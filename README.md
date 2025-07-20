@@ -39,6 +39,9 @@ There will be no type inference, all variables should have their type specified 
 - Pattern matching
 - Variant types / tuples
 - print and read
+- Validate int literals 
+- Better error reporting in the lexing stage
+- Comments
 
 ## Examples
 ```
