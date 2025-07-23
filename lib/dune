@@ -1,3 +1,19 @@
 (library
  (name compiler_lib)
+ (package ccc)
+ (modules ast interpreter lexer parser)
+)
+
+; Rule for ocamllex
+(rule
+ (targets lexer.ml)
+ (deps    lexer.mll)
+ (action  (run ocamllex -o lexer.ml lexer.mll))
+)
+
+; Rule for menhir
+(rule
+ (targets parser.ml parser.mli)
+ (deps    parser.mly)
+ (action  (run menhir --ocamlc 'ocamlc' --infer parser.mly))
 )

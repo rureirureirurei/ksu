@@ -42,6 +42,7 @@ There will be no type inference, all variables should have their type specified 
 - Validate int literals 
 - Better error reporting in the lexing stage
 - Comments
+- Arrays
 
 ## Examples
 ```

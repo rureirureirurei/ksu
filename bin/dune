@@ -1,4 +1,3 @@
 (executable
- (public_name temp)
  (name main)
- (libraries temp))
+ (modules main))

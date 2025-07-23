@@ -51,7 +51,7 @@
 (* End of file *)
 %token EOF
 
-%start <(* TODO - I have to represent AST in my program *)> parse
+%start <unit> parse
 
 %% (* Rules *)
 
