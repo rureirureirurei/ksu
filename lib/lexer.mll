@@ -29,7 +29,7 @@ rule token = parse
   | '%' -> { MOD }
 
   (* Comparison operators *)
-  | "==" -> { EQUAL }
+  | "==" -> { EQUALS }
   | "!=" -> { NOT_EQUAL }
   | '<' -> { LESS }
   | '>' -> { GREATER }
@@ -40,6 +40,7 @@ rule token = parse
   | "or" -> { OR }
   | "and" -> { AND }
   | "not" -> { NOT }
+  | '!' -> { NOT }
 
   (* Keywords *)
   | "let" -> { LET }
@@ -50,6 +51,7 @@ rule token = parse
   | "fun" -> { FUN }
 
   (* Punctuation *)
+  | "=" -> { EQUAL }
   | '(' -> { LEFT_PAREN }
   | ')' -> { RIGHT_PAREN }
   | ':' -> { SEMI }

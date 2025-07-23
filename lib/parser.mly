@@ -1,8 +1,12 @@
 (* In the parser, we will define the list of tokens, those will be later accesible via the menhir-generated type *)
+%{
+    (* Header *)    
+%}
+
 
 (* Literals *)
 %token <bool> BOOL_LITERAL
-%token <int> BOOL_LITERAL
+%token <int> INT_LITERAL
 %token <string> ID
 
 (* Types *)
@@ -18,7 +22,7 @@
 %token MOD               (** "%"       *)
 
 (* Operators - Comparison *)
-%token EQUAL             (** "=="      *)
+%token EQUALS            (** "=="      *)
 %token NOT_EQUAL         (** "!="      *)
 %token LESS              (** "<"       *)
 %token GREATER           (** ">"       *)
@@ -39,9 +43,62 @@
 %token FUN
 
 (* Punctuation *)
+%token EQUAL
 %token LEFT_PAREN
 %token RIGHT_PAREN
 %token SEMI (* : *)
 
 (* End of file *)
 %token EOF
+
+%start <(* TODO - I have to represent AST in my program *)> parse
+
+%% (* Rules *)
+
+parse:
+| e EOF {}
+
+e:
+| LET ID EQUAL e IN e {}
+| IF e THEN e ELSE e {}
+| FUN ID SEMI type_e ARR e {}
+| e binop e {}
+| e relop e {}
+| e boolop e {}
+| unop e {}
+| boolunop e {}
+| LEFT_PAREN e RIGHT_PAREN {}
+| INT_LITERAL {}
+| BOOL_LITERAL {}
+
+relop:
+| EQUALS {}
+| NOT_EQUAL {}
+| GREATER {}
+| GREATER_OR_EQUAL {}
+| LESS {}
+| LESS_OR_EQUAL {}
+
+binop:
+| PLUS {}
+| MINUS {}
+| TIMES {}
+| DIV {}
+| MOD {}
+
+boolop:
+| AND {}
+| OR {}
+
+unop:
+| MINUS {}
+
+boolunop:
+| NOT {}
+
+type_e: 
+| BOOL_T {}
+| INT_T {}
+| type_e ARR type_e {}
+
+%% (* Footer *)
