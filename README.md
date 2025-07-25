@@ -1,7 +1,69 @@
-# Language specification
+# ksu
 
-The ??? is a functional language that supports first class continuations.
+*ksu* is a functional language that supports first class continuations.
 It's syntax resembles OCaml.
+
+## Priorities and tasks
+
+- **0** - Core part of the language. Must be implemented as fast as possible.
+- **1** - Important functionality that is blocked by the missing core parts. Should be implemented. 
+- **2** - Neat idea that can be implemented in a sensible time. 
+- **3** - Neat idea that would take substantial amount of time. Most likely will never be implemented.
+
+Things I still have to implement:
+  - Specification (0)
+    - Types specification (0) 
+    - Advanced control flow specification (0)
+    - Operators (0)
+      - Precenedce (0)
+  - Lexer (0)
+    - Error reporting (1)
+    - Comments (1)
+    - Use my own lexer from the FP course (3) 
+  - Parser (0)
+    - Resolve parsing conflicts (0)
+    - Type expressions (0)
+    - Clean up the mess between the logical, relational and arithmetic operators (0)
+  - Interpreter (0)
+    - Fundamental stuff interpreter (0)
+    - CPS interpreter for the advanced control flow (0)
+  - Types (0)
+    - Variant types (2)
+    - Record types (2)
+  - Pattern matching (3)
+  - Arrays (3)
+
+## In general
+
+Program is a single plaintext file that contains sequence of statements. Each statement is either
+- Variable binding (0) ```let <id> = <expr>```
+- Application (0) ```<expr> <expr>```
+- Custom type definition (3) ```type <id> = <type_expr>```
+
+For example
+
+```ksu
+let x: int = 10
+let y: int = 20
+print_int x                  (* prints 20 *)
+
+let f: int -> int = fun n: int -> n * 2 in
+let g: int -> int = fun m: int -> m * 3 in 
+let k: int = (if x == 10 then 1 else -1) in
+    print_int ((f y) + (g x) + k)     (* prints 71 *)
+
+let fact: int -> int = fun n: int -> if n == 0 then 1 else (fact (n - 1)) * n 
+
+print_int (fact 5) (* prints 120*)
+```
+
+The program may communicate with the outer world by
+- (0) returned value of the last statement
+- (1) `print_int: int -> ()`
+- (2) `print_string: st`
+- (2) `read: () -> string`
+
+
 
 ## Types
 
@@ -19,30 +81,6 @@ There will be no type inference, all variables should have their type specified 
 - fun <id> -> <expr>
 - +,-,/,*
 - ;
-
-## TODO
-- Lexer
-- Parser
-- Interpreter
-- Interpreter in the CPS
-- Playing around with the FCCs a bit more
-- Adding advanced control flow operators to the lexer/parser- Implementing them in the interpreter
-- Writing AST to IR translation
-- Closure conversion
-- Register colouring
-- IR to ASM translation
-- Testing infrastructure
-
-## MAYBE
-- Strings
-- Modules
-- Pattern matching
-- Variant types / tuples
-- print and read
-- Validate int literals 
-- Better error reporting in the lexing stage
-- Comments
-- Arrays
 
 ## Examples
 ```
