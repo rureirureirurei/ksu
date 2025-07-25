@@ -1,6 +1,8 @@
 type binop = 
 | Plus
 | Minus
+| Times
+| Div
 
 type t = 
 | Bool_T

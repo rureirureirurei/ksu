@@ -57,6 +57,7 @@
 
 parse:
 | e EOF {}
+| e SEMI parse {}
 
 e:
 | LET ID EQUAL e IN e {}
@@ -99,6 +100,8 @@ boolunop:
 type_e: 
 | BOOL_T {}
 | INT_T {}
-| type_e ARR type_e {}
+| BOOL_T ARR type_e {}
+| INT_T ARR type_e {}
+| LEFT_PAREN type_e RIGHT_PAREN ARR type_e {}
 
 %% (* Footer *)
