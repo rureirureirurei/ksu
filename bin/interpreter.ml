@@ -13,96 +13,56 @@ let print_all_tokens lexbuf =
 
 module Env = Map.Make (String)
 
-type res =
-  | Num of int
-  | Bool of bool
-  | String of string
-  | Fun of (res list -> res)
+type env = value Env.t
+and value =
+  | VNumber of int
+  | VBool of bool
+  | VString of string
+  | VClosure of { args : string list; body: Ast.expr; env : env }
 
-type env = res Env.t
+let string_of_value = function
+  | VNumber n -> string_of_int n
+  | VBool b -> string_of_bool b
+  | VString s -> s
+  | VClosure _ -> "<function>"
 
-let string_of_res = function
-  | Num n -> string_of_int n
-  | Bool b -> string_of_bool b
-  | String s -> s
-  | Fun _ -> "<function>"
-
-let rec eval (expr : Ast.expr) (env : env) : res =
+  
+let rec eval (expr : Ast.expr) (env : env) : value =
   match expr with
-  | Ast.Number n -> Num n
-  | Ast.Bool b -> Bool b
-  | Ast.String s -> String s
-  | Ast.Symbol sym -> (
-      match sym with
-      | "-"
-      | "+"
-      | "*"
-      | "/" ->
-          let op_of_sym = function
-            | "-" -> (-)
-            | "+" -> (+)
-            | "*" -> ( * )
-            | "/" -> (/)
-            | _ -> failwith "Unknown symbol"
-          in
-          Fun
-            (fun args ->
-              match args with
-              | [ Num n1; Num n2 ] -> Num ((op_of_sym sym) n1 n2)
-              | _ -> failwith "op expects 2 nums")
-      | "="
-      | "<"
-      | ">"
-      | "<="
-      | ">=" ->
-          let op_of_sym = function
-            | "=" -> (=)
-            | "<" -> (<)
-            | ">" -> (>)
-            | "<=" -> (<=)
-            | ">=" -> (>=)
-            | _ -> failwith "Unknown symbol"
-          in
-          Fun
-            (fun args ->
-              match args with
-              | [ Num n1; Num n2 ] -> Bool ((op_of_sym sym) n1 n2)
-              | _ -> failwith "op expects 2 nums")
-      | _ -> (
-          match Env.find_opt sym env with
-          | Some res -> res
-          | None -> failwith @@ "Unknown symbol: " ^ sym))
+  | Ast.Number n -> VNumber n
+  | Ast.Bool b -> VBool b
+  | Ast.String s -> VString s
+  | Ast.Symbol sym ->  (
+    match Env.find_opt sym env with
+    | Some res -> res
+    | None -> failwith @@ "Unknown symbol: " ^ sym
+  )
   | Ast.Lambda { ids; body } ->
-      Fun
-        (fun args ->
-          let computed_args = List.combine ids args in
-          let new_env =
-            List.fold_left
-              (fun acc (id, arg) -> Env.add id arg acc)
-              env computed_args
-          in
-          eval body new_env)
+      VClosure { args = ids; body; env }
   | Ast.App exps -> (
       let rests = List.map (fun exp -> eval exp env) exps in
       let fun_res = List.hd rests in
-      let args = List.tl rests in
-      match fun_res with Fun f -> f args | _ -> failwith "Expected a function")
+      let args_val = List.tl rests in
+      match fun_res with
+      | VClosure { args; body; env } ->
+          eval body (List.fold_left2 (fun acc id arg -> Env.add id arg acc) env args args_val)
+      | _ -> failwith "Expected a function")
   | Ast.Callcc _ -> failwith "now implemented"
-  | Ast.Let { ids; defs; b } -> (
+  | Ast.Let { ids; defs; b } ->
       let new_env =
         List.fold_left2
           (fun acc id def -> Env.add id (eval def env) acc)
           env ids defs
       in
-      eval b new_env)
+      eval b new_env
   | Ast.If { cond; y; n } -> (
       match eval cond env with
-      | Bool true -> eval y env
-      | Bool false -> eval n env
+      | VBool true -> eval y env
+      | VBool false -> eval n env
       | _ -> failwith "if condition must be a boolean")
   | Ast.Define _ -> failwith "define can be only on top level"
 
-let eval_file (exprs : Ast.expr list) (env : env) : res list =
+let eval_file (exprs : Ast.expr list) (env : env) : value list =
   fst
   @@ List.fold_left
        (fun (rests, env) expr ->
@@ -122,4 +82,4 @@ let interpret files =
   let lexbuf = Lexing.from_channel channel in
   let parse_tree = Parser.parse Lexer.lex lexbuf in
   let res = eval_file parse_tree Env.empty in
-  List.iter (fun r -> print_endline @@ string_of_res r) res
+  List.iter (fun r -> print_endline @@ string_of_value r) res
