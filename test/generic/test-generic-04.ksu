@@ -1,0 +1,9 @@
+;30
+(define conditional-cont
+  (lambda (n)
+    (call/cc (lambda (k)
+               (if (= n 0)
+                   (k 30)
+                   (* n 3))))))
+
+(conditional-cont 0) 

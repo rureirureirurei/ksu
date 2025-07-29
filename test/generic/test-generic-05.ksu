@@ -1,0 +1,6 @@
+;42
+(define apply-cont
+  (lambda (k val)
+    (k val)))
+
+(+ 40 (call/cc (lambda (k) (apply-cont k 2)))) 
