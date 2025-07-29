@@ -1,8 +1,3 @@
-%{
-    open Ast
-%}
-
-
 %token <bool> BOOL
 %token <int> NUMBER
 %token <string> SYMBOL
@@ -20,30 +15,46 @@
 s: expr EOF { $1 }
 
 expr:
-  | literal { $1 }
-  | LPAREN list_ RPAREN { $1 }
-  | LPAREN lambda RPAREN { $1 }
-  | LPAREN if_expr RPAREN { $1 }
-  
-lambda_args:
-  | SYMBOL { [$1] }
-  | SYMBOL lambda_args { $1 :: $2 }
+  | atom { $1 }
+  | LPAREN compound RPAREN { $2 }
 
-lambda:
-  | LAMBDA LPAREN lambda_args RPAREN expr { Ast.lambda { ids = $3; body = $4 } }
-
-if_expr:
-  | IF expr expr expr { Ast.if_expr { cond = $3; y = $4; n = $5 } }
-
-list_:
-  | expr { [$1] }
-  | expr list_ { $1 :: $2 }
-
-literal:
+atom:
   | BOOL { Ast.Bool $1 }
   | NUMBER { Ast.Number $1 }
   | STRING { Ast.String $1 }
   | SYMBOL { Ast.Symbol $1 }
 
+compound:
+  | list_expr { Ast.List $1 }
+  | lambda_expr { $1}
+  | if_expr { $1 }
+  | let_expr { $1 }
+  | callcc_expr { $1 }
+  | define_expr { $1 }
+lambda_args:
+  | SYMBOL { [$1] }
+  | SYMBOL lambda_args { $1 :: $2 }
 
-%% (* Footer *)
+lambda_expr:
+  | LAMBDA LPAREN lambda_args RPAREN expr { Ast.Lambda { ids = $3; b = $5 } }
+
+if_expr:
+  | IF expr expr expr { Ast.If { cond = $2; y = $3; n = $4 } }
+
+list_expr:
+  | expr { [$1] }
+  | expr list_expr { $1 :: $2 }
+
+
+callcc_expr:
+  | CALLCC expr { Ast.Callcc $2 }
+
+let_args: 
+  | LBRACKET SYMBOL expr RBRACKET { [($2, $3)] }
+  | LBRACKET SYMBOL expr RBRACKET let_args { ($2, $3) :: $5 }
+
+let_expr:
+  | LET LPAREN let_args RPAREN expr { Ast.Let { ids = List.map fst $3; defs = List.map snd $3; b = $5 } }
+
+define_expr:
+  | DEFINE SYMBOL expr { Ast.Define { name = $2; expr = $3 } }
