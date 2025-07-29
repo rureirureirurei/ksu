@@ -33,6 +33,11 @@ Things I still have to implement:
     - Dynamic typing with runtime checks (2)
     - Optional static typing (3)
     - Type inference (3)
+  - Executable (0)
+    - Read from stdin (0)
+    - Parse arguments (2)
+    - Read from file (2)
+
 
 ## In general
 
