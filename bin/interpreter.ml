@@ -93,7 +93,6 @@ let eval_file (exprs : Ast.expr list) (env : env) : value list =
   fst
   @@ List.fold_left
        (fun (rests, env) expr ->
-         print_endline @@ Ast.string_of_expr expr;
          match expr with
          | Ast.Define { name; expr } -> (
           match expr with 
@@ -109,7 +108,6 @@ let eval_file (exprs : Ast.expr list) (env : env) : value list =
        ([], env) exprs
 
 let interpret files =
-  Printf.printf "Interpreting files: %s\n" (String.concat ", " files);
   let channel = open_in (List.hd files) in
   let lexbuf = Lexing.from_channel channel in
   let parse_tree = Parser.parse Lexer.lex lexbuf in
