@@ -1,6 +1,6 @@
 (library
  (name compiler_lib)
- (package ccc)
+ (package ksu)
  (modules ast interpreter lexer parser)
 )
 

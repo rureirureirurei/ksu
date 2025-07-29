@@ -1,17 +1,17 @@
 (lang dune 3.19)
 
-(name ccc)
+(name ksu)
 
 (generate_opam_files true)
 
 (source
- (github rureirureirurei/ccc)
+ (github rureirureirurei/ksu)
 )
 
 (authors "Denys Zinoviev")
 
 (package
- (name ccc)
+ (name ksu)
  (depends
   ocaml
   menhir
