@@ -1,78 +1,27 @@
-{ (* Header is just some arbitrary OCaml code *)
-     open Parser
-     type token = Parser.token
-     open Lexing
+{ 
+  open Parser
+  type token = Parser.token
+  open Lexing
 }
 
-(* Then, here we might define some aux regular expressions.
-
-let somerexpr1 = ...
-let somerexpr2 = ...
-
-examples may be 
-
-let lol = "true" | "false"
-let kek = ['0'-'9']+
-...
-*)
-
-let lowercase_letter = ['a' - 'z']
 let digit = ['0' - '9']
-let ident = lowercase_letter (digit | lowercase_letter)* 
+let letter = ['a' - 'z' 'A' - 'Z']
+let symbol_char = letter | ['+' '-' '*' '/' '<' '>' '=' '!' '?']
+let whitespace = [' ' '\t' '\n' '\r']
 
 rule token = parse
-  (* Arithmetic operators *)
-  | '+' { PLUS }
-  | '-' { MINUS }
-  | '*' { TIMES }
-  | '/' { DIV }
-  | '%' { MOD }
-
-  (* Comparison operators *)
-  | "==" { EQUALS }
-  | "!=" { NOT_EQUAL }
-  | '<' { LESS }
-  | '>' { GREATER }
-  | "<=" { LESS_OR_EQUAL }
-  | ">=" { GREATER_OR_EQUAL }
-
-  (* Logical operators *)
-  | "or" { OR }
-  | "and" { AND }
-  | "not" { NOT }
-  | '!' { NOT }
-
-  (* Keywords *)
-  | "let" { LET }
-  | "in" { IN }
-  | "if" { IF }
-  | "then" { THEN }
-  | "else" { ELSE }
-  | "fun" { FUN }
-
-  (* Punctuation *)
-  | "=" { EQUAL }
-  | '(' { LEFT_PAREN }
-  | ')' { RIGHT_PAREN }
-  | ':' { SEMI }
-  | "->" { ARR }
-
-  (* Types *)
-  | "int" { INT_T }
-  | "bool" { BOOL_T }
-
-  (* Literals *)
-  | "true" { BOOL_LITERAL true }
-  | "false" { BOOL_LITERAL false }
-  | digit+ as i { INT_LITERAL (int_of_string i) }
-  | ident as id { ID id }
-
-  (* Whitespace and newlines *)
-  | ['\n'] { new_line lexbuf; token lexbuf }
-  | [' ' '\t' '\r'] { token lexbuf }
-
-  (* End of file *)
+  | digit+ as n { NUMBER (int_of_string n) }
+  | '"' ([^ '"']* as s) '"' { STRING s }
+  | symbol_char (symbol_char | digit)* as s { SYMBOL s }
+  | "#t" { BOOLEAN true }
+  | "#f" { BOOLEAN false }
+  | '(' { LPAREN }
+  | ')' { RPAREN }
+  | '[' { LBRACKET }
+  | ']' { RBRACKET }
+  | "define" { DEFINE }
+  | "lambda" { LAMBDA }
+  | "call/cc" { CALLCC }
+  | ';' [^ '\n']* { token lexbuf }
+  | whitespace+ { token lexbuf }
   | eof { EOF }
-
-{ (* Footer is just some arbitrary OCaml code *)
-}
