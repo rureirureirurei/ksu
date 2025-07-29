@@ -1,7 +1,6 @@
 { 
   open Parser
   type token = Parser.token
-  open Lexing
 }
 
 let digit = ['0' - '9']
@@ -9,12 +8,12 @@ let letter = ['a' - 'z' 'A' - 'Z']
 let symbol_char = letter | ['+' '-' '*' '/' '<' '>' '=' '!' '?']
 let whitespace = [' ' '\t' '\n' '\r']
 
-rule token = parse
+rule lex = parse
   | digit+ as n { NUMBER (int_of_string n) }
   | '"' ([^ '"']* as s) '"' { STRING s }
   | symbol_char (symbol_char | digit)* as s { SYMBOL s }
-  | "#t" { BOOLEAN true }
-  | "#f" { BOOLEAN false }
+  | "#t" { BOOL true }
+  | "#f" { BOOL false }
   | '(' { LPAREN }
   | ')' { RPAREN }
   | '[' { LBRACKET }
@@ -22,6 +21,6 @@ rule token = parse
   | "define" { DEFINE }
   | "lambda" { LAMBDA }
   | "call/cc" { CALLCC }
-  | ';' [^ '\n']* { token lexbuf }
-  | whitespace+ { token lexbuf }
+  | ';' [^ '\n']* { lex lexbuf }
+  | whitespace+ { lex lexbuf }
   | eof { EOF }

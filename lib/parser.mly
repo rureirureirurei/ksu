@@ -9,10 +9,14 @@
 %token LET
 %token EOF
 
-%start <Ast.expr> s
+%start <Ast.expr> parse
 
 %%
-s: expr EOF { $1 }
+parse: exprs EOF { Ast.List $1 }
+
+exprs:
+  | { [] }
+  | expr exprs { $1 :: $2 }
 
 expr:
   | atom { $1 }
