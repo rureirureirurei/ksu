@@ -121,7 +121,5 @@ let interpret files =
   let channel = open_in (List.hd files) in
   let lexbuf = Lexing.from_channel channel in
   let parse_tree = Parser.parse Lexer.lex lexbuf in
-  print_endline "Parsed expression:";
-  print_endline @@ Ast.string_of_expr @@ List.hd parse_tree;
   let res = eval_file parse_tree Env.empty in
   List.iter (fun r -> print_endline @@ string_of_res r) res

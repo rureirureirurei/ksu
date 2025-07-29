@@ -15,15 +15,16 @@ let rec string_of_expr = function
   | Number n -> string_of_int n
   | String s -> s
   | Symbol s -> s
-  | App l -> "(" ^ String.concat " " (List.map string_of_expr l) ^ ")"
+  | App l -> 
+      "(" ^ String.concat "\n  " (List.map string_of_expr l) ^ ")"
   | Lambda { ids; body } ->
-      "(lambda (" ^ String.concat " " ids ^ ") " ^ string_of_expr body ^ ")"
+      "(lambda (" ^ String.concat " " ids ^ ")\n  " ^ string_of_expr body ^ ")"
   | If { cond; y; n } ->
-      "(if " ^ string_of_expr cond ^ " " ^ string_of_expr y ^ " "
-      ^ string_of_expr n ^ ")"
+      "(if " ^ string_of_expr cond ^ "\n    " ^ string_of_expr y ^ "\n    " ^ string_of_expr n ^ ")"
   | Callcc e -> "(callcc " ^ string_of_expr e ^ ")"
   | Let { ids; defs; b } ->
-      "(let (" ^ String.concat " " ids ^ ") ("
-      ^ String.concat " " (List.map string_of_expr defs)
-      ^ ") " ^ string_of_expr b ^ ")"
-  | Define { name; expr } -> "(define " ^ name ^ " " ^ string_of_expr expr ^ ")"
+      "(let (" ^ String.concat " " ids ^ ")\n  (" ^ 
+      String.concat "\n   " (List.map string_of_expr defs) ^
+      ")\n  " ^ string_of_expr b ^ ")"
+  | Define { name; expr } -> 
+      "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")"
