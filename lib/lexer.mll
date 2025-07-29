@@ -33,6 +33,8 @@ rule lex = parse
   | ')' { RPAREN }
   | '[' { LBRACKET }
   | ']' { RBRACKET }
+  | "let" { LET }
+  | "if" { IF }
   | "define" { DEFINE }
   | "lambda" { LAMBDA }
   | "call/cc" { CALLCC }
