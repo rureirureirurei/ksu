@@ -3,6 +3,28 @@
 *ksu* is a functional language that supports first-class continuations.
 Its syntax resembles Scheme.
 
+## Usage
+
+The `ksu` executable can be used in two modes:
+
+### Interpreter Mode (Default)
+```bash
+ksu program.ksu
+```
+Runs the program directly by interpreting it. This is the default behavior.
+
+### Compiler Mode
+```bash
+ksu --compile program.ksu -o output
+```
+Compiles the program to a native executable. The `-o` flag specifies the output filename.
+
+### Interactive Mode
+```bash
+ksu
+```
+Starts an interactive REPL (Read-Eval-Print Loop) where you can enter expressions directly.
+
 ## Priorities and tasks
 
 - **0** - Core part of the language. Must be implemented as fast as possible.
