@@ -65,7 +65,9 @@ Things I still have to implement:
 
 Program is a sequence of S-expressions. Each expression is either:
 - **Atom**: number, string, symbol, or boolean
-- **List**: `(expr expr ...)`
+- **Compound**: `(expr expr ...)`
+
+Compound is either special form, or function application.
 
 Special forms:
 - `(lambda (params...) body)` - function definition
