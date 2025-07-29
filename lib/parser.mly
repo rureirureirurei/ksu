@@ -9,10 +9,10 @@
 %token LET
 %token EOF
 
-%start <Ast.expr> parse
+%start <Ast.expr list> parse
 
 %%
-parse: exprs EOF { Ast.List $1 }
+parse: exprs EOF { $1 }
 
 exprs:
   | { [] }
@@ -29,26 +29,26 @@ atom:
   | SYMBOL { Ast.Symbol $1 }
 
 compound:
-  | list_expr { Ast.List $1 }
+  | app_expr { Ast.App $1 }
   | lambda_expr { $1}
   | if_expr { $1 }
   | let_expr { $1 }
   | callcc_expr { $1 }
   | define_expr { $1 }
+
 lambda_args:
   | SYMBOL { [$1] }
   | SYMBOL lambda_args { $1 :: $2 }
 
 lambda_expr:
-  | LAMBDA LPAREN lambda_args RPAREN expr { Ast.Lambda { ids = $3; b = $5 } }
+  | LAMBDA LPAREN lambda_args RPAREN expr { Ast.Lambda { ids = $3; body = $5 } }
 
 if_expr:
   | IF expr expr expr { Ast.If { cond = $2; y = $3; n = $4 } }
 
-list_expr:
+app_expr:
   | expr { [$1] }
-  | expr list_expr { $1 :: $2 }
-
+  | expr app_expr { $1 :: $2 }
 
 callcc_expr:
   | CALLCC expr { Ast.Callcc $2 }
