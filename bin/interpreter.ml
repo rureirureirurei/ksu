@@ -19,12 +19,14 @@ and value =
   | VBool of bool
   | VString of string
   | VClosure of { args : string list; body: Ast.expr; env : env }
+  | VRecClosure of { name: string; args : string list; body: Ast.expr; env : env }
 
 let string_of_value = function
   | VNumber n -> string_of_int n
   | VBool b -> string_of_bool b
   | VString s -> s
   | VClosure _ -> "<function>"
+  | VRecClosure _ -> "<rec-function>"
 
   
 let rec eval (expr : Ast.expr) (env : env) : value =
@@ -39,6 +41,28 @@ let rec eval (expr : Ast.expr) (env : env) : value =
   )
   | Ast.Lambda { ids; body } ->
       VClosure { args = ids; body; env }
+  | Ast.App ((Ast.Symbol "*") :: args) -> 
+      let rests = List.map (fun exp -> eval exp env) args in
+      let product = List.fold_left ( * ) 1 (List.map (fun v -> match v with | VNumber n -> n | _ -> failwith "Expected a number") rests)in
+      VNumber product
+  | Ast.App ((Ast.Symbol "+") :: args) -> 
+      let rests = List.map (fun exp -> eval exp env) args in
+      let sum = List.fold_left (+) 0 (List.map (fun v -> match v with | VNumber n -> n | _ -> failwith "Expected a number") rests) in
+      VNumber sum
+  | Ast.App ((Ast.Symbol "=") :: args) -> 
+      let rests = List.map (fun exp -> eval exp env) args in
+      let values = List.map (fun v -> match v with | VNumber n -> n | _ -> failwith "Expected a number") rests in
+      let is_equal = List.length values = 2 && List.hd values = List.hd (List.tl values) in
+      VBool is_equal
+  | Ast.App ((Ast.Symbol "-") :: args) -> 
+      let rests = List.map (fun exp -> eval exp env) args in
+      let numbers = List.map (fun v -> match v with | VNumber n -> n | _ -> failwith "Expected a number") rests in
+      let difference = match numbers with
+        | [] -> 0
+        | [x] -> -x
+        | x :: xs -> List.fold_left (-) x xs
+      in
+      VNumber difference
   | Ast.App exps -> (
       let rests = List.map (fun exp -> eval exp env) exps in
       let fun_res = List.hd rests in
@@ -46,6 +70,9 @@ let rec eval (expr : Ast.expr) (env : env) : value =
       match fun_res with
       | VClosure { args; body; env } ->
           eval body (List.fold_left2 (fun acc id arg -> Env.add id arg acc) env args args_val)
+      | VRecClosure { name; args; body; env } as closure->
+        let new_env = (List.fold_left2 (fun acc id arg -> Env.add id arg acc) env args args_val) in
+        eval body (Env.add name closure new_env)
       | _ -> failwith "Expected a function")
   | Ast.Callcc _ -> failwith "now implemented"
   | Ast.Let { ids; defs; b } ->
@@ -68,9 +95,14 @@ let eval_file (exprs : Ast.expr list) (env : env) : value list =
        (fun (rests, env) expr ->
          print_endline @@ Ast.string_of_expr expr;
          match expr with
-         | Ast.Define { name; expr } ->
-             let res = eval expr env in
-             (rests, Env.add name res env)
+         | Ast.Define { name; expr } -> (
+          match expr with 
+          | Ast.Lambda { ids; body } -> (
+            let res = VRecClosure { name; args = ids; body; env } in
+            (rests, Env.add name res env)
+          )
+          | _ -> let res = eval expr env in (rests, Env.add name res env)
+         )
          | _ as expr ->
              let res = eval expr env in
              (res :: rests, env))
