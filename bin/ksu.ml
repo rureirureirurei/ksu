@@ -9,11 +9,6 @@ let compile ~output files =
     output (String.concat ", " files);
   failwith "Compiler not implemented"
 
-let interpret files =
-  Printf.printf "Interpreting files: %s\n" 
-    (String.concat ", " files);
-  failwith "Interpreter not implemented"
-
 (* Command line argument parsing *)
 let usage_msg = "ksu [--compile] [--output <file>] <files>..."
 
@@ -49,6 +44,6 @@ let () =
   | (false, []) ->
       repl ()
   | (false, _) ->
-      interpret files
+      Interpreter.interpret files
   
 
