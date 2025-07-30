@@ -2,5 +2,7 @@
     "ocaml.sandbox": {
         "kind": "opam",
         "switch": "${workspaceFolder:ksu}"
-    }
+    },
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.guides.bracketPairs": true
 }
