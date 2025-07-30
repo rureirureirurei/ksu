@@ -71,3 +71,4 @@ let_expr:
 
 define_expr:
   | DEFINE SYMBOL expr { Compiler_lib.Ast.Define { name = $2; expr = $3 } }
+  | DEFINE LPAREN SYMBOL lambda_args RPAREN expr { Compiler_lib.Ast.Define { name = $3; expr = Compiler_lib.Ast.Lambda { ids = $4; body = $6 }  } }

@@ -62,46 +62,125 @@ let rec value_to_bool = function
 (* Handle built-in operations *)
 and eval_builtin_op op args env k =
   eval_exprs env args [] (fun values ->
-  let numbers = List.map value_to_number values in
   k @@ match op with
-  | "+" -> VNumber (List.fold_left ( + ) 0 numbers)
-  | "=" ->
-      VBool
-        (List.length numbers = 2
-        && List.hd numbers = List.hd (List.tl numbers))
+  (* N-ary operations (0 or more arguments) *)
+  | "+" -> 
+      let numbers = List.map value_to_number values in
+      VNumber (List.fold_left (+) 0 numbers)
+  | "*" -> 
+      let numbers = List.map value_to_number values in
+      VNumber (List.fold_left ( * ) 1 numbers)
+  
+  (* Binary operations that reduce from left to right *)
   | "-" ->
-      VNumber (List.fold_left ( - ) (List.hd numbers) (List.tl numbers))
-  | "*" -> VNumber (List.fold_left ( * ) 1 numbers)
-  | "<" -> 
-      VBool (List.length numbers = 2 && List.hd numbers < List.hd (List.tl numbers))
+      let numbers = List.map value_to_number values in
+      (match numbers with
+       | [] -> failwith "Subtraction requires at least one argument"
+       | [x] -> VNumber (-x)
+       | x :: rest -> VNumber (List.fold_left (-) x rest))
+  | "/" ->
+      let numbers = List.map value_to_number values in
+      (match numbers with
+       | [] -> failwith "Division requires at least one argument"
+       | [x] -> VNumber (1 / x)
+       | x :: rest -> VNumber (List.fold_left (/) x rest))
+  
+  (* Comparison operations - check if elements are in order *)
+  | "=" ->
+      let numbers = List.map value_to_number values in
+      (match numbers with
+       | [] -> failwith "Equality requires at least one argument"
+       | [_] -> VBool true
+       | _ -> 
+           let result = List.fold_left 
+             (fun (acc, prev) curr -> (acc && prev = curr, curr))
+             (true, List.hd numbers) (List.tl numbers) in
+           VBool (fst result))
+  | "<" ->
+      let numbers = List.map value_to_number values in
+      (match numbers with
+       | [] -> failwith "Less than requires at least one argument"
+       | [_] -> VBool true
+       | _ -> 
+           let result = List.fold_left 
+             (fun (acc, prev) curr -> (acc && prev < curr, curr))
+             (true, List.hd numbers) (List.tl numbers) in
+           VBool (fst result))
   | ">" ->
-      VBool (List.length numbers = 2 && List.hd numbers > List.hd (List.tl numbers))
+      let numbers = List.map value_to_number values in
+      (match numbers with
+       | [] -> failwith "Greater than requires at least one argument"
+       | [_] -> VBool true
+       | _ -> 
+           let result = List.fold_left 
+             (fun (acc, prev) curr -> (acc && prev > curr, curr))
+             (true, List.hd numbers) (List.tl numbers) in
+           VBool (fst result))
   | "<=" ->
-      VBool (List.length numbers = 2 && List.hd numbers <= List.hd (List.tl numbers))
+      let numbers = List.map value_to_number values in
+      (match numbers with
+       | [] -> failwith "Less than or equal requires at least one argument"
+       | [_] -> VBool true
+       | _ -> 
+           let result = List.fold_left 
+             (fun (acc, prev) curr -> (acc && prev <= curr, curr))
+             (true, List.hd numbers) (List.tl numbers) in
+           VBool (fst result))
   | ">=" ->
-      VBool (List.length numbers = 2 && List.hd numbers >= List.hd (List.tl numbers))
+      let numbers = List.map value_to_number values in
+      (match numbers with
+       | [] -> failwith "Greater than or equal requires at least one argument"
+       | [_] -> VBool true
+       | _ -> 
+           let result = List.fold_left 
+             (fun (acc, prev) curr -> (acc && prev >= curr, curr))
+             (true, List.hd numbers) (List.tl numbers) in
+           VBool (fst result))
+  
+  (* Unary predicates - must have exactly 1 argument *)
   | "number?" ->
-      VBool (match List.hd values with VNumber _ -> true | _ -> false)
+      (match values with
+       | [v] -> VBool (match v with VNumber _ -> true | _ -> false)
+       | _ -> failwith "number? requires exactly one argument")
   | "boolean?" ->
-      VBool (match List.hd values with VBool _ -> true | _ -> false)
+      (match values with
+       | [v] -> VBool (match v with VBool _ -> true | _ -> false)
+       | _ -> failwith "boolean? requires exactly one argument")
   | "string?" ->
-      VBool (match List.hd values with VString _ -> true | _ -> false)
+      (match values with
+       | [v] -> VBool (match v with VString _ -> true | _ -> false)
+       | _ -> failwith "string? requires exactly one argument")
   | "procedure?" ->
-      VBool (match List.hd values with VClosure _ | VRecClosure _ -> true | _ -> false)
+      (match values with
+       | [v] -> VBool (match v with VClosure _ | VRecClosure _ -> true | _ -> false)
+       | _ -> failwith "procedure? requires exactly one argument")
   | "continuation?" ->
-      VBool (match List.hd values with VCont _ -> true | _ -> false)
+      (match values with
+       | [v] -> VBool (match v with VCont _ -> true | _ -> false)
+       | _ -> failwith "continuation? requires exactly one argument")
   | "null?" ->
-      VBool (match List.hd values with VNil -> true | _ -> false)
+      (match values with
+       | [v] -> VBool (match v with VNil -> true | _ -> false)
+       | _ -> failwith "null? requires exactly one argument")
+  
+  (* Binary operations - must have exactly 2 arguments *)
   | "cons" ->
-      VPair (List.hd values, List.hd (List.tl values))
-  | "car" -> (
-      match List.hd values with
-      | VPair (a, _) -> a
-      | _ -> failwith "Expected a pair")
-  | "cdr" -> (
-      match List.hd values with
-      | VPair (_, b) -> b
-      | _ -> failwith "Expected a pair")
+      (match values with
+       | [a; b] -> VPair (a, b)
+       | _ -> failwith "cons requires exactly two arguments")
+  | "car" ->
+      (match values with
+       | [v] -> (match v with
+                 | VPair (a, _) -> a
+                 | _ -> failwith "car requires a pair")
+       | _ -> failwith "car requires exactly one argument")
+  | "cdr" ->
+      (match values with
+       | [v] -> (match v with
+                 | VPair (_, b) -> b
+                 | _ -> failwith "cdr requires a pair")
+       | _ -> failwith "cdr requires exactly one argument")
+  
   | _ -> failwith ("Unknown operation: " ^ op)
   )
 
@@ -131,7 +210,7 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
       | None -> 
         failwith ("Unknown symbol: " ^ sym))
   | Ast.Lambda { ids; body } -> k (VClosure { args = ids; body; env })
-  | Ast.App (Ast.Symbol op :: args) when List.mem op [ "*"; "+"; "="; "-"; "<"; ">"; "<="; ">="; "number?"; "boolean?"; "string?"; "procedure?"; "continuation?" ] ->
+  | Ast.App (Ast.Symbol op :: args) when List.mem op [ "*"; "+"; "="; "-"; "/"; "<"; ">"; "<="; ">="; "number?"; "boolean?"; "string?"; "procedure?"; "continuation?"; "null?"; "cons"; "car"; "cdr" ] ->
       eval_builtin_op op args env k
   | Ast.App (func_expr :: arg_exprs) ->
       eval_expr env func_expr (fun func_value ->

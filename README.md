@@ -82,6 +82,14 @@ Special forms:
 - `(define name value)` - top-level binding
 - `(call/cc proc)` - first-class continuations
 
+defines do not support optional arguments, variable arguments (wraping the rest into the list). defines allowed only on the top level. defines do not support multiple sequential expressions in the body
+defines do allow two forms (define <id> <expr>) and (define (<id> <arg0> <arg1> ... <argn>) <expr>), latter is the same as (define <id> (lambda (<arg0> <arg1> ... <argn>) <expr>))
+... is not the language syntax, it means some amount of argument names, i.e (define (fun a b c d) <expr>)
+defines allow recursion (for now, only in the lambdas)
+defines cannot forward-reference other defines
+defines cannot define nested functions i.e (define ((<name> <arg0>) <arg1>) <expr>)
+
+
 ## Examples
 
 Basic arithmetic and functions:
@@ -131,5 +139,14 @@ Main types (runtime representation):
 
 Arithmetic: `+`, `-`, `*`, `/`, `=`, `<`, `>`, `<=`, `>=`
 I/O: `display`, `newline` (2)
-List operations: `car`, `cdr`, `cons`, `null?` (2)
-Type predicates: `number?`, `boolean?`, `string?`, `procedure?`, `continuation?`
+List operations: `car`, `cdr`, `cons`
+Type predicates: `number?`, `boolean?`, `string?`, `procedure?`, `continuation?`, `null?`, `cons?`
+
+
+до пятниці
+рекорди
+builtins 
+and closure conversion
+
+then translation to C 
+implement call/cc by translating to CPS
