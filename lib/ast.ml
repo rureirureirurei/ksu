@@ -9,6 +9,8 @@ type expr =
   | Callcc of expr
   | Let of { defs : (string * expr) list; body : expr }
   | Define of { name : string; expr : expr }
+  | Pair of expr * expr
+  | Nil
 
 let rec string_of_expr = function
   | Bool b -> string_of_bool b
@@ -30,3 +32,5 @@ let rec string_of_expr = function
       ^ ")\n  " ^ string_of_expr body ^ ")"
   | Define { name; expr } ->
       "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")"
+  | Pair (e1, e2) -> "(cons " ^ string_of_expr e1 ^ " :: " ^ string_of_expr e2 ^ ")"
+  | Nil -> "nil"

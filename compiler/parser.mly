@@ -7,6 +7,7 @@
 %token DEFINE
 %token IF LAMBDA CALLCC
 %token LET
+%token QUOTE
 %token EOF
 
 %start <Compiler_lib.Ast.expr list> parse
@@ -27,6 +28,7 @@ atom:
   | NUMBER { Compiler_lib.Ast.Number $1 }
   | STRING { Compiler_lib.Ast.String $1 }
   | SYMBOL { Compiler_lib.Ast.Symbol $1 }
+  | list_expr { $1 }
 
 compound:
   | app_expr { Compiler_lib.Ast.App $1 }
@@ -35,6 +37,13 @@ compound:
   | let_expr { $1 }
   | callcc_expr { $1 }
   | define_expr { $1 }
+
+list_expr:
+  | QUOTE LPAREN list_elements RPAREN { $3 }
+
+list_elements:
+  | { Compiler_lib.Ast.Nil }
+  | expr list_elements { Compiler_lib.Ast.Pair ($1, $2) }
 
 lambda_args:
   | SYMBOL { [$1] }

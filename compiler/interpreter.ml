@@ -30,15 +30,19 @@ and value =
       env : env;
     }
   | VCont of (value -> value)
+  | VPair of value * value
+  | VNil
 
 (* Convert values to string representation *)
-let string_of_value = function
+let rec string_of_value = function
   | VNumber n -> string_of_int n
   | VBool b -> string_of_bool b
   | VString s -> s
   | VClosure _ -> "<function>"
   | VRecClosure _ -> "<rec-function>"
   | VCont _ -> "<continuation>"
+  | VPair (a, b) -> "(" ^ string_of_value a ^ " . " ^ string_of_value b ^ ")"
+  | VNil -> "nil"
 
 
 let print_env env =
@@ -86,6 +90,18 @@ and eval_builtin_op op args env k =
       VBool (match List.hd values with VClosure _ | VRecClosure _ -> true | _ -> false)
   | "continuation?" ->
       VBool (match List.hd values with VCont _ -> true | _ -> false)
+  | "null?" ->
+      VBool (match List.hd values with VNil -> true | _ -> false)
+  | "cons" ->
+      VPair (List.hd values, List.hd (List.tl values))
+  | "car" -> (
+      match List.hd values with
+      | VPair (a, _) -> a
+      | _ -> failwith "Expected a pair")
+  | "cdr" -> (
+      match List.hd values with
+      | VPair (_, b) -> b
+      | _ -> failwith "Expected a pair")
   | _ -> failwith ("Unknown operation: " ^ op)
   )
 
@@ -158,6 +174,10 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
           if value_to_bool condition_value then eval_expr env y k
           else eval_expr env n k)
   | Ast.Define _ -> failwith "Define can only be used at top level"
+  | Ast.Pair (a, b) -> eval_expr env a (fun a_value ->
+      eval_expr env b (fun b_value ->
+        k (VPair (a_value, b_value))))
+  | Ast.Nil -> k VNil
 
 (* Handle top-level definitions *)
 let process_definition : string -> Ast.expr -> env -> env =

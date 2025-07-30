@@ -17,6 +17,7 @@
   | RPAREN -> "RPAREN"
   | STRING s -> "STRING(\"" ^ s ^ "\")"
   | SYMBOL s -> "SYMBOL(" ^ s ^ ")"
+  | QUOTE -> "QUOTE"
 }
 
 let digit = ['0' - '9']
@@ -38,6 +39,7 @@ rule lex = parse
   | "define" { DEFINE }
   | "lambda" { LAMBDA }
   | "call/cc" { CALLCC }
+  | "'" { QUOTE }
   | ';' [^ '\n']* { lex lexbuf }
   | symbol_char (symbol_char | digit)* as s { SYMBOL s }
   | whitespace+ { lex lexbuf }
