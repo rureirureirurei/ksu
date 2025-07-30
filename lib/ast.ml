@@ -7,7 +7,7 @@ type expr =
   | Lambda of { ids : string list; body : expr }
   | If of { cond : expr; y : expr; n : expr }
   | Callcc of expr
-  | Let of { ids : string list; defs : expr list; b : expr }
+  | Let of { defs: (string * expr) list; body : expr }
   | Define of { name : string; expr : expr }
 
 let rec string_of_expr = function
@@ -22,9 +22,9 @@ let rec string_of_expr = function
       "(if " ^ string_of_expr cond ^ "\n    " ^ string_of_expr y ^ "\n    "
       ^ string_of_expr n ^ ")"
   | Callcc e -> "(callcc " ^ string_of_expr e ^ ")"
-  | Let { ids; defs; b } ->
-      "(let (" ^ String.concat " " ids ^ ")\n  ("
-      ^ String.concat "\n   " (List.map string_of_expr defs)
-      ^ ")\n  " ^ string_of_expr b ^ ")"
+  | Let { defs; body } ->
+      "(let (" ^ String.concat " " (List.map fst defs) ^ ")\n  ("
+      ^ String.concat "\n   " (List.map string_of_expr (List.map snd defs))
+      ^ ")\n  " ^ string_of_expr body ^ ")"
   | Define { name; expr } ->
       "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")"

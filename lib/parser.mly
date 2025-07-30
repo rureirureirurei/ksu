@@ -58,7 +58,7 @@ let_args:
   | LBRACKET SYMBOL expr RBRACKET let_args { ($2, $3) :: $5 }
 
 let_expr:
-  | LET LPAREN let_args RPAREN expr { Ast.Let { ids = List.map fst $3; defs = List.map snd $3; b = $5 } }
+  | LET LPAREN let_args RPAREN expr { Ast.Let { defs = $3; body = $5 } }
 
 define_expr:
   | DEFINE SYMBOL expr { Ast.Define { name = $2; expr = $3 } }
