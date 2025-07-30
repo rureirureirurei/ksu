@@ -1,0 +1,7 @@
+;30 25
+(define x 10)
+(define y 20)
+(+ x y)  ; returns 30
+
+(define square (lambda (n) (* n n)))
+(square 5)  ; returns 25

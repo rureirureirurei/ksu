@@ -45,11 +45,13 @@ Things I still have to implement:
   - Parser (0)
     - Wrap Ast.expr into the type that will also contain location in file (2)
     - Error reporting (2)
+    - Negative numbers (2)
     - Lists (2)
     - Define procedure syntax (2)
   - Interpreter (0)
-    - Rewrite using CPS (0)
-    - First-class continuations (call/cc) (0)
+    - Throw (2)
+    - Testing for interpreter (1)
+    - Mutations: set! (2)
   - Compiler (0)
     - Types (?)
     - Transform AST: let -> lambda, nested expressions -> let, define -> letrec (?)
@@ -106,7 +108,7 @@ First-class continuations:
 (define saved-cont #f)
 (define result
   (+ 1 (call/cc (lambda (k) 
-                  (set! saved-cont k) 
+                  (set! saved-cont k) ; (2) set!
                   10))))
 ; result is 11, but saved-cont can be called later
 (saved-cont 99)  ; jumps back, returns 100
@@ -124,6 +126,6 @@ Main types (runtime representation):
 ## Built-in Functions
 
 Arithmetic: `+`, `-`, `*`, `/`, `=`, `<`, `>`, `<=`, `>=`
-I/O: `display`, `newline`
-List operations: `car`, `cdr`, `cons`, `null?`
-Type predicates: `number?`, `boolean?`, `string?`, `procedure?`
+I/O: `display`, `newline` (2)
+List operations: `car`, `cdr`, `cons`, `null?` (2)
+Type predicates: `number?`, `boolean?`, `string?`, `procedure?`, `continuation?`
