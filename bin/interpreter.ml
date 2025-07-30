@@ -68,6 +68,24 @@ and eval_builtin_op op args env k =
   | "-" ->
       VNumber (List.fold_left ( - ) (List.hd numbers) (List.tl numbers))
   | "*" -> VNumber (List.fold_left ( * ) 1 numbers)
+  | "<" -> 
+      VBool (List.length numbers = 2 && List.hd numbers < List.hd (List.tl numbers))
+  | ">" ->
+      VBool (List.length numbers = 2 && List.hd numbers > List.hd (List.tl numbers))
+  | "<=" ->
+      VBool (List.length numbers = 2 && List.hd numbers <= List.hd (List.tl numbers))
+  | ">=" ->
+      VBool (List.length numbers = 2 && List.hd numbers >= List.hd (List.tl numbers))
+  | "number?" ->
+      VBool (match List.hd values with VNumber _ -> true | _ -> false)
+  | "boolean?" ->
+      VBool (match List.hd values with VBool _ -> true | _ -> false)
+  | "string?" ->
+      VBool (match List.hd values with VString _ -> true | _ -> false)
+  | "procedure?" ->
+      VBool (match List.hd values with VClosure _ | VRecClosure _ -> true | _ -> false)
+  | "continuation?" ->
+      VBool (match List.hd values with VCont _ -> true | _ -> false)
   | _ -> failwith ("Unknown operation: " ^ op)
   )
 
@@ -97,7 +115,7 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
       | None -> 
         failwith ("Unknown symbol: " ^ sym))
   | Ast.Lambda { ids; body } -> k (VClosure { args = ids; body; env })
-  | Ast.App (Ast.Symbol op :: args) when List.mem op [ "*"; "+"; "="; "-" ] ->
+  | Ast.App (Ast.Symbol op :: args) when List.mem op [ "*"; "+"; "="; "-"; "<"; ">"; "<="; ">="; "number?"; "boolean?"; "string?"; "procedure?"; "continuation?" ] ->
       eval_builtin_op op args env k
   | Ast.App (func_expr :: arg_exprs) ->
       eval_expr env func_expr (fun func_value ->
