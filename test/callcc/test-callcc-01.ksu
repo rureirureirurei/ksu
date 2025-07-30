@@ -1,4 +1,2 @@
-;8
-(+ 2 (call/cc (lambda (k1)
-                 (+ 3 (call/cc (lambda (k2)
-                                 (k1 6))))))) 
+;30
+(+ 20 (call/cc (lambda (k) (k 10))))
