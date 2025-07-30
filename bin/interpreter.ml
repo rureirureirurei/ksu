@@ -38,6 +38,11 @@ let string_of_value = function
   | VClosure _ -> "<function>"
   | VRecClosure _ -> "<rec-function>"
 
+
+let print_env env =
+  print_endline "Environment:" ;
+  Env.iter (fun k v -> print_endline (k ^ " -> " ^ string_of_value v)) env
+
 (* Helper function to extract number from value *)
 let value_to_number = function
   | VNumber n -> n
@@ -86,26 +91,27 @@ and eval_expr : 'a. env -> Ast.expr -> (value -> 'a) -> 'a =
   | Ast.Symbol sym -> (
       match Env.find_opt sym env with
       | Some value -> k value
-      | None -> failwith ("Unknown symbol: " ^ sym))
+      | None -> 
+        failwith ("Unknown symbol: " ^ sym))
   | Ast.Lambda { ids; body } -> k (VClosure { args = ids; body; env })
   | Ast.App (Ast.Symbol op :: args) when List.mem op [ "*"; "+"; "="; "-" ] ->
       eval_builtin_op op args env k
   | Ast.App (func_expr :: arg_exprs) ->
       eval_expr env func_expr (fun func_value ->
           match func_value with
-          | VClosure { args; body; env } ->
+          | VClosure { args; body; env=captured_env } ->
               eval_exprs env arg_exprs [] (fun arg_values ->
                   let extended_env =
-                    extend_env env (List.combine args arg_values)
+                    extend_env captured_env (List.combine args arg_values)
                   in
                   eval_expr extended_env body k)
-          | VRecClosure { name; args; body; env } ->
-              eval_exprs env arg_exprs [] (fun arg_values ->
-                  let extended_env =
-                    Env.add name func_value
-                      (extend_env env (List.combine args arg_values))
-                  in
-                  eval_expr extended_env body k)
+          | VRecClosure { name; args; body; env=captured_env } ->
+            eval_exprs env arg_exprs [] (fun arg_values ->
+              let extended_env =
+                Env.add name func_value
+                  (extend_env captured_env (List.combine args arg_values))
+              in
+              eval_expr extended_env body k)
           | _ -> failwith "Expected a function")
   | Ast.App [] -> failwith "Empty application"
   | Ast.Callcc _ -> failwith "Callcc not implemented"
