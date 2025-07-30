@@ -1,3 +1,4 @@
 (executable
- (libraries compiler_lib)
+ (libraries compiler_lib compiler)
+ (public_name ksu)
  (name ksu))

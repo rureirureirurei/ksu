@@ -9,7 +9,7 @@
 %token LET
 %token EOF
 
-%start <Ast.expr list> parse
+%start <Compiler_lib.Ast.expr list> parse
 
 %%
 parse: exprs EOF { $1 }
@@ -23,13 +23,13 @@ expr:
   | LPAREN compound RPAREN { $2 }
 
 atom:
-  | BOOL { Ast.Bool $1 }
-  | NUMBER { Ast.Number $1 }
-  | STRING { Ast.String $1 }
-  | SYMBOL { Ast.Symbol $1 }
+  | BOOL { Compiler_lib.Ast.Bool $1 }
+  | NUMBER { Compiler_lib.Ast.Number $1 }
+  | STRING { Compiler_lib.Ast.String $1 }
+  | SYMBOL { Compiler_lib.Ast.Symbol $1 }
 
 compound:
-  | app_expr { Ast.App $1 }
+  | app_expr { Compiler_lib.Ast.App $1 }
   | lambda_expr { $1}
   | if_expr { $1 }
   | let_expr { $1 }
@@ -41,24 +41,24 @@ lambda_args:
   | SYMBOL lambda_args { $1 :: $2 }
 
 lambda_expr:
-  | LAMBDA LPAREN lambda_args RPAREN expr { Ast.Lambda { ids = $3; body = $5 } }
+  | LAMBDA LPAREN lambda_args RPAREN expr { Compiler_lib.Ast.Lambda { ids = $3; body = $5 } }
 
 if_expr:
-  | IF expr expr expr { Ast.If { cond = $2; y = $3; n = $4 } }
+  | IF expr expr expr { Compiler_lib.Ast.If { cond = $2; y = $3; n = $4 } }
 
 app_expr:
   | expr { [$1] }
   | expr app_expr { $1 :: $2 }
 
 callcc_expr:
-  | CALLCC expr { Ast.Callcc $2 }
+  | CALLCC expr { Compiler_lib.Ast.Callcc $2 }
 
 let_args: 
   | LBRACKET SYMBOL expr RBRACKET { [($2, $3)] }
   | LBRACKET SYMBOL expr RBRACKET let_args { ($2, $3) :: $5 }
 
 let_expr:
-  | LET LPAREN let_args RPAREN expr { Ast.Let { defs = $3; body = $5 } }
+  | LET LPAREN let_args RPAREN expr { Compiler_lib.Ast.Let { defs = $3; body = $5 } }
 
 define_expr:
-  | DEFINE SYMBOL expr { Ast.Define { name = $2; expr = $3 } }
+  | DEFINE SYMBOL expr { Compiler_lib.Ast.Define { name = $2; expr = $3 } }

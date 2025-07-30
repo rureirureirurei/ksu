@@ -1,7 +1,3 @@
 (library
- (name compiler_lib))
-
-(menhir
- (modules parser))
-
-(ocamllex lexer)
+ (name compiler_lib)
+)
