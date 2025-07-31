@@ -60,9 +60,8 @@ let value_to_bool = function
   | VBool b -> b
   | _ -> failwith "Expected a boolean"
 
-let init_env = let 
-  aux f = VPrim (fun args -> f (List.map value_to_number args))
-in Env.of_list [
+let init_env = let aux f = VPrim (fun args -> f (List.map value_to_number args)) in 
+  Env.of_list [
   "+", aux (fun args -> VNumber (List.fold_left (+) 0 args));
   "*", aux (fun args -> VNumber (List.fold_left ( * ) 1 args));
   "-", aux (fun args -> VNumber (List.fold_left (-) (List.hd args) (List.tl args)));
@@ -168,7 +167,7 @@ let process_definition : string -> Ast.expr -> env -> env =
 
 (* Evaluate a list of top-level expressions *)
 let eval_file : Ast.expr list -> env -> value list =
- fun exprs initial_env ->
+ fun exprs env ->
   let results, _ =
     List.fold_left
       (fun (acc, env) expr ->
@@ -179,7 +178,7 @@ let eval_file : Ast.expr list -> env -> value list =
         | _ -> 
           let v = eval_expr env expr (fun v -> v) in
           (v :: acc, env))
-      ([], initial_env) exprs
+      ([], env) exprs
   in
   List.rev results
 

@@ -77,14 +77,6 @@ let start_repl () =
 
 let repl () = start_repl ()
 
-(* File interpretation *)
-let interpret_file filename =
-  let channel = open_in filename in
-  let lexbuf = Lexing.from_channel channel in
-  let parse_tree = Parser.parse Lexer.lex lexbuf in
-  let results = Interpreter.eval_file parse_tree Interpreter.Env.empty in
-  List.iter (fun result -> print_endline (Interpreter.string_of_value result)) results
-
 let compile ~output files =
   Printf.printf "Compiling to %s with files: %s\n" output
     (String.concat ", " files);
@@ -120,4 +112,4 @@ let () =
         exit 1);
       compile ~output:!output_file files
   | false, [] -> repl ()
-  | false, _ -> List.iter interpret_file files
+  | false, _ -> Interpreter.interpret files
