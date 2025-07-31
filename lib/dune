@@ -1,3 +1,2 @@
 (library
- (name compiler_lib)
-)
+ (name compiler_lib))

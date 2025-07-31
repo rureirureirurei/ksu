@@ -10,46 +10,49 @@ let start_repl () =
   Printf.printf "  (+ 1 2)\n";
   Printf.printf "  (define x 5)\n";
   Printf.printf "  (if (> x 3) \"yes\" \"no\")\n\n";
-  
+
   (* Initialize environment *)
   let rec loop env =
     try
       Printf.printf "ksu> ";
       flush stdout;
-      
+
       let input = read_line () in
-      
+
       (* Handle empty input *)
-      if String.trim input = "" then
-        loop env
+      if String.trim input = "" then loop env
       else
         try
           (* Parse the input *)
           let lexbuf = Lexing.from_string input in
           let parse_tree = Parser.parse Lexer.lex lexbuf in
-          
+
           (* Evaluate each expression in the input *)
-          let results, new_env = 
+          let results, new_env =
             List.fold_left
               (fun (acc, current_env) expr ->
                 match expr with
                 | Ast.Define { name; expr } ->
-                    let updated_env = Interpreter.process_definition name expr current_env in
+                    let updated_env =
+                      Interpreter.process_definition name expr current_env
+                    in
                     (acc, updated_env)
-                | Ast.Expr expr -> 
-                  let v = Interpreter.eval_expr current_env expr (fun v -> v) in
-                  (v :: acc, current_env))
+                | Ast.Expr expr ->
+                    let v =
+                      Interpreter.eval_expr current_env expr (fun v -> v)
+                    in
+                    (v :: acc, current_env))
               ([], env) parse_tree
           in
-          
+
           (* Print results *)
-          List.iter (fun result -> 
-            Printf.printf "%s\n" (Interpreter.string_of_value result)
-          ) (List.rev results);
-          
+          List.iter
+            (fun result ->
+              Printf.printf "%s\n" (Interpreter.string_of_value result))
+            (List.rev results);
+
           (* Continue with updated environment *)
           loop new_env
-          
         with
         | Parser.Error ->
             Printf.eprintf "Parser error: Invalid syntax\n";
@@ -63,7 +66,6 @@ let start_repl () =
         | End_of_file ->
             Printf.printf "\nGoodbye!\n";
             exit 0
-            
     with
     | Sys.Break ->
         Printf.printf "\n";
@@ -72,7 +74,7 @@ let start_repl () =
         Printf.printf "\nGoodbye!\n";
         exit 0
   in
-  
+
   loop Interpreter.init_env
 
 let repl () = start_repl ()
