@@ -30,8 +30,8 @@ let start_repl () =
           (* Evaluate each expression in the input *)
           let results, new_env =
             List.fold_left
-              (fun (acc, current_env) expr ->
-                match expr with
+              (fun (acc, current_env) (expr: Ast.top_expr) ->
+                match expr.value with
                 | Ast.Define { name; expr } ->
                     let updated_env =
                       Interpreter.process_definition name expr current_env

@@ -1,6 +1,15 @@
-type top_expr = Expr of expr | Define of { name : string; expr : expr }
 
-and expr =
+type location = {
+  file: string;
+  line: int;
+  column: int;
+}
+
+type top_expr_data = Expr of expr | Define of { name : string; expr : expr }
+
+and top_expr = top_expr_data node
+
+and expr_data =
   | Bool of bool
   | Number of int
   | String of string
@@ -13,7 +22,22 @@ and expr =
   | Pair of expr * expr
   | Nil
 
-let rec string_of_expr = function
+and expr = expr_data node
+
+and 'a node = {
+  value : 'a;
+  id: int;
+  loc: location;
+}
+
+let fresh_node_tag: unit -> int =
+  let counter = ref 0 in
+  fun () ->
+    let result = !counter in
+    counter := result + 1;
+    result
+
+let rec string_of_expr {value; _} = match value with
   | Bool b -> string_of_bool b
   | Number n -> string_of_int n
   | String s -> s
@@ -35,7 +59,7 @@ let rec string_of_expr = function
       "(cons " ^ string_of_expr e1 ^ " :: " ^ string_of_expr e2 ^ ")"
   | Nil -> "nil"
 
-and string_of_top_expr = function
+let string_of_top_expr {value; _} = match value with
   | Expr e -> string_of_expr e
   | Define { name; expr } ->
       "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")"

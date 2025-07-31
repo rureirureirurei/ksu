@@ -133,8 +133,8 @@ and extend_env : env -> (string * value) list -> env =
 
 (* Main expression evaluation function *)
 and eval_expr : env -> Ast.expr -> (value -> value) -> value =
- fun env expr k ->
-  match expr with
+ fun env { value; _ } k ->
+  match value with
   | Ast.Number n -> k (VNumber n)
   | Ast.Bool b -> k (VBool b)
   | Ast.String s -> k (VString s)
@@ -166,7 +166,7 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
               eval_exprs env arg_exprs [] (fun arg_values -> k (f arg_values))
           | _ -> failwith "Expected a function")
   | Ast.App [] -> failwith "Empty application"
-  | Ast.Callcc (Ast.Lambda { ids; body }) -> (
+  | Ast.Callcc { value = Ast.Lambda { ids; body }; _ } -> (
       match ids with
       | [ id ] ->
           let extended_env = Env.add id (VCont k) env in
@@ -193,7 +193,7 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
 let process_definition : string -> Ast.expr -> env -> env =
  fun name expr env ->
   match expr with
-  | Ast.Lambda { ids; body } ->
+  | { value = Ast.Lambda { ids; body }; _ } ->
       let recursive_closure = VRecClosure { name; args = ids; body; env } in
       Env.add name recursive_closure env
   | _ ->
@@ -205,8 +205,8 @@ let eval_file : Ast.top_expr list -> env -> value list =
  fun exprs env ->
   let results, _ =
     List.fold_left
-      (fun (acc, env) expr ->
-        match expr with
+      (fun (acc, env) (expr: Ast.top_expr) ->
+        match expr.value with
         | Ast.Define { name; expr } ->
             let updated_env = process_definition name expr env in
             (acc, updated_env)
