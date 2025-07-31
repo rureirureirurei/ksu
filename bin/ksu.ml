@@ -73,7 +73,7 @@ let start_repl () =
         exit 0
   in
   
-  loop Interpreter.Env.empty
+  loop Interpreter.init_env
 
 let repl () = start_repl ()
 

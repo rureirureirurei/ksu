@@ -2,7 +2,7 @@
 """
 KSU Test Runner
 
-This script runs all .ksu test files in test/callcc and test/generic directories
+This script runs all .ksu test files in test/callcc, test/generic, and test/lists directories
 and compares the output with the expected result from the first line comment.
 """
 
@@ -18,9 +18,9 @@ def extract_expected_result(file_path):
         first_line = f.readline().strip()
     
     # Look for comment starting with ; followed by expected result
-    match = re.match(r'^;(\S+)$', first_line)
+    match = re.match(r'^;(.+)$', first_line)
     if match:
-        return match.group(1)
+        return match.group(1).strip()
     else:
         raise ValueError(f"No expected result found in first line: {first_line}")
 
@@ -51,7 +51,7 @@ def run_ksu_file(file_path):
 
 def run_tests():
     """Run all tests and report results."""
-    test_dirs = ['test/callcc', 'test/generic']
+    test_dirs = ['test/callcc', 'test/generic', 'test/lists']
     total_tests = 0
     passed_tests = 0
     failed_tests = []
