@@ -52,6 +52,7 @@ Things I still have to implement:
     - Throw (2)
     - Testing for interpreter (1)
     - Mutations: set! (2)
+    - cond (2)
   - REPL (2)
     - Error reporting (2)
     - rlwrap (2)
@@ -81,14 +82,6 @@ Special forms:
 - `(if test then else)` - conditional
 - `(define name value)` - top-level binding
 - `(call/cc proc)` - first-class continuations
-
-defines do not support optional arguments, variable arguments (wraping the rest into the list). defines allowed only on the top level. defines do not support multiple sequential expressions in the body
-defines do allow two forms (define <id> <expr>) and (define (<id> <arg0> <arg1> ... <argn>) <expr>), latter is the same as (define <id> (lambda (<arg0> <arg1> ... <argn>) <expr>))
-... is not the language syntax, it means some amount of argument names, i.e (define (fun a b c d) <expr>)
-defines allow recursion (for now, only in the lambdas)
-defines cannot forward-reference other defines
-defines cannot define nested functions i.e (define ((<name> <arg0>) <arg1>) <expr>)
-
 
 ## Examples
 
@@ -137,8 +130,37 @@ Main types (runtime representation):
 
 ## Built-in Functions
 
-Arithmetic: `+`, `-`, `*`, `/`, `=`, `<`, `>`, `<=`, `>=`
-I/O: `display`, `newline` (2)
+### Arithmetic: `+`, `-`, `*`, `/`, `=`, `<`, `>`, `<=`, `>=`
+
+### Keywords
+
+#### `call/cc`
+First-class continuations. Captures the current continuation and passes it to the given procedure. Only lambda expr with with arity 1 can be passed to it.
+
+#### `define`
+Top-level binding for variables and functions. Only allowed at the top level.
+
+**Forms:**
+- `(define <id> <expr>)` - bind a value to an identifier
+- `(define (<id> <arg0> <arg1> ... <argn>) <expr>)` - define a function (equivalent to `(define <id> (lambda (<arg0> <arg1> ... <argn>) <expr>))`)
+
+**Limitations compared to racket:**
+- No optional arguments or variable arguments (rest parameters)
+- No multiple sequential expressions in the body
+- No forward-referencing other defines
+- No nested function definitions like `(define ((<name> <arg0>) <arg1>) <expr>)`
+- Recursion is allowed (currently only in lambdas)
+
+#### `lambda`
+Function definition. Creates a procedure with the given parameters and body. Can have multiple arguments.
+
+#### `let`
+Local bindings. Creates a new scope with bound variables. Can have multiple non-recursive definitions.
+
+#### `if`
+Conditional expression. Evaluates the test and returns either the then or else expression in the lazy manner.
+
+### I/O: `display`, `newline` (2)
 List operations: `car`, `cdr`, `cons`
 Type predicates: `number?`, `boolean?`, `string?`, `procedure?`, `continuation?`, `null?`, `cons?`
 
