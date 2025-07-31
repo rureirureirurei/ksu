@@ -10,14 +10,15 @@
 %token QUOTE
 %token EOF
 
-%start <Compiler_lib.Ast.expr list> parse
+%start <Compiler_lib.Ast.top_expr list> parse
 
 %%
 parse: exprs EOF { $1 }
 
 exprs:
   | { [] }
-  | expr exprs { $1 :: $2 }
+  | expr exprs { Compiler_lib.Ast.Expr $1 :: $2 }
+  | LPAREN define_expr RPAREN exprs { $2 :: $4 }
 
 expr:
   | atom { $1 }
@@ -36,7 +37,6 @@ compound:
   | if_expr { $1 }
   | let_expr { $1 }
   | callcc_expr { $1 }
-  | define_expr { $1 }
 
 list_expr:
   | QUOTE LPAREN list_elements RPAREN { $3 }

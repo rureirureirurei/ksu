@@ -131,6 +131,11 @@ Main types (runtime representation):
 ## Built-in Functions
 
 ### Arithmetic: `+`, `-`, `*`, `/`, `=`, `<`, `>`, `<=`, `>=`
+- `+`, `*` - variadic, fold over all arguments
+- `-`, `/` - variadic, fold left-to-right starting with first argument  
+- `=` - variadic, returns true if all arguments are equal
+- `<`, `>`, `<=`, `>=` - binary comparison operators
+
 
 ### Keywords
 
@@ -168,7 +173,7 @@ At the moment, quotes are evaluated as list of exressions (the same as in proper
 are rather syntactic sugar to cons, than separate mechanism of preserving thing as unevaluated symbols.
 
 
-### I/O: `display`, `newline` (2)
+### `I/O: `display`, `newline` (2)`
 Type predicates: `number?`, `boolean?`, `string?`, `procedure?`, `continuation?`, `null?`, `cons?`
 
 

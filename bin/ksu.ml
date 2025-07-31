@@ -36,7 +36,7 @@ let start_repl () =
                 | Ast.Define { name; expr } ->
                     let updated_env = Interpreter.process_definition name expr current_env in
                     (acc, updated_env)
-                | _ -> 
+                | Ast.Expr expr -> 
                   let v = Interpreter.eval_expr current_env expr (fun v -> v) in
                   (v :: acc, current_env))
               ([], env) parse_tree

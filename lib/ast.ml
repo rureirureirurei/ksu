@@ -1,4 +1,7 @@
-type expr =
+type top_expr =
+  | Expr of expr
+  | Define of { name : string; expr : expr }
+and expr =
   | Bool of bool
   | Number of int
   | String of string
@@ -8,7 +11,6 @@ type expr =
   | If of { cond : expr; y : expr; n : expr }
   | Callcc of expr
   | Let of { defs : (string * expr) list; body : expr }
-  | Define of { name : string; expr : expr }
   | Pair of expr * expr
   | Nil
 
@@ -30,7 +32,8 @@ let rec string_of_expr = function
       ^ ")\n  ("
       ^ String.concat "\n   " (List.map string_of_expr (List.map snd defs))
       ^ ")\n  " ^ string_of_expr body ^ ")"
-  | Define { name; expr } ->
-      "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")"
   | Pair (e1, e2) -> "(cons " ^ string_of_expr e1 ^ " :: " ^ string_of_expr e2 ^ ")"
   | Nil -> "nil"
+and string_of_top_expr = function
+  | Expr e -> string_of_expr e
+  | Define { name; expr } -> "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")"

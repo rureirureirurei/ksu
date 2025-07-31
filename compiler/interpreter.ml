@@ -78,6 +78,7 @@ let init_env = let aux f = VPrim (fun args -> f (List.map value_to_number args))
   "null?", VPrim (function [VNil] -> VBool true | _ -> VBool false);
   "pair?", VPrim (function [VPair _] -> VBool true | _ -> VBool false);
   "list?", VPrim (function [VNil] -> VBool true | [VPair (_, VNil)] -> VBool true | _ -> VBool false);  
+  "eq?", VPrim (function [x; y] -> VBool (x = y) | _ -> failwith "Expected two arguments for eq?");
 ]
 
 (* Evalualte a list of expressions sequentially, expressions cannot reference variables in each other similar to regular let*)
@@ -148,7 +149,6 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
       eval_expr env cond (fun condition_value ->
           if value_to_bool condition_value then eval_expr env y k
           else eval_expr env n k)
-  | Ast.Define _ -> failwith "Define can only be used at top level"
   | Ast.Pair (a, b) -> eval_expr env a (fun a_value ->
       eval_expr env b (fun b_value ->
         k (VPair (a_value, b_value))))
@@ -166,7 +166,7 @@ let process_definition : string -> Ast.expr -> env -> env =
     Env.add name v env
 
 (* Evaluate a list of top-level expressions *)
-let eval_file : Ast.expr list -> env -> value list =
+let eval_file : Ast.top_expr list -> env -> value list =
  fun exprs env ->
   let results, _ =
     List.fold_left
@@ -175,7 +175,7 @@ let eval_file : Ast.expr list -> env -> value list =
         | Ast.Define { name; expr } ->
             let updated_env = process_definition name expr env in
             (acc, updated_env)
-        | _ -> 
+        | Ast.Expr expr -> 
           let v = eval_expr env expr (fun v -> v) in
           (v :: acc, env))
       ([], env) exprs
