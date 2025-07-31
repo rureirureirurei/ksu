@@ -160,8 +160,15 @@ Local bindings. Creates a new scope with bound variables. Can have multiple non-
 #### `if`
 Conditional expression. Evaluates the test and returns either the then or else expression in the lazy manner.
 
+### `quotes and pairs`
+
+Quotes are not implemented. Cons are, though.
+List operations: `car`, `cdr`, `cons` and `null` primitive value are supported.
+At the moment, quotes are evaluated as list of exressions (the same as in proper quotes assuming that all values are primitives), and, 
+are rather syntactic sugar to cons, than separate mechanism of preserving thing as unevaluated symbols.
+
+
 ### I/O: `display`, `newline` (2)
-List operations: `car`, `cdr`, `cons`
 Type predicates: `number?`, `boolean?`, `string?`, `procedure?`, `continuation?`, `null?`, `cons?`
 
 
