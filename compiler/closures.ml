@@ -25,7 +25,7 @@ let rec free_vars: expr -> VarSet.t = fun expr ->
 module VarMap = Map.Make(String)
 type state = int VarMap.t
 
-let rec t (expr: top_expr): expr = 
+let t (expr: top_expr): top_expr = 
     let rec aux: expr -> state -> expr -> expr = fun expr state env ->
         match expr.value with
         | Var v -> (match VarMap.find_opt v state with
@@ -74,7 +74,7 @@ let rec t (expr: top_expr): expr =
             | f :: args' -> (
                 match f.value with
                 | Var _ -> synthetic @@ App args'
-                | Pair ({value = Lambda { ids; _ }; _}, _) -> (
+                | Pair ({value = Lambda { ids = _; _ }; _}, _) -> (
                     let var = fresh_var () in 
                     let varid = (match var.value with
                         | Var v -> v
@@ -101,8 +101,10 @@ let rec t (expr: top_expr): expr =
         match expr.value with
         | Define { name; expr } ->
             (* Should we add the define name to the state? *)
-            aux expr VarMap.empty (fresh_var ())
+            let expr' = aux expr VarMap.empty (fresh_var ()) in
+            { value= Define { name = name; expr = expr' }; id = expr.id; loc = expr.loc }
         | Expr expr ->
-            aux expr VarMap.empty (fresh_var ())
+            { value= Expr (aux expr VarMap.empty (fresh_var ())); id = expr.id; loc = expr.loc }
 
-let rec t_file: top_expr list -> top_expr list = failwith "not implemented"
+let t_file: top_expr list -> top_expr list = fun exprs ->
+    List.map t exprs
