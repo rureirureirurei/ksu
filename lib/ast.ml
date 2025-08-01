@@ -9,16 +9,18 @@ type top_expr_data = Expr of expr | Define of { name : string; expr : expr }
 
 and top_expr = top_expr_data node
 
+and var = string
+
 and expr_data =
   | Bool of bool
   | Number of int
   | String of string
-  | Symbol of string
+  | Var of var
   | App of expr list
-  | Lambda of { ids : string list; body : expr }
+  | Lambda of { ids : var list; body : expr }
   | If of { cond : expr; y : expr; n : expr }
   | Callcc of expr
-  | Let of { defs : (string * expr) list; body : expr }
+  | Let of { defs : (var * expr) list; body : expr }
   | Pair of expr * expr
   | Nil
 
@@ -41,7 +43,7 @@ let rec string_of_expr {value; _} = match value with
   | Bool b -> string_of_bool b
   | Number n -> string_of_int n
   | String s -> s
-  | Symbol s -> s
+  | Var s -> s
   | App l -> "(" ^ String.concat "\n  " (List.map string_of_expr l) ^ ")"
   | Lambda { ids; body } ->
       "(lambda (" ^ String.concat " " ids ^ ")\n  " ^ string_of_expr body ^ ")"

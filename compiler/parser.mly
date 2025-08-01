@@ -44,7 +44,7 @@ atom:
   | BOOL { mk_node $loc (Bool $1) }
   | NUMBER { mk_node $loc (Number $1) }
   | STRING { mk_node $loc (String $1) }
-  | SYMBOL { mk_node $loc (Symbol $1) }
+  | SYMBOL { mk_node $loc (Var $1) }
   | list_expr { $1 }
 
 compound:
@@ -62,7 +62,7 @@ list_elements:
   | expr list_elements { mk_node $loc (Pair ($1, $2)) }
 
 lambda_args:
-  | SYMBOL { [$1] }
+  | { [] }
   | SYMBOL lambda_args { $1 :: $2 }
 
 lambda_expr:
