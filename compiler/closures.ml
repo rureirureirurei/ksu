@@ -35,11 +35,11 @@ let rec t_top_expr (expr : top_expr) : top_expr =
   match expr.value with
   | Define { name; expr } ->
       (* Should we add the define name to the state? *)
-      let expr' = t expr VarMap.empty (fresh_var ()) in
+      let expr' = t expr VarMap.empty (fst @@ fresh_var ()) in
       { value = Define { name; expr = expr' }; id = expr.id; loc = expr.loc }
   | Expr expr ->
       {
-        value = Expr (t expr VarMap.empty (fresh_var ()));
+        value = Expr (t expr VarMap.empty (fst @@fresh_var ()));
         id = expr.id;
         loc = expr.loc;
       }
@@ -57,12 +57,7 @@ and t : expr -> state -> expr -> expr =
       | None -> expr)
   | Lambda { ids; body } ->
       let free = free expr in
-      let env' = fresh_var () in
-      let env'id =
-        match env'.value with
-        | Var v -> v
-        | _ -> failwith "new env should be symbol"
-      in
+      let (env', env'id) = fresh_var () in
       let ids' = env'id :: ids in
       let state' =
         List.fold_left
@@ -96,32 +91,26 @@ and t : expr -> state -> expr -> expr =
       let y' = t y state env in
       let n' = t n state env in
       synthetic @@ If { cond = cond'; y = y'; n = n' }
-  | Callcc _ -> failwith "todo"
+  | Callcc _ -> failwith "Closure translation not implemented for callcc"
   | Bool _ | Number _ | String _ -> expr
   (* we should probably check if the functino is lambda - transalte it and replace with let ..., otherwise if that's cont - todo, if id - then ((car id) (cdr id) ...args)  *)
-  | App args -> (
+  | App (f :: args) -> (
       let args' = List.map (fun arg -> t arg state env) args in
-      match args' with
-      | f :: args' -> (
-          match f.value with
-          | Var _ -> synthetic @@ App args'
-          | Pair ({ value = Lambda { ids = _; _ }; _ }, _) ->
-              let var = fresh_var () in
-              let varid =
-                match var.value with Var v -> v | _ -> failwith "wtf"
-              in
-              let app' =
-                synthetic
-                @@ App
-                     ([
-                        synthetic @@ App [ synthetic @@ Var "car"; var ];
-                        synthetic @@ App [ synthetic @@ Var "cdr"; var ];
-                      ]
-                     @ args')
-              in
-              synthetic @@ Ast.Let { defs = [ (varid, f) ]; body = app' }
-          | _ -> failwith "wtf")
-      | [] -> failwith "cannot have empty application")
+      match f.value with
+      (* (id ...args) => ((car id) (cdr id) ...args) *)
+      | Var _ -> synthetic @@ App ((synthetic @@ App [ synthetic @@ Var "cdr"; f ]) :: f :: args')
+      | Lambda _ -> (
+        let lam' = t f state env in
+        match lam'.value with 
+          | Pair _ -> 
+            let new_var, new_var_id = fresh_var () in
+            let body = synthetic @@ App ((synthetic @@ App [ synthetic @@ Var "cdr"; new_var ]) :: new_var :: args') in
+            synthetic @@ Ast.Let { defs = [ (new_var_id, lam') ]; body = body }
+          | _ -> failwith "Expected tuple after closure translation"
+      )
+      | _ -> failwith "Expected lambda or identifier (or continuation TODO)"
+    )
+    | App [] -> failwith "Empty application"
 
 (* Takes a list of top_exprs and returns a list of top_exprs with the closures converted *)
 let t_file : top_expr list -> top_expr list =

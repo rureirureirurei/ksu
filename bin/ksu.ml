@@ -6,10 +6,6 @@ open Compiler
 let start_repl () =
   Printf.printf "KSU REPL - Interactive Mode\n";
   Printf.printf "Type expressions to evaluate (Ctrl+C to exit)\n";
-  Printf.printf "Examples:\n";
-  Printf.printf "  (+ 1 2)\n";
-  Printf.printf "  (define x 5)\n";
-  Printf.printf "  (if (> x 3) \"yes\" \"no\")\n\n";
 
   (* Initialize environment *)
   let rec loop env =
@@ -64,77 +60,18 @@ let start_repl () =
             Printf.printf "\n";
             loop env
         | End_of_file ->
-            Printf.printf "\nGoodbye!\n";
             exit 0
     with
     | Sys.Break ->
         Printf.printf "\n";
         loop env
     | End_of_file ->
-        Printf.printf "\nGoodbye!\n";
         exit 0
   in
 
   loop Interpreter.init_env
 
 let repl () = start_repl ()
-
-(* Closure conversion mode *)
-let closure_conversion_mode () =
-  Printf.printf "KSU Closure Conversion Mode\n";
-  Printf.printf "Type expressions to parse and convert (Ctrl+C to exit)\n";
-  Printf.printf "Examples:\n";
-  Printf.printf "  (lambda (x) (+ x 1))\n";
-  Printf.printf "  (define f (lambda (x y) (+ x y)))\n\n";
-
-  let rec loop () =
-    try
-      Printf.printf "ksu-closure> ";
-      flush stdout;
-
-      let input = read_line () in
-
-      (* Handle empty input *)
-      if String.trim input = "" then loop ()
-      else
-        try
-          (* Parse the input *)
-          let lexbuf = Lexing.from_string input in
-          let parse_tree = Parser.parse Lexer.lex lexbuf in
-
-          (* Apply closure conversion *)
-          let converted_tree = Closures.t_file parse_tree in
-
-          (* Print the converted AST *)
-          List.iter
-            (fun expr -> Printf.printf "%s\n" (Ast.string_of_top_expr expr))
-            converted_tree;
-
-          (* Continue *)
-          loop ()
-        with
-        | Parser.Error ->
-            Printf.eprintf "Parser error: Invalid syntax\n";
-            loop ()
-        | Failure msg ->
-            Printf.eprintf "Closure conversion error: %s\n" msg;
-            loop ()
-        | Sys.Break ->
-            Printf.printf "\n";
-            loop ()
-        | End_of_file ->
-            Printf.printf "\nGoodbye!\n";
-            exit 0
-    with
-    | Sys.Break ->
-        Printf.printf "\n";
-        loop ()
-    | End_of_file ->
-        Printf.printf "\nGoodbye!\n";
-        exit 0
-  in
-
-  loop ()
 
 let compile ~output files =
   Printf.printf "Compiling to %s with files: %s\n" output
@@ -153,7 +90,7 @@ let speclist =
   [
     ("--compile", Arg.Set compile_mode, "Compile to native executable");
     ("--output", Arg.Set_string output_file, "Output file for compilation");
-    ("--closure", Arg.Set closure_mode, "Run in closure conversion mode");
+    ("--closure", Arg.Set closure_mode, "Runs interpreter on the closure converted code");
   ]
 
 let () =
@@ -172,7 +109,7 @@ let () =
         Printf.eprintf "%s\n" usage_msg;
         exit 1);
       compile ~output:!output_file files
-  | _, true, [] -> closure_conversion_mode ()
+  | _, true, [] -> failwith "Closure conversion mode works only with files"
   | _, true, _ ->
       (* Process files in closure conversion mode *)
       List.iter
@@ -181,15 +118,21 @@ let () =
             let channel = open_in filename in
             let lexbuf = Lexing.from_channel channel in
             let parse_tree = Parser.parse Lexer.lex lexbuf in
+            Printf.printf "=== Parsed %s ===\n" filename;
+            List.iter
+              (fun expr -> Printf.printf "%s\n" (Ast.string_of_top_expr expr))
+              parse_tree;
             let converted_tree = Closures.t_file parse_tree in
 
-            Printf.printf "=== Closure conversion for %s ===\n" filename;
+            Printf.printf "\n=== Closure conversion  %s ===\n" filename;
             List.iter
               (fun expr -> Printf.printf "%s\n" (Ast.string_of_top_expr expr))
               converted_tree;
             Printf.printf "\n";
 
-            close_in channel
+            let results = Interpreter.eval_file converted_tree Interpreter.init_env in
+            List.iter (fun result -> print_endline (Interpreter.string_of_value result)) results
+
           with
           | Parser.Error ->
               Printf.eprintf "Parse error in %s\n" filename;

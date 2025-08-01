@@ -110,11 +110,12 @@ let init_env =
       ("null?", VPrim (function [ VNil ] -> VBool true | _ -> VBool false));
       ("pair?", VPrim (function [ VPair _ ] -> VBool true | _ -> VBool false));
       ( "list?",
-        VPrim
-          (function
-          | [ VNil ] -> VBool true
-          | [ VPair (_, VNil) ] -> VBool true
-          | _ -> VBool false) );
+        let rec aux = function
+        | [ VNil ] -> VBool true
+        | [ VPair (_, rest) ] -> aux [rest]
+        | _ -> VBool false
+        in
+        VPrim aux );
       ( "eq?",
         VPrim
           (function

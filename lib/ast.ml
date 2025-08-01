@@ -35,12 +35,12 @@ let synthetic : expr_data -> expr =
     loc = { file = ""; line = 0; column = 0 };
   }
 
-let fresh_var : unit -> expr =
+let fresh_var : unit -> (expr * var) =
   let counter = ref 0 in
   fun () ->
     let result = "synthetic_var_" ^ string_of_int !counter in
     counter := !counter + 1;
-    synthetic (Var result)
+    (synthetic (Var result), result)
 
 (* Takes OCaml list and returns list in the AST representation *)
 let rec genlist : expr list -> expr =
@@ -85,16 +85,16 @@ let string_of_expr expr =
             defs
         in
         "(let ("
-        ^ String.concat " " (List.map fst defs)
+        ^ "  " ^String.concat " " (List.map fst defs)
         ^ ")\n" ^ indent ^ "  ("
-        ^ String.concat ("\n" ^ indent ^ "   ") defs_str
+        ^ "  " ^String.concat ("\n" ^ indent ^ "   ") defs_str
         ^ ")\n" ^ indent ^ "  "
-        ^ string_of_expr_aux (offset + 2) body
+        ^ " " ^ string_of_expr_aux (offset + 2) body
         ^ ")"
     | Pair (e1, e2) ->
         "(cons "
         ^ string_of_expr_aux offset e1
-        ^ " :: "
+        ^ " . "
         ^ string_of_expr_aux offset e2
         ^ ")"
     | Nil -> "nil"
