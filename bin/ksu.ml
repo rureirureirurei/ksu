@@ -30,7 +30,7 @@ let start_repl () =
           (* Evaluate each expression in the input *)
           let results, new_env =
             List.fold_left
-              (fun (acc, current_env) (expr: Ast.top_expr) ->
+              (fun (acc, current_env) (expr : Ast.top_expr) ->
                 match expr.value with
                 | Ast.Define { name; expr } ->
                     let updated_env =
@@ -107,8 +107,7 @@ let closure_conversion_mode () =
 
           (* Print the converted AST *)
           List.iter
-            (fun expr ->
-              Printf.printf "%s\n" (Ast.string_of_top_expr expr))
+            (fun expr -> Printf.printf "%s\n" (Ast.string_of_top_expr expr))
             converted_tree;
 
           (* Continue *)
@@ -183,14 +182,13 @@ let () =
             let lexbuf = Lexing.from_channel channel in
             let parse_tree = Parser.parse Lexer.lex lexbuf in
             let converted_tree = Closures.t_file parse_tree in
-            
+
             Printf.printf "=== Closure conversion for %s ===\n" filename;
             List.iter
-              (fun expr ->
-                Printf.printf "%s\n" (Ast.string_of_top_expr expr))
+              (fun expr -> Printf.printf "%s\n" (Ast.string_of_top_expr expr))
               converted_tree;
             Printf.printf "\n";
-            
+
             close_in channel
           with
           | Parser.Error ->
@@ -200,7 +198,8 @@ let () =
               Printf.eprintf "Error opening file %s: %s\n" filename msg;
               exit 1
           | e ->
-              Printf.eprintf "Unexpected error in %s: %s\n" filename (Printexc.to_string e);
+              Printf.eprintf "Unexpected error in %s: %s\n" filename
+                (Printexc.to_string e);
               exit 1)
         files
   | false, false, [] -> repl ()

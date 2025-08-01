@@ -4,15 +4,15 @@ open Compiler_lib
 (* Error handling utilities *)
 let format_error_position lexbuf =
   let pos = Lexing.lexeme_start_p lexbuf in
-  Printf.sprintf "at line %d, column %d" pos.Lexing.pos_lnum (pos.Lexing.pos_cnum - pos.Lexing.pos_bol)
+  Printf.sprintf "at line %d, column %d" pos.Lexing.pos_lnum
+    (pos.Lexing.pos_cnum - pos.Lexing.pos_bol)
 
 let format_parser_error lexbuf =
   let token = Lexing.lexeme lexbuf in
   let position = format_error_position lexbuf in
   if String.length token > 0 then
     Printf.sprintf "syntax error: unexpected token '%s' %s" token position
-  else
-    Printf.sprintf "syntax error: unexpected end of input %s" position
+  else Printf.sprintf "syntax error: unexpected end of input %s" position
 
 (* Environment implementation *)
 module Env = Map.Make (String)
@@ -151,8 +151,9 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
           | VClosure { args; body; env = captured_env } ->
               eval_exprs env arg_exprs [] (fun arg_values ->
                   if List.length arg_values <> List.length args then
-                    failwith (Printf.sprintf "Expected %d arguments, got %d" 
-                               (List.length args) (List.length arg_values))
+                    failwith
+                      (Printf.sprintf "Expected %d arguments, got %d"
+                         (List.length args) (List.length arg_values))
                   else
                     let extended_env =
                       extend_env captured_env (List.combine args arg_values)
@@ -161,8 +162,9 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
           | VRecClosure { name; args; body; env = captured_env } ->
               eval_exprs env arg_exprs [] (fun arg_values ->
                   if List.length arg_values <> List.length args then
-                    failwith (Printf.sprintf "Expected %d arguments, got %d" 
-                               (List.length args) (List.length arg_values))
+                    failwith
+                      (Printf.sprintf "Expected %d arguments, got %d"
+                         (List.length args) (List.length arg_values))
                   else
                     let extended_env =
                       Env.add name func_value
@@ -215,7 +217,7 @@ let eval_file : Ast.top_expr list -> env -> value list =
  fun exprs env ->
   let results, _ =
     List.fold_left
-      (fun (acc, env) (expr: Ast.top_expr) ->
+      (fun (acc, env) (expr : Ast.top_expr) ->
         match expr.value with
         | Ast.Define { name; expr } ->
             let updated_env = process_definition name expr env in
@@ -232,7 +234,7 @@ let interpret files =
   let filename = List.hd files in
   let channel = open_in filename in
   let lexbuf = Lexing.from_channel channel in
-  
+
   try
     let parse_tree = Parser.parse Lexer.lex lexbuf in
     let results = eval_file parse_tree init_env in
