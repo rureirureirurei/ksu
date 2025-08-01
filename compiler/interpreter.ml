@@ -1,16 +1,18 @@
 (* Interpreter module for KSU language *)
 open Compiler_lib
 
-(* Utility function for printing all tokens *)
-let print_all_tokens lexbuf =
-  let rec aux () =
-    match Lexer.lex lexbuf with
-    | EOF -> ()
-    | token ->
-        print_endline (Lexer.string_of_token token);
-        aux ()
-  in
-  aux ()
+(* Error handling utilities *)
+let format_error_position lexbuf =
+  let pos = Lexing.lexeme_start_p lexbuf in
+  Printf.sprintf "at line %d, column %d" pos.Lexing.pos_lnum (pos.Lexing.pos_cnum - pos.Lexing.pos_bol)
+
+let format_parser_error lexbuf =
+  let token = Lexing.lexeme lexbuf in
+  let position = format_error_position lexbuf in
+  if String.length token > 0 then
+    Printf.sprintf "syntax error: unexpected token '%s' %s" token position
+  else
+    Printf.sprintf "syntax error: unexpected end of input %s" position
 
 (* Environment implementation *)
 module Env = Map.Make (String)
@@ -138,7 +140,7 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
   | Ast.Number n -> k (VNumber n)
   | Ast.Bool b -> k (VBool b)
   | Ast.String s -> k (VString s)
-  | Ast.Symbol sym -> (
+  | Ast.Var sym -> (
       match Env.find_opt sym env with
       | Some value -> k value
       | None -> failwith ("Unknown symbol: " ^ sym))
@@ -148,17 +150,25 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
           match func_value with
           | VClosure { args; body; env = captured_env } ->
               eval_exprs env arg_exprs [] (fun arg_values ->
-                  let extended_env =
-                    extend_env captured_env (List.combine args arg_values)
-                  in
-                  eval_expr extended_env body k)
+                  if List.length arg_values <> List.length args then
+                    failwith (Printf.sprintf "Expected %d arguments, got %d" 
+                               (List.length args) (List.length arg_values))
+                  else
+                    let extended_env =
+                      extend_env captured_env (List.combine args arg_values)
+                    in
+                    eval_expr extended_env body k)
           | VRecClosure { name; args; body; env = captured_env } ->
               eval_exprs env arg_exprs [] (fun arg_values ->
-                  let extended_env =
-                    Env.add name func_value
-                      (extend_env captured_env (List.combine args arg_values))
-                  in
-                  eval_expr extended_env body k)
+                  if List.length arg_values <> List.length args then
+                    failwith (Printf.sprintf "Expected %d arguments, got %d" 
+                               (List.length args) (List.length arg_values))
+                  else
+                    let extended_env =
+                      Env.add name func_value
+                        (extend_env captured_env (List.combine args arg_values))
+                    in
+                    eval_expr extended_env body k)
           | VCont f ->
               eval_exprs env arg_exprs [] (fun arg_values ->
                   f (List.hd arg_values))
@@ -222,6 +232,19 @@ let interpret files =
   let filename = List.hd files in
   let channel = open_in filename in
   let lexbuf = Lexing.from_channel channel in
-  let parse_tree = Parser.parse Lexer.lex lexbuf in
-  let results = eval_file parse_tree init_env in
-  List.iter (fun result -> print_endline (string_of_value result)) results
+  
+  try
+    let parse_tree = Parser.parse Lexer.lex lexbuf in
+    let results = eval_file parse_tree init_env in
+    List.iter (fun result -> print_endline (string_of_value result)) results
+  with
+  | Parser.Error ->
+      let error_msg = format_parser_error lexbuf in
+      Printf.eprintf "Parse error in %s: %s\n" filename error_msg;
+      exit 1
+  | Sys_error msg ->
+      Printf.eprintf "Error opening file %s: %s\n" filename msg;
+      exit 1
+  | e ->
+      Printf.eprintf "Unexpected error: %s\n" (Printexc.to_string e);
+      exit 1
