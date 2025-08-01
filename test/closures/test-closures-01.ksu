@@ -1,4 +1,4 @@
-;1
+;(10 . 20)
 (define (f1 a1) 
   (lambda (a2) 
     (lambda () (cons a1 a2))

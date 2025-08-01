@@ -1,0 +1,24 @@
+;((1 . 2) . (3 . 4))\n(1 . 2)\n(3 . 4)\n1\n2\n(1 . (2 . (3 . nil)))\n1\n2\n3\ntrue\ntrue\ntrue\n((1 . (2 . nil)) . ((3 . (4 . nil)) . nil))\n1\ntrue
+; Test complex list operations and list building
+; Test nested lists
+(cons (cons 1 2) (cons 3 4))
+(car (cons (cons 1 2) (cons 3 4)))
+(cdr (cons (cons 1 2) (cons 3 4)))
+(car (car (cons (cons 1 2) (cons 3 4))))
+(cdr (car (cons (cons 1 2) (cons 3 4))))
+
+; Test building a proper list (3 elements)
+(cons 1 (cons 2 (cons 3 nil)))
+(car (cons 1 (cons 2 (cons 3 nil))))
+(car (cdr (cons 1 (cons 2 (cons 3 nil)))))
+(car (cdr (cdr (cons 1 (cons 2 (cons 3 nil))))))
+
+; Test list predicates on complex structures
+(list? (cons 1 (cons 2 (cons 3 nil))))
+(pair? (cons 1 (cons 2 (cons 3 nil))))
+(null? (cdr (cdr (cdr (cons 1 (cons 2 (cons 3 nil)))))))
+
+; Test nested proper lists
+(cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 nil)) nil))
+(car (car (cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 nil)) nil))))
+(list? (car (cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 nil)) nil)))) 
