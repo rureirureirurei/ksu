@@ -39,6 +39,17 @@ let fresh_node_tag: unit -> int =
     counter := result + 1;
     result
 
+let synthetic: expr_data -> expr = fun data ->
+  { value = data; id = fresh_node_tag (); loc = { file = ""; line = 0; column = 0 } }
+
+let fresh_var: unit -> expr =
+  let counter = ref 0 in
+  fun () ->
+    let result = "synthetic_var_" ^ string_of_int !counter in
+    counter := !counter + 1;
+    synthetic (Var result)
+
+
 let rec string_of_expr {value; _} = match value with
   | Bool b -> string_of_bool b
   | Number n -> string_of_int n
@@ -65,3 +76,10 @@ let string_of_top_expr {value; _} = match value with
   | Expr e -> string_of_expr e
   | Define { name; expr } ->
       "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")"
+
+let rec genlist: expr list -> expr = fun l ->
+  match l with
+  | [] -> synthetic Nil
+  | [x] -> synthetic (Pair (x, synthetic Nil))
+  | x :: xs -> synthetic (Pair (x, genlist xs))
+
