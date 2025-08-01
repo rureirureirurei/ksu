@@ -1,0 +1,5 @@
+;30
+(define incby20 (let ([x 20]) (
+                            lambda (y) (+ x y)
+                            )))
+(incby20 10)

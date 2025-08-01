@@ -51,7 +51,7 @@ def run_ksu_file(file_path):
 
 def run_tests():
     """Run all tests and report results."""
-    test_dirs = ['test/callcc', 'test/generic', 'test/lists']
+    test_dirs = ['test/callcc', 'test/generic', 'test/lists', 'test/closures']
     total_tests = 0
     passed_tests = 0
     failed_tests = []

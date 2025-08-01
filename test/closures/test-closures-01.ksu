@@ -1,0 +1,11 @@
+;1
+(define (f1 a1) 
+  (lambda (a2) 
+    (lambda () (cons a1 a2))
+  )
+)
+
+
+(define x (f1 10))
+(define y (x 20))
+( y )
