@@ -20,7 +20,10 @@ def extract_expected_result(file_path):
     # Look for comment starting with ; followed by expected result
     match = re.match(r'^;(.+)$', first_line)
     if match:
-        return match.group(1).strip()
+        expected = match.group(1).strip()
+        # Convert \n escape sequences to actual newlines
+        expected = expected.replace('\\n', '\n')
+        return expected
     else:
         raise ValueError(f"No expected result found in first line: {first_line}")
 
@@ -28,7 +31,7 @@ def run_ksu_file(file_path):
     """Run a KSU file and return the output."""
     try:
         result = subprocess.run(
-            ['dune', 'exec', 'ksu', '--', str(file_path)],
+            ['dune', 'exec', 'ksu', '--', '--closure',str(file_path)],
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent  # Run from project root
@@ -37,12 +40,8 @@ def run_ksu_file(file_path):
         if result.returncode != 0:
             return f"ERROR: {result.stderr.strip()}"
         
-        # Get the last line of output (the final result)
-        output_lines = result.stdout.strip().split('\n')
-        if output_lines:
-            return output_lines[-1]  # Return the last line
-        else:
-            return ""
+        # Return the complete output, stripping trailing whitespace
+        return result.stdout.strip()
             
     except subprocess.CalledProcessError as e:
         return f"ERROR: Command failed with return code {e.returncode}"
@@ -79,7 +78,7 @@ def run_tests():
                 actual = run_ksu_file(file_path)
                 
                 if actual == expected:
-                    print(f"  PASS {file_path.name}: {actual}")
+                    print(f"  PASS {file_path.name}")
                     passed_tests += 1
                 else:
                     print(f"  FAIL {file_path.name}")
