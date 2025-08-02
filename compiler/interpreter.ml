@@ -60,9 +60,11 @@ let value_to_number = function
 (* Helper function to extract boolean from value *)
 let value_to_bool = function VBool b -> b | _ -> failwith "Expected a boolean"
 
-let init_env =
-  let aux f = VPrim (fun args -> f (List.map value_to_number args)) in
-  Env.of_list
+(* Primitive function mapping *)
+let primitive_functions =
+  let module StringMap = Map.Make (String) in
+  let aux f = fun args -> f (List.map value_to_number args) in
+  StringMap.of_list
     [
       ("+", aux (fun args -> VNumber (List.fold_left ( + ) 0 args)));
       ("*", aux (fun args -> VNumber (List.fold_left ( * ) 1 args)));
@@ -92,36 +94,32 @@ let init_env =
           | [ x; y ] -> VBool (x >= y)
           | _ -> failwith "Expected two arguments for >=") );
       ( "cons",
-        VPrim
-          (function
-          | [ x; y ] -> VPair (x, y)
-          | _ -> failwith "Expected two arguments for cons") );
+        function
+        | [ x; y ] -> VPair (x, y)
+        | _ -> failwith "Expected two arguments for cons" );
       ( "car",
-        VPrim
-          (function
-          | [ VPair (x, _) ] -> x
-          | _ -> failwith "Expected a pair for car") );
+        function
+        | [ VPair (x, _) ] -> x
+        | _ -> failwith "Expected a pair for car" );
       ( "cdr",
-        VPrim
-          (function
-          | [ VPair (_, y) ] -> y
-          | _ -> failwith "Expected a pair for cdr") );
-      ("nil", VNil);
-      ("null?", VPrim (function [ VNil ] -> VBool true | _ -> VBool false));
-      ("pair?", VPrim (function [ VPair _ ] -> VBool true | _ -> VBool false));
+        function
+        | [ VPair (_, y) ] -> y
+        | _ -> failwith "Expected a pair for cdr" );
+      ("null?", function [ VNil ] -> VBool true | _ -> VBool false);
+      ("pair?", function [ VPair _ ] -> VBool true | _ -> VBool false);
       ( "list?",
         let rec aux = function
-        | [ VNil ] -> VBool true
-        | [ VPair (_, rest) ] -> aux [rest]
-        | _ -> VBool false
+          | [ VNil ] -> VBool true
+          | [ VPair (_, rest) ] -> aux [ rest ]
+          | _ -> VBool false
         in
-        VPrim aux );
+        aux );
       ( "eq?",
-        VPrim
-          (function
-          | [ x; y ] -> VBool (x = y)
-          | _ -> failwith "Expected two arguments for eq?") );
+        function
+        | [ x; y ] -> VBool (x = y)
+        | _ -> failwith "Expected two arguments for eq?" );
     ]
+
 
 (* Evalualte a list of expressions sequentially, expressions cannot reference variables in each other similar to regular let*)
 let rec eval_exprs :
@@ -201,6 +199,11 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
       eval_expr env a (fun a_value ->
           eval_expr env b (fun b_value -> k (VPair (a_value, b_value))))
   | Ast.Nil -> k VNil
+  | Ast.Prim name -> (
+      let module StringMap = Map.Make (String) in
+      match StringMap.find_opt name primitive_functions with
+      | Some f -> k (VPrim f)
+      | None -> failwith ("Unknown primitive: " ^ name))
 
 (* Handle top-level definitions *)
 let process_definition : string -> Ast.expr -> env -> env =
@@ -230,6 +233,31 @@ let eval_file : Ast.top_expr list -> env -> value list =
   in
   List.rev results
 
+(* Evaluate a list of top-level expressions and return both results and environment *)
+let eval_file_with_env : Ast.top_expr list -> env -> value list * env =
+ fun exprs env ->
+  let results, final_env =
+    List.fold_left
+      (fun (acc, env) (expr : Ast.top_expr) ->
+        match expr.value with
+        | Ast.Define { name; expr } ->
+            let updated_env = process_definition name expr env in
+            (acc, updated_env)
+        | Ast.Expr expr ->
+            let v = eval_expr env expr (fun v -> v) in
+            (v :: acc, env))
+      ([], env) exprs
+  in
+  (List.rev results, final_env)
+
+(* Create initial environment with builtin definitions *)
+let create_initial_env () =
+  let module StringMap = Map.Make (String) in
+  let builtin_env = Env.empty in
+  let builtin_defs = Builtins.builtin_definitions in
+  let _, final_env = eval_file_with_env builtin_defs builtin_env in
+  final_env
+
 (* Main interpreter entry point *)
 let interpret files =
   let filename = List.hd files in
@@ -238,7 +266,7 @@ let interpret files =
 
   try
     let parse_tree = Parser.parse Lexer.lex lexbuf in
-    let results = eval_file parse_tree init_env in
+    let results = eval_file parse_tree (create_initial_env ()) in
     List.iter (fun result -> print_endline (string_of_value result)) results
   with
   | Parser.Error ->
