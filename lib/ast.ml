@@ -81,20 +81,20 @@ let string_of_expr expr =
         let defs_str =
           List.map
             (fun (name, expr) ->
-              name ^ " " ^ string_of_expr_aux (offset + 3) expr)
+              name ^ " " ^ string_of_expr_aux (offset + 4) expr)
             defs
         in
         "(let ("
-        ^ "  " ^String.concat " " (List.map fst defs)
+        ^ String.concat " " (List.map fst defs)
         ^ ")\n" ^ indent ^ "  ("
-        ^ "  " ^String.concat ("\n" ^ indent ^ "   ") defs_str
+        ^ String.concat ("\n" ^ indent ^ "   ") defs_str
         ^ ")\n" ^ indent ^ "  "
-        ^ " " ^ string_of_expr_aux (offset + 2) body
+        ^ string_of_expr_aux (offset + 2) body
         ^ ")"
     | Pair (e1, e2) ->
         "(cons "
         ^ string_of_expr_aux offset e1
-        ^ " . "
+        ^ " "
         ^ string_of_expr_aux offset e2
         ^ ")"
     | Nil -> "nil"
