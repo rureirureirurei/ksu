@@ -16,6 +16,7 @@ and expr_data =
   | Let of { defs : (var * expr) list; body : expr }
   | Pair of expr * expr
   | Nil
+  | Prim of string
 
 and expr = expr_data node
 and 'a node = { value : 'a; id : int; loc : location }
@@ -35,7 +36,7 @@ let synthetic : expr_data -> expr =
     loc = { file = ""; line = 0; column = 0 };
   }
 
-let fresh_var : unit -> (expr * var) =
+let fresh_var : unit -> expr * var =
   let counter = ref 0 in
   fun () ->
     let result = "synthetic_var_" ^ string_of_int !counter in
@@ -81,12 +82,10 @@ let string_of_expr expr =
         let defs_str =
           List.map
             (fun (name, expr) ->
-              name ^ " " ^ string_of_expr_aux (offset + 4) expr)
+              "[" ^ name ^ " " ^ string_of_expr_aux (offset + 4) expr ^ "]")
             defs
         in
         "(let ("
-        ^ String.concat " " (List.map fst defs)
-        ^ ")\n" ^ indent ^ "  ("
         ^ String.concat ("\n" ^ indent ^ "   ") defs_str
         ^ ")\n" ^ indent ^ "  "
         ^ string_of_expr_aux (offset + 2) body
@@ -98,6 +97,7 @@ let string_of_expr expr =
         ^ string_of_expr_aux offset e2
         ^ ")"
     | Nil -> "nil"
+    | Prim name -> "<primitive:" ^ name ^ ">"
   in
   string_of_expr_aux 0 expr
 
