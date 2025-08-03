@@ -1,10 +1,11 @@
 ;120
-(let ([Y (lambda (f)
+(define Y (lambda (f)
            ((lambda (x) (f (lambda (v) ((x x) v))))
-            (lambda (x) (f (lambda (v) ((x x) v))))))])
-  (let ([factorial (Y (lambda (f)
+            (lambda (x) (f (lambda (v) ((x x) v)))))))
+
+(define factorial (Y (lambda (f)
                         (lambda (n)
                           (if (= n 0)
                               1
-                              (* n (f (- n 1)))))))])
-    (factorial 5)))
+                              (* n (f (- n 1))))))))
+(factorial 5)

@@ -31,7 +31,7 @@ def run_ksu_file(file_path):
     """Run a KSU file and return the output."""
     try:
         result = subprocess.run(
-            ['dune', 'exec', 'ksu', '--', '--closure',str(file_path)],
+            ['dune', 'exec', 'ksu', '--',str(file_path)],
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent  # Run from project root
@@ -50,14 +50,16 @@ def run_ksu_file(file_path):
 
 def run_tests():
     """Run all tests and report results."""
-    test_dirs = ['test/callcc', 'test/generic', 'test/lists', 'test/closures']
+    test_dirs = [
+            'test/callcc',
+            'test/generic',
+            'test/lists',
+            'test/closures'
+            ]
     total_tests = 0
     passed_tests = 0
     failed_tests = []
-    
-    print("Running KSU tests...")
-    print("=" * 50)
-    
+
     for test_dir in test_dirs:
         if not os.path.exists(test_dir):
             print(f"Warning: Test directory {test_dir} not found")
@@ -82,21 +84,20 @@ def run_tests():
                     passed_tests += 1
                 else:
                     print(f"  FAIL {file_path.name}")
-                    print(f"    Expected: {expected}")
-                    print(f"    Got:      {actual}")
-                    failed_tests.append((file_path.name, expected, actual))
-                    
+                    failed_tests.append(file_path.name)                    
             except Exception as e:
                 print(f"  ERROR {file_path.name}: {e}")
-                failed_tests.append((file_path.name, "ERROR", str(e)))
+                failed_tests.append(file_path.name)
     
-    print("\n" + "=" * 50)
-    print(f"Test Results: {passed_tests}/{total_tests} passed")
+    color = '\033[32m' if passed_tests == total_tests else '\033[31m'
+    print(f"\n{color}Test Results: {passed_tests}/{total_tests} passed\033[0m")
+    if passed_tests != total_tests:
+        print("\033[31mYou bring great dishonor to your ancestors! Commit seppuku to restore your family's honor!\033[0m")
     
     if failed_tests:
-        print(f"\nFailed tests ({len(failed_tests)}):")
-        for test_name, expected, actual in failed_tests:
-            print(f"  {test_name}: expected '{expected}', got '{actual}'")
+        # print(f"\nFailed tests ({len(failed_tests)}):")
+        # for test_name in failed_tests:
+        #     print(f"  {test_name}")
         return 1
     else:
         print("All tests passed!")
