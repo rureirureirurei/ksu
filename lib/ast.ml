@@ -17,6 +17,9 @@ and expr_data =
   | Pair of expr * expr
   | Nil
   | Prim of string
+  | Car of expr
+  | Cdr of expr
+  | Cons of expr * expr
 
 and expr = expr_data node
 and 'a node = { value : 'a; id : int; loc : location }
@@ -98,6 +101,9 @@ let string_of_expr expr =
         ^ ")"
     | Nil -> "nil"
     | Prim name -> "<primitive:" ^ name ^ ">"
+    | Car e -> "(car " ^ string_of_expr_aux offset e ^ ")"
+    | Cdr e -> "(cdr " ^ string_of_expr_aux offset e ^ ")"
+    | Cons (e1, e2) -> "(" ^ string_of_expr_aux offset e1 ^ " . " ^ string_of_expr_aux offset e2 ^ ")"
   in
   string_of_expr_aux 0 expr
 

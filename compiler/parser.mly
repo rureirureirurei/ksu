@@ -8,6 +8,7 @@
 %token IF LAMBDA CALLCC
 %token LET
 %token QUOTE
+%token CAR CDR CONS
 %token EOF
 
 %start <Compiler_lib.Ast.top_expr list> parse
@@ -53,6 +54,9 @@ compound:
   | if_expr { $1 }
   | let_expr { $1 }
   | callcc_expr { $1 }
+  | car_expr { $1 }
+  | cdr_expr { $1 }
+  | cons_expr { $1 }
 
 list_expr:
   | QUOTE LPAREN list_elements RPAREN { $3 }
@@ -88,3 +92,12 @@ let_expr:
 define_expr:
   | DEFINE SYMBOL expr { mk_node $loc (Define { name = $2; expr = $3 }) }
   | DEFINE LPAREN SYMBOL lambda_args RPAREN expr { mk_node $loc (Define { name = $3; expr = mk_node $loc (Lambda { ids = $4; body = $6 }) }) }
+
+car_expr:
+  | CAR expr { mk_node $loc (Car $2) }
+
+cdr_expr:
+  | CDR expr { mk_node $loc (Cdr $2) }
+
+cons_expr:
+  | CONS expr expr { mk_node $loc (Cons ($2, $3)) }
