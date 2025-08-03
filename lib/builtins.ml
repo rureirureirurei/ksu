@@ -130,43 +130,6 @@ let builtin_definitions : top_expr list =
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
     };
-    (* List primitives *)
-    {
-      value =
-        Define
-          {
-            name = "cons";
-            expr =
-              synthetic
-                (Lambda { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "cons"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
-          };
-      id = fresh_node_tag ();
-      loc = { file = ""; line = 0; column = 0 };
-    };
-    {
-      value =
-        Define
-          {
-            name = "car";
-            expr =
-              synthetic
-                (Lambda { ids = [ "a0" ]; body = synthetic (App [ synthetic (Prim "car"); synthetic (Var "a0") ]) });
-          };
-      id = fresh_node_tag ();
-      loc = { file = ""; line = 0; column = 0 };
-    };
-    {
-      value =
-        Define
-          {
-            name = "cdr";
-            expr =
-              synthetic
-                (Lambda { ids = [ "a0" ]; body = synthetic (App [ synthetic (Prim "cdr"); synthetic (Var "a0") ]) });
-          };
-      id = fresh_node_tag ();
-      loc = { file = ""; line = 0; column = 0 };
-    };
     (* Constants *)
     {
       value = Define { name = "nil"; expr = synthetic Nil };
@@ -218,6 +181,18 @@ let builtin_definitions : top_expr list =
             expr =
               synthetic
                 (Lambda { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "eq?"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+          };
+      id = fresh_node_tag ();
+      loc = { file = ""; line = 0; column = 0 };
+    };
+    {
+      value =
+        Define
+          {
+            name = "list-ref";
+            expr =
+              synthetic
+                (Lambda { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "list-ref"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
