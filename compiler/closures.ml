@@ -26,6 +26,9 @@ let rec free : expr -> VarSet.t =
   | Callcc _ -> failwith "Free variables analysis not implemented for callcc"
   | Bool _ | Number _ | String _ -> VarSet.empty
   | Prim _ -> VarSet.empty
+  | Car e -> free e
+  | Cdr e -> free e
+  | Cons (e1, e2) -> VarSet.union (free e1) (free e2)
 
 (* Contains mappings identifier -> index in the enviroment for the free variables *)
 module VarMap = Map.Make (String)
@@ -53,7 +56,7 @@ and t : expr -> state -> expr -> expr =
       | Some index ->
           let index_node = synthetic (Number index) in
           let list_ref_node = synthetic (Var "list-ref") in
-          let app_node = synthetic (App [ list_ref_node; env; index_node ]) in
+          let app_node = synthetic (App [ (synthetic (Car list_ref_node)); list_ref_node; env; index_node ]) in
           app_node
       | None -> expr)
   | Lambda { ids; body } ->
@@ -65,7 +68,7 @@ and t : expr -> state -> expr -> expr =
           (fun acc (id, index) -> VarMap.add id index acc)
           VarMap.empty
           (List.combine (VarSet.elements free)
-             (List.init (VarSet.cardinal free) (fun _ -> 0)))
+             (List.init (VarSet.cardinal free) (fun i -> (i + 1))))
       in
       let body' = t body state' env' in
       let lambda_node = synthetic (Lambda { ids = ids'; body = body' }) in
@@ -95,6 +98,16 @@ and t : expr -> state -> expr -> expr =
   | Callcc _ -> failwith "Closure translation not implemented for callcc"
   | Bool _ | Number _ | String _ -> expr
   | Prim _ -> expr
+  | Car e -> 
+      let e' = t e state env in
+      synthetic @@ Car e'
+  | Cdr e -> 
+      let e' = t e state env in
+      synthetic @@ Cdr e'
+  | Cons (e1, e2) -> 
+      let e1' = t e1 state env in
+      let e2' = t e2 state env in
+      synthetic @@ Cons (e1', e2')
   (* we should probably check if the functino is lambda - transalte it and replace with let ..., otherwise if that's cont - todo, if id - then ((car id) (cdr id) ...args)  *)
   | App (f :: args) -> (
       let args' = List.map (fun arg -> t arg state env) args in
@@ -102,22 +115,14 @@ and t : expr -> state -> expr -> expr =
       (* (id ...args) => ((car id) (cdr id) ...args) *)
       | Var _ ->
           synthetic
-          @@ App ((synthetic @@ App [ synthetic @@ Var "car"; f ]) :: f :: args')
-      | Lambda _ -> (
-          let lam' = t f state env in
-          match lam'.value with
-          | Pair _ ->
-              let new_var, new_var_id = fresh_var () in
-              let body =
-                synthetic
-                @@ App
-                     ((synthetic @@ App [ synthetic @@ Var "car"; new_var ])
-                     :: new_var :: args')
-              in
-              synthetic @@ Ast.Let { defs = [ (new_var_id, lam') ]; body }
-          | _ -> failwith "Expected tuple after closure translation")
-      | Prim _ -> synthetic @@ App (f :: args')
-      | _ -> failwith "Expected lambda or identifier (or continuation TODO)")
+          @@ App ((synthetic (Car f)) :: f :: args')
+      | Prim _ -> 
+        synthetic
+        @@ App (f :: args')
+      | _ -> 
+        let f' = t f state env in
+        let var, var_id = fresh_var () in
+        synthetic @@ Let { defs = [ (var_id, f') ]; body = synthetic (App ((synthetic (Car var)) :: var :: args')) })
   | App [] -> failwith "Empty application"
 
 (* Takes a list of top_exprs and returns a list of top_exprs with the closures converted *)
