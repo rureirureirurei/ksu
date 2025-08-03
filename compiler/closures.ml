@@ -108,21 +108,28 @@ and t : expr -> state -> expr -> expr =
       let e1' = t e1 state env in
       let e2' = t e2 state env in
       synthetic @@ Cons (e1', e2')
-  (* we should probably check if the functino is lambda - transalte it and replace with let ..., otherwise if that's cont - todo, if id - then ((car id) (cdr id) ...args)  *)
   | App (f :: args) -> (
       let args' = List.map (fun arg -> t arg state env) args in
       match f.value with
-      (* (id ...args) => ((car id) (cdr id) ...args) *)
       | Var _ ->
-          synthetic
-          @@ App ((synthetic (Car f)) :: f :: args')
+        let var, var_id = fresh_var () in
+        synthetic (Let { defs = [ (var_id, synthetic (Car f)) ]; body = synthetic (App (var :: f :: args')) })
       | Prim _ -> 
         synthetic
         @@ App (f :: args')
       | _ -> 
         let f' = t f state env in
         let var, var_id = fresh_var () in
-        synthetic @@ Let { defs = [ (var_id, f') ]; body = synthetic (App ((synthetic (Car var)) :: var :: args')) })
+        let var', var_id' = fresh_var () in
+        synthetic @@ Let { 
+          defs = [ (var_id, f') ]; 
+          body = synthetic @@ Let { 
+            defs = [ (var_id', synthetic (Car var)) ]; 
+            body = synthetic (App (var' :: var :: args')) 
+          } 
+        }
+        
+      )
   | App [] -> failwith "Empty application"
 
 (* Takes a list of top_exprs and returns a list of top_exprs with the closures converted *)
