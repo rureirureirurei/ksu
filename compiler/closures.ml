@@ -28,7 +28,6 @@ let rec free : expr -> VarSet.t =
   | Prim _ -> VarSet.empty
   | Car e -> free e
   | Cdr e -> free e
-  | Cons (e1, e2) -> VarSet.union (free e1) (free e2)
 
 (* Contains mappings identifier -> index in the enviroment for the free variables *)
 module VarMap = Map.Make (String)
@@ -104,10 +103,6 @@ and t : expr -> state -> expr -> expr =
   | Cdr e -> 
       let e' = t e state env in
       synthetic @@ Cdr e'
-  | Cons (e1, e2) -> 
-      let e1' = t e1 state env in
-      let e2' = t e2 state env in
-      synthetic @@ Cons (e1', e2')
   | App (f :: args) -> (
       let args' = List.map (fun arg -> t arg state env) args in
       match f.value with

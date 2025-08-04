@@ -227,10 +227,6 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
             match e_value with
             | VPair (_, cdr) -> k cdr
             | v -> failwith (Printf.sprintf "cdr: expected a pair, got %s" (string_of_value v)))
-    | Ast.Cons (e1, e2) ->
-        eval_expr env e1 (fun e1_value ->
-            eval_expr env e2 (fun e2_value -> 
-                k (VPair (e1_value, e2_value))))
     | Ast.Prim name -> (
         let module StringMap = Map.Make (String) in
         match StringMap.find_opt name builtin_functions with

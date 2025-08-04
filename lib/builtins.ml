@@ -130,6 +130,22 @@ let builtin_definitions : top_expr list =
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
     };
+    {
+      value =
+        Define
+          {
+            name = "cons";
+            expr =
+              synthetic
+                (Lambda
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body = synthetic (App [ synthetic (Prim "cons"); synthetic (Var "a0"); synthetic (Var "a1") ]);
+                   });
+          };
+      id = fresh_node_tag ();
+      loc = { file = ""; line = 0; column = 0 };
+    };
     (* Constants *)
     {
       value = Define { name = "nil"; expr = synthetic Nil };

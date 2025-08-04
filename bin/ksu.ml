@@ -23,6 +23,9 @@ let () =
   let files = List.rev !input_files in
   let files_asts = List.map (fun file -> Parser.parse Lexer.lex (Lexing.from_channel (open_in file))) files in
   let files_converted_asts = List.concat @@ List.map Closures.t_file files_asts in
+  
+  (* List.iter (fun ast -> print_endline (Ast.string_of_top_expr ast)) files_converted_asts; *)
+  
   let results, _ = Interpreter.eval files_converted_asts env in
   
   (* Start REPL if --repl flag is provided *)

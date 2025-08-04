@@ -8,7 +8,7 @@
 %token IF LAMBDA CALLCC
 %token LET
 %token QUOTE
-%token CAR CDR CONS
+%token CAR CDR
 %token EOF
 
 %start <Compiler_lib.Ast.top_expr list> parse
@@ -56,7 +56,6 @@ compound:
   | callcc_expr { $1 }
   | car_expr { $1 }
   | cdr_expr { $1 }
-  | cons_expr { $1 }
 
 list_expr:
   | QUOTE LPAREN list_elements RPAREN { $3 }
@@ -98,6 +97,3 @@ car_expr:
 
 cdr_expr:
   | CDR expr { mk_node $loc (Cdr $2) }
-
-cons_expr:
-  | CONS expr expr { mk_node $loc (Cons ($2, $3)) }

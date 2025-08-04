@@ -25,7 +25,6 @@ rule lex = parse
   | "call/cc" { CALLCC }
   | "car" { CAR }
   | "cdr" { CDR }
-  | "cons" { CONS }
   | "'" { QUOTE }
   | ';' [^ '\n' '\r']* { lex lexbuf }
   | newline { 
