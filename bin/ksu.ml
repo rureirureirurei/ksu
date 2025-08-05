@@ -16,13 +16,13 @@ let () =
 
   (* Initialize environment with builtin definitions *)
   let builtin_ast = Builtins.builtin_definitions in
-  let builtin_ast_converted = Closures.t_file builtin_ast in
+  let builtin_ast_converted, builtin_globals = Closures.t_file builtin_ast in
   let _, env = Interpreter.eval builtin_ast_converted Interpreter.Env.empty in
 
   (* Parse provided files *)
   let files = List.rev !input_files in
   let files_asts = List.map (fun file -> Parser.parse Lexer.lex (Lexing.from_channel (open_in file))) files in
-  let files_converted_asts = List.concat @@ List.map Closures.t_file files_asts in
+  let files_converted_asts, files_converted_globals = List.fold_left_map (fun (globals, acc) ast -> let ast', globals' = Closures.t_file ast in (globals' @ globals, ast' :: acc)) ([], []) files_asts in
   
   (* List.iter (fun ast -> print_endline (Ast.string_of_top_expr ast)) files_converted_asts; *)
   
