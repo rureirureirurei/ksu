@@ -30,7 +30,7 @@ let fresh_node_tag : unit -> int =
     counter := result + 1;
     result
 
-let synthetic : expr_data -> expr =
+let synthetic : 'a -> 'a node =
  fun data ->
   {
     value = data;
