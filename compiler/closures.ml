@@ -34,20 +34,22 @@ module VarMap = Map.Make (String)
 
 type state = int VarMap.t
 
-let rec t_top_expr (expr : top_expr) : top_expr =
+let rec t_top_expr (expr : top_expr) : top_expr * top_expr list =
   match expr.value with
   | Define { name; expr } ->
       (* Should we add the define name to the state? *)
-      let expr' = t expr VarMap.empty (fst @@ fresh_var ()) in
-      { value = Define { name; expr = expr' }; id = expr.id; loc = expr.loc }
+      let expr', globals = t expr VarMap.empty (fst @@ fresh_var ()) in
+      { value = Define { name; expr = expr' }; id = expr.id; loc = expr.loc }, globals
   | Expr expr ->
+      let expr', globals = t expr VarMap.empty (fst @@ fresh_var ()) in
       {
-        value = Expr (t expr VarMap.empty (fst @@ fresh_var ()));
+        value = Expr expr';
         id = expr.id;
         loc = expr.loc;
-      }
+      }, globals
 
-and t : expr -> state -> expr -> expr =
+(* Returns a tuple of the transformed expression and the list of global lambda definitions that need to be added to the state *)
+and t : expr -> state -> expr -> (expr * top_expr list) =
  fun expr state env ->
   match expr.value with
   | Var v -> (
@@ -56,8 +58,8 @@ and t : expr -> state -> expr -> expr =
           let index_node = synthetic (Number index) in
           let list_ref_node = synthetic (Var "list-ref") in
           let app_node = synthetic (App [ (synthetic (Car list_ref_node)); list_ref_node; env; index_node ]) in
-          app_node
-      | None -> expr)
+          (app_node, [])
+      | None -> (expr, []))
   | Lambda { ids; body } ->
       let free = free expr in
       let env', env'id = fresh_var () in
@@ -69,51 +71,53 @@ and t : expr -> state -> expr -> expr =
           (List.combine (VarSet.elements free)
              (List.init (VarSet.cardinal free) (fun i -> (i + 1))))
       in
-      let body' = t body state' env' in
+      let body', body_globals = t body state' env' in
       let lambda_node = synthetic (Lambda { ids = ids'; body = body' }) in
-      genlist
-        (lambda_node
-        :: List.map
-             (fun id -> t (synthetic (Var id)) state env)
-             (VarSet.elements free))
+      let lambda_name, lambda_name_id = fresh_var () in
+      let lambda_global = synthetic (Define { name = lambda_name_id; expr = lambda_node }) in
+      let env = List.map(fun id -> fst @@ t (synthetic (Var id)) state env) (VarSet.elements free) in
+      (synthetic (Pair (lambda_name, genlist env)), lambda_global :: body_globals)
+
   | Let { defs; body } ->
-      let defs' = List.map (fun (id, expr) -> (id, t expr state env)) defs in
-      let body' =
+      let defs_globals, defs' = List.fold_left_map (fun globals (id, expr) -> let e', global = t expr state env in (global @ globals, (id, e'))) [] defs in
+      let body', body_globals =
         t body
           (List.fold_left (fun acc (id, _) -> VarMap.remove id acc) state defs')
           env
       in
-      synthetic @@ Let { defs = defs'; body = body' }
+      synthetic @@ Let { defs = defs'; body = body' }, defs_globals @ body_globals
+
   | Pair (e1, e2) ->
-      let e1' = t e1 state env in
-      let e2' = t e2 state env in
-      synthetic @@ Pair (e1', e2')
-  | Nil -> expr
+      let e1', g1 = t e1 state env in
+      let e2', g2 = t e2 state env in
+      synthetic @@ Pair (e1', e2'), g1 @ g2
   | If { cond; y; n } ->
-      let cond' = t cond state env in
-      let y' = t y state env in
-      let n' = t n state env in
-      synthetic @@ If { cond = cond'; y = y'; n = n' }
+      let cond', gc = t cond state env in
+      let y', gy = t y state env in
+      let n', gn = t n state env in
+      synthetic @@ If { cond = cond'; y = y'; n = n' }, gc @ gy @ gn
   | Callcc _ -> failwith "Closure translation not implemented for callcc"
-  | Bool _ | Number _ | String _ -> expr
-  | Prim _ -> expr
+  | Bool _ | Number _ | String _ -> (expr, [])
+  | Prim _ -> (expr, [])
+  | Nil -> (expr, [])
   | Car e -> 
-      let e' = t e state env in
-      synthetic @@ Car e'
+      let e', global = t e state env in
+      (synthetic @@ Car e', global)
   | Cdr e -> 
-      let e' = t e state env in
-      synthetic @@ Cdr e'
+      let e', global = t e state env in
+      (synthetic @@ Cdr e', global)
   | App (f :: args) -> (
-      let args' = List.map (fun arg -> t arg state env) args in
+      let (globals: top_expr list), args' = List.fold_left_map (fun globals arg -> let e', global = t arg state env in (global @ globals, e')) [] args in
       match f.value with
-      | Var _ ->
+      (* | Var _ ->
         let var, var_id = fresh_var () in
-        synthetic (Let { defs = [ (var_id, synthetic (Car f)) ]; body = synthetic (App (var :: f :: args')) })
+        synthetic (Let { defs = [ (var_id, synthetic (Car f)) ]; body = synthetic (App (var :: f :: args')) }) *)
       | Prim _ -> 
         synthetic
-        @@ App (f :: args')
-      | _ -> 
-        let f' = t f state env in
+        @@ App (f :: args'), globals
+        | _ -> 
+          (* I am not sure if we need it? I mean the idea is clear - to have applications to identifiers only. *)
+        let f', f'_global = t f state env in
         let var, var_id = fresh_var () in
         let var', var_id' = fresh_var () in
         synthetic @@ Let { 
@@ -122,11 +126,12 @@ and t : expr -> state -> expr -> expr =
             defs = [ (var_id', synthetic (Car var)) ]; 
             body = synthetic (App (var' :: var :: args')) 
           } 
-        }
+        }, globals @ f'_global
         
       )
   | App [] -> failwith "Empty application"
 
 (* Takes a list of top_exprs and returns a list of top_exprs with the closures converted *)
-let t_file : top_expr list -> top_expr list =
- fun exprs -> List.map t_top_expr exprs
+let t_file : top_expr list -> top_expr list  =
+ fun exprs -> 
+  let exprs', globals = 
