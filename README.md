@@ -176,11 +176,5 @@ are rather syntactic sugar to cons, than separate mechanism of preserving thing 
 ### `I/O: `display`, `newline` (2)`
 Type predicates: `number?`, `boolean?`, `string?`, `procedure?`, `continuation?`, `null?`, `cons?`
 
-
-до пятниці
-рекорди
-builtins 
-and closure conversion
-
-then translation to C 
-implement call/cc by translating to CPS
+## Liturature 
+- https://matt.might.net/articles/closure-conversion/
