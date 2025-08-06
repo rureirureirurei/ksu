@@ -134,4 +134,9 @@ and t : expr -> state -> expr -> (expr * top_expr list) =
 (* Takes a list of top_exprs and returns a list of top_exprs with the closures converted *)
 let t_file : top_expr list -> top_expr list  =
  fun exprs -> 
-  let exprs', globals = 
+  let globals, exprs' = List.fold_left_map 
+    (fun globals arg -> let expr', globals' = t_top_expr arg in (globals @ globals', expr'))
+    []
+    exprs 
+  in
+    globals @ exprs'
