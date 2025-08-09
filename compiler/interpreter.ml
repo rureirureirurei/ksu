@@ -151,7 +151,7 @@ let builtin_functions =
         | _ -> failwith "Expected two arguments for eq?" );
     ]
 
-(* Evalualte a list of expressions sequentially, expressions cannot reference variables in each other similar to regular let*)
+(* Evalualte a list of expressions separately, expressions cannot reference variables in each other similar to regular let*)
 let rec eval_exprs :
     env -> Ast.expr list -> value list -> (value list -> value) -> value =
  fun env args acc k ->
@@ -220,7 +220,13 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
         | _ -> failwith "Callcc expected a lambda with one argument")
     | Ast.Callcc _ -> failwith "Callcc expected a lambda"
     | Ast.Let { defs; body } ->
-        eval_exprs env (List.map snd defs) [] (fun values ->
+        let rec aux = (fun env (args: (Ast.var * Ast.expr) list) acc k ->
+          match args with
+          | [] -> k acc
+          | (id, def) :: args -> 
+            eval_expr env def (fun v -> aux (Env.add id v env) args (acc @ [ v ]) k))
+        in 
+        aux env defs [] (fun values ->
             let extended_env =
               extend_env env (List.combine (List.map fst defs) values)
             in
