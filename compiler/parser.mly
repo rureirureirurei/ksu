@@ -82,7 +82,7 @@ callcc_expr:
   | CALLCC expr { mk_node $loc (Callcc $2) }
 
 let_args: 
-  | LBRACKET SYMBOL expr RBRACKET { [($2, $3)] }
+  | { [] }
   | LBRACKET SYMBOL expr RBRACKET let_args { ($2, $3) :: $5 }
 
 let_expr:
