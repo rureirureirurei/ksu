@@ -27,9 +27,8 @@ let () =
     Closures.t_file builtin_ast @ Closures.t_file files_asts
   in
 
-  
-  let files_flattened_asts = files_converted_asts in
-  (* List.map Flattening.disambiguate_top_expr files_converted_asts *)
+  let files_flattened_asts = List.map Flattening.disambiguate_top_expr files_converted_asts in
+  let files_flattened_asts = List.map Flattening.flatten_top_expr files_flattened_asts in
   
   if (!debug_mode) then (
     List.iter (fun ast -> print_endline @@ "\n" ^ (Ast.string_of_top_expr ast)) files_flattened_asts
