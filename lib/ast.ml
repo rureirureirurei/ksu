@@ -99,7 +99,7 @@ let string_of_expr expr =
         ^ string_of_expr_aux offset e2
         ^ ")"
     | Nil -> "nil"
-    | Prim name -> "<primitive:" ^ name ^ ">"
+    | Prim name -> "<primitive: \"" ^ name ^ "\">"
     | Car e -> "(car " ^ string_of_expr_aux offset e ^ ")"
     | Cdr e -> "(cdr " ^ string_of_expr_aux offset e ^ ")"
   in
