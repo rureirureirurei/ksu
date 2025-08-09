@@ -54,14 +54,11 @@ and t : expr -> state -> expr -> expr * top_expr list =
       | Some index ->
           let index_node = synthetic (Number index) in
           let list_ref_node = synthetic (Var "list-ref") in
-          let app_node =
-            synthetic
-              (App
-                 [
-                   synthetic (Car list_ref_node); list_ref_node; env; index_node;
-                 ])
-          in
-          (app_node, [])
+          let fresh, fresh_id = fresh_var () in
+          let app_node = synthetic (App [ fresh; list_ref_node; env; index_node ]) in 
+          (synthetic
+              (Let { defs = [ (fresh_id, synthetic (Car list_ref_node)) ]; body = app_node}), [])
+
       | None -> (expr, []))
   | Lambda { ids; body } ->
       let free = free expr in

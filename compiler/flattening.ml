@@ -4,7 +4,8 @@ module Trans = Map.Make (String)
 
 type defs = (var * expr) list
 
-let flatten : expr -> expr =
+
+let disambiguate : expr -> expr =
   let rec t (e : expr) (trans : expr Trans.t) : expr =
     match e.value with
     | Var v -> ( match Trans.find_opt v trans with None -> e | Some v -> v)
@@ -32,8 +33,8 @@ let flatten : expr -> expr =
     | App (f :: args) -> (
         match f.value with
         | Prim _ | Var _ ->
-            synthetic (App (f :: List.map (fun e -> t e trans) args))
-        | _ -> failwith "Expected application to identifier or builtin")
+            synthetic (App ((t f trans) :: List.map (fun e -> t e trans) args))
+        | _ -> failwith ("Expected application to identifier or builtin, found " ^ (Ast.string_of_expr f)))
     | App [] -> failwith "Expected application to have at least one argument"
     | If { cond; y; n } ->
         let cond' = t cond trans in
@@ -58,3 +59,21 @@ let flatten : expr -> expr =
     | Bool _ | String _ | Number _ -> e
   in
   fun e -> t e Trans.empty
+
+
+
+  let disambiguate_top_expr : top_expr -> top_expr = 
+    fun e -> 
+      match e.value with 
+      | Define { name; expr } -> (
+        match expr.value with 
+        | Lambda { ids; body } -> 
+          let body' = disambiguate body in 
+          synthetic (Define { name; expr = synthetic (Lambda { ids; body = body' }) })
+        | _ -> synthetic (Define { name; expr = disambiguate expr }))
+      | Expr e -> 
+        let e' = disambiguate e in 
+        synthetic (Expr e')
+
+
+
