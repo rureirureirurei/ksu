@@ -10,13 +10,15 @@ let disambiguate : expr -> expr =
     match e.value with
     | Var v -> ( match Trans.find_opt v trans with None -> e | Some v -> v)
     | Let { defs; body } ->
-        let defs' =
-          List.map
-            (fun (_, e) ->
-              let fresh, fresh_id = fresh_var () in
-              let trans' = Trans.add fresh_id fresh trans in
-              let e' = t e trans' in
-              (fresh_id, e'))
+        let fresh_vars = List.map (fun (var, _) -> (var, fresh_var ()) ) defs in
+        let trans' = List.fold_left (fun trans (v, freshv) -> Trans.add v (fst freshv) trans) trans fresh_vars in 
+        let (defs': (var * expr) list) =
+          List.mapi
+            (fun i (_, e) ->
+              let (e': expr) = t e trans' in
+              let (v': var) =  (List.nth fresh_vars i) |> snd |> snd in 
+              (v', e')
+            )
             defs
         in
         let trans' =
