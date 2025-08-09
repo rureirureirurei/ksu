@@ -64,18 +64,18 @@ let disambiguate : expr -> expr =
 
 
 
-  let disambiguate_top_expr : top_expr -> top_expr = 
-    fun e -> 
-      match e.value with 
-      | Define { name; expr } -> (
-        match expr.value with 
-        | Lambda { ids; body } -> 
-          let body' = disambiguate body in 
-          synthetic (Define { name; expr = synthetic (Lambda { ids; body = body' }) })
-        | _ -> synthetic (Define { name; expr = disambiguate expr }))
-      | Expr e -> 
-        let e' = disambiguate e in 
-        synthetic (Expr e')
+let disambiguate_top_expr : top_expr -> top_expr = 
+  fun e -> 
+    match e.value with 
+    | Define { name; expr } -> (
+      match expr.value with 
+      | Lambda { ids; body } -> 
+        let body' = disambiguate body in 
+        synthetic (Define { name; expr = synthetic (Lambda { ids; body = body' }) })
+      | _ -> synthetic (Define { name; expr = disambiguate expr }))
+    | Expr e -> 
+      let e' = disambiguate e in 
+      synthetic (Expr e')
 
 
 (* Takes expression, and returns let expression (possibly with no definitions) that
@@ -97,8 +97,19 @@ let rec flatten : expr -> expr = fun expr -> match expr.value with
 )
 | Let { defs; body } -> (
   let defs' = List.map (fun (v, e) -> (v, flatten e)) defs in 
+ 
+  let defs'' = 
+  List.fold_left
+    (fun defs'' (v, e) -> match e.value with 
+    | Let { defs=defz; body } -> defs'' @ (defz @ [(v, body)])
+    | _ -> failwith "Expected let") 
+    []
+    defs' 
+  in 
+ 
   let body' = flatten body in match body'.value with 
-  | Let { defs = body_defs; body = body'' } -> synthetic (Let { defs = defs' @ body_defs; body = body'' })
+  | Let { defs = body_defs; body = body'' } -> 
+    synthetic (Let { defs = defs'' @ body_defs; body = body'' })
   | _ -> failwith "Expected let with no definitions"
 )
 | If { cond; y; n } -> (
