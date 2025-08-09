@@ -11,7 +11,7 @@ let flatten : expr -> expr =
     | Let { defs; body } ->
         let defs' =
           List.map
-            (fun (v, e) ->
+            (fun (_, e) ->
               let fresh, fresh_id = fresh_var () in
               let trans' = Trans.add fresh_id fresh trans in
               let e' = t e trans' in
@@ -29,6 +29,32 @@ let flatten : expr -> expr =
         failwith
           "Did not expect lambda during flattening. All lambdas must be first \
            child of define."
-    | _ -> failwith "todo"
+    | App (f :: args) -> (
+        match f.value with
+        | Prim _ | Var _ ->
+            synthetic (App (f :: List.map (fun e -> t e trans) args))
+        | _ -> failwith "Expected application to identifier or builtin")
+    | App [] -> failwith "Expected application to have at least one argument"
+    | If { cond; y; n } ->
+        let cond' = t cond trans in
+        let y' = t y trans in
+        let n' = t n trans in
+        synthetic (If { cond = cond'; y = y'; n = n' })
+    | Callcc e ->
+        let e' = t e trans in
+        synthetic (Callcc e')
+    | Pair (e1, e2) ->
+        let e1' = t e1 trans in
+        let e2' = t e2 trans in
+        synthetic (Pair (e1', e2'))
+    | Car e ->
+        let e' = t e trans in
+        synthetic (Car e')
+    | Cdr e ->
+        let e' = t e trans in
+        synthetic (Cdr e')
+    | Nil -> e
+    | Prim _ -> e
+    | Bool _ | String _ | Number _ -> e
   in
   fun e -> t e Trans.empty
