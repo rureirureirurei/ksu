@@ -25,48 +25,9 @@ ksu
 ```
 Starts an interactive REPL (Read-Eval-Print Loop) where you can enter expressions directly.
 
-## Priorities and tasks
-
-- **0** - Core part of the language. Must be implemented as fast as possible.
-- **1** - Important functionality that is blocked by the missing core parts. Should be implemented. 
-- **2** - Neat idea that can be implemented in a sensible time. 
-- **3** - Neat idea that would take substantial amount of time. Most likely will never be implemented.
-
-Things I still have to implement:
-  - Reading
-    - Implement userland multithreading (1)
-    - Backtracking K elements sum (1)
-  - Specification (0)
-    - Basic expression specification (2)
-    - Continuation specification and examples (0)
-    - Built-in functions specification (2)
-  - Lexer (0)
-    - Error reporting (2)
-  - Parser (0)
-    - Wrap Ast.expr into the type that will also contain location in file (2)
-    - Error reporting (2)
-    - Negative numbers (2)
-    - Lists (2)
-    - Define procedure syntax (2)
-  - Interpreter (0)
-    - Throw (2)
-    - Testing for interpreter (1)
-    - Mutations: set! (2)
-    - cond (2)
-  - REPL (2)
-    - Error reporting (2)
-    - rlwrap (2)
-    - call/cc does not work? (2)
-  - Compiler (0)
-    - Types (?)
-    - Transform AST: let -> lambda, nested expressions -> let, define -> letrec (?)
-    - Validate AST: function arity, special forms valid usage, unbound variables and functions, closure info (0)
-    - Closure Conversion: basically remove all free variables by adding env variable (0)
-    - CPS transformation (1?)
-  - Types (2)
-    - Dynamic typing with runtime checks (2)
-    - Optional static typing (3)
-    - Type inference (3)
+## TODO
+  - Refactor constructor for the App ast node - make function and arguments separate. It would remove stupid App [] checks and make parsing simpler (2)
+  - Adequately propagate node locations during closure conversion and flattening (3)
 
 ## In general
 
