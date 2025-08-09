@@ -78,4 +78,72 @@ let disambiguate : expr -> expr =
         synthetic (Expr e')
 
 
+(* Takes expression, and returns let expression (possibly with no definitions) that
+  does NOT contain any nested let expressions.
+*)
+let rec flatten : expr -> expr = fun expr -> match expr.value with 
+| Pair (a, b) ->
+  let a' = flatten a in 
+  let b' = flatten b in (
+  match (a'.value, b'.value) with 
+  | (Let { defs = adefs; body = abody }, Let {defs = bdefs; body = bbody }) -> 
+    synthetic (Let {defs = adefs @ bdefs; body = synthetic (Pair (abody, bbody))})
+  | _ -> failwith "Expected two Let's")
+| App args -> (
+  let args' = List.map (fun e -> flatten e) args in 
+  let defs = List.map (fun (e : expr) -> match e.value with Let { defs; _ } -> defs | _ -> failwith "Expected let") args' in 
+  let bodies = List.map (fun (e : expr) -> match e.value with Let { body; _ } -> body | _ -> failwith "Expected let") args' in 
+  synthetic (Let { defs = List.concat defs; body = synthetic (App bodies) })
+)
+| Let { defs; body } -> (
+  let defs' = List.map (fun (v, e) -> (v, flatten e)) defs in 
+  let body' = flatten body in match body'.value with 
+  | Let { defs = body_defs; body = body'' } -> synthetic (Let { defs = defs' @ body_defs; body = body'' })
+  | _ -> failwith "Expected let with no definitions"
+)
+| If { cond; y; n } -> (
+  let cond' = flatten cond in 
+  let y' = flatten y in 
+  let n' = flatten n in 
+  match (cond'.value, y'.value, n'.value) with 
+  | (Let { defs = cond_defs; body = cond_body }, 
+     Let { defs = y_defs; body = y_body }, 
+     Let { defs = n_defs; body = n_body }) -> 
+    synthetic (Let { defs = cond_defs @ y_defs @ n_defs; body = synthetic (If { cond = cond_body; y = y_body; n = n_body }) })
+  | _ -> failwith "Expected three lets during if flattening"
+)
+| Callcc e -> (
+  let e' = flatten e in match e'.value with 
+  | Let { defs = e_defs; body = e_body } -> synthetic (Let { defs = e_defs; body = synthetic (Callcc e_body) })
+  | _ -> failwith "Expected let during callcc flattening"
+)
+| Lambda _ -> failwith "Did not expect lambda during flattening. All lambdas must be first child of define."
+| Number _  
+| String _ 
+| Nil
+| Bool _ -> synthetic (Let { defs = []; body = expr })
+| Var _
+| Prim _ -> synthetic (Let { defs = []; body = expr })
+| Car e -> (
+  let e' = flatten e in match e'.value with 
+  | Let { defs = e_defs; body = e_body } -> synthetic (Let { defs = e_defs; body = synthetic (Car e_body) })
+  | _ -> failwith "Expected let during car flattening"
+)
+| Cdr e -> (
+  let e' = flatten e in match e'.value with 
+  | Let { defs = e_defs; body = e_body } -> synthetic (Let { defs = e_defs; body = synthetic (Cdr e_body) })
+  | _ -> failwith "Expected let during cdr flattening"
+)
 
+let flatten_top_expr : top_expr -> top_expr = 
+  fun e -> 
+    match e.value with 
+    | Define { name; expr } -> (match expr.value with 
+      | Lambda { ids; body } -> 
+        let body' = flatten body in 
+        synthetic (Define { name; expr = synthetic (Lambda { ids; body = body' }) })
+      | _ -> synthetic (Define { name; expr = flatten expr }))
+    (* In top level exprs, we can just flatten the expression *)
+    | Expr e -> 
+      let e' = flatten e in 
+      synthetic (Expr e')
