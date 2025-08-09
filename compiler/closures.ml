@@ -76,7 +76,7 @@ and t : expr -> state -> expr -> (expr * top_expr list) =
       let lambda_name, lambda_name_id = fresh_var () in
       let lambda_global = synthetic (Define { name = lambda_name_id; expr = lambda_node }) in
       let env = List.map(fun id -> fst @@ t (synthetic (Var id)) state env) (VarSet.elements free) in
-      (synthetic (Pair (lambda_name, genlist env)), lambda_global :: body_globals)
+      (synthetic (Pair (lambda_name, genlist env)), body_globals @ [lambda_global])
 
   | Let { defs; body } ->
       let defs_globals, defs' = List.fold_left_map (fun globals (id, expr) -> let e', global = t expr state env in (global @ globals, (id, e'))) [] defs in
@@ -96,7 +96,7 @@ and t : expr -> state -> expr -> (expr * top_expr list) =
       let y', gy = t y state env in
       let n', gn = t n state env in
       synthetic @@ If { cond = cond'; y = y'; n = n' }, gc @ gy @ gn
-  | Callcc _ -> failwith "Closure translation not implemented for callcc"
+  | Callcc f -> let f', global_defs = t f state env in synthetic (Callcc f'), global_defs
   | Bool _ | Number _ | String _ -> (expr, [])
   | Prim _ -> (expr, [])
   | Nil -> (expr, [])
@@ -109,9 +109,6 @@ and t : expr -> state -> expr -> (expr * top_expr list) =
   | App (f :: args) -> (
       let (globals: top_expr list), args' = List.fold_left_map (fun globals arg -> let e', global = t arg state env in (global @ globals, e')) [] args in
       match f.value with
-      (* | Var _ ->
-        let var, var_id = fresh_var () in
-        synthetic (Let { defs = [ (var_id, synthetic (Car f)) ]; body = synthetic (App (var :: f :: args')) }) *)
       | Prim _ -> 
         synthetic
         @@ App (f :: args'), globals
@@ -126,7 +123,7 @@ and t : expr -> state -> expr -> (expr * top_expr list) =
             defs = [ (var_id', synthetic (Car var)) ]; 
             body = synthetic (App (var' :: var :: args')) 
           } 
-        }, globals @ f'_global
+        }, f'_global @ globals
         
       )
   | App [] -> failwith "Empty application"

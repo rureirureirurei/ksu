@@ -19,11 +19,11 @@ let () =
 
   (* Parse provided files *)
   let files = List.rev !input_files in
-  let parse_file = fun acc file -> acc @ (Parser.parse Lexer.lex (Lexing.from_channel (open_in file))) in
-  let files_asts = List.fold_left parse_file [] files in
-  let files_converted_asts = Closures.t_file (builtin_ast @ files_asts) in
+  let parse_file = fun file acc -> acc @ (Parser.parse Lexer.lex (Lexing.from_channel (open_in file))) in
+  let files_asts = List.fold_right parse_file files [] in
+  let files_converted_asts = (Closures.t_file builtin_ast) @ (Closures.t_file files_asts) in
   
-  List.iter (fun ast -> print_endline @@ "\n" ^ (Ast.string_of_top_expr ast)) files_converted_asts;
+  (* List.iter (fun ast -> print_endline @@ "\n" ^ (Ast.string_of_top_expr ast)) files_converted_asts; *)
   
   let results, _ = Interpreter.eval files_converted_asts Interpreter.Env.empty in
   
