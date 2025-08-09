@@ -3,11 +3,12 @@ open Compiler_lib
 open Compiler
 
 (* Command line argument parsing *)
-let usage_msg = "ksu [--repl] <files>..."
+let usage_msg = "ksu [--repl] [--debug] <files>..."
+let debug_mode = ref false
 let repl_mode = ref false
 let input_files = ref []
 let anon_fun filename = input_files := filename :: !input_files
-let speclist = [ ("--repl", Arg.Set repl_mode, "Start interactive REPL mode") ]
+let speclist = [ ("--repl", Arg.Set repl_mode, "Start interactive REPL mode"); ("--debug", Arg.Set debug_mode, "Print debug information") ]
 
 let () =
   Arg.parse speclist anon_fun usage_msg;
@@ -26,9 +27,16 @@ let () =
     Closures.t_file builtin_ast @ Closures.t_file files_asts
   in
 
-  (* List.iter (fun ast -> print_endline @@ "\n" ^ (Ast.string_of_top_expr ast)) files_converted_asts; *)
+  
+  let files_flattened_asts = files_converted_asts in
+  (* List.map Flattening.disambiguate_top_expr files_converted_asts *)
+  
+  if (!debug_mode) then (
+    List.iter (fun ast -> print_endline @@ "\n" ^ (Ast.string_of_top_expr ast)) files_flattened_asts
+  ) else ();
+
   let results, _ =
-    Interpreter.eval files_converted_asts Interpreter.Env.empty
+    Interpreter.eval files_flattened_asts Interpreter.Env.empty
   in
 
   (* Start REPL if --repl flag is provided *)
