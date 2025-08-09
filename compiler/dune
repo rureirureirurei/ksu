@@ -1,7 +1,7 @@
 (library
  (name compiler)
  (libraries compiler_lib)
- (modules parser lexer interpreter closures))
+ (modules parser lexer interpreter closures flattening))
 
 (menhir
  (modules parser))

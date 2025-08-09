@@ -12,7 +12,18 @@ let builtin_definitions : top_expr list =
             name = "+";
             expr =
               synthetic
-                (Lambda { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "+"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+                (Lambda
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "+");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -24,7 +35,18 @@ let builtin_definitions : top_expr list =
             name = "*";
             expr =
               synthetic
-                (Lambda { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "*"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+                (Lambda
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "*");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -37,7 +59,17 @@ let builtin_definitions : top_expr list =
             expr =
               synthetic
                 (Lambda
-                   { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "-"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "-");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -50,7 +82,17 @@ let builtin_definitions : top_expr list =
             expr =
               synthetic
                 (Lambda
-                   { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "/"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "/");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -64,7 +106,17 @@ let builtin_definitions : top_expr list =
             expr =
               synthetic
                 (Lambda
-                   { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "="); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "=");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -77,7 +129,17 @@ let builtin_definitions : top_expr list =
             expr =
               synthetic
                 (Lambda
-                   { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "<"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "<");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -92,7 +154,14 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body = synthetic (App [ synthetic (Prim ">"); synthetic (Var "a0"); synthetic (Var "a1") ]);
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim ">");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
                    });
           };
       id = fresh_node_tag ();
@@ -108,7 +177,14 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body = synthetic (App [ synthetic (Prim "<="); synthetic (Var "a0"); synthetic (Var "a1") ]);
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "<=");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
                    });
           };
       id = fresh_node_tag ();
@@ -124,7 +200,14 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body = synthetic (App [ synthetic (Prim ">="); synthetic (Var "a0"); synthetic (Var "a1") ]);
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim ">=");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
                    });
           };
       id = fresh_node_tag ();
@@ -140,7 +223,14 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body = synthetic (App [ synthetic (Prim "cons"); synthetic (Var "a0"); synthetic (Var "a1") ]);
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "cons");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
                    });
           };
       id = fresh_node_tag ();
@@ -160,7 +250,13 @@ let builtin_definitions : top_expr list =
             name = "null?";
             expr =
               synthetic
-                (Lambda { ids = [ "a0" ]; body = synthetic (App [ synthetic (Prim "null?"); synthetic (Var "a0") ]) });
+                (Lambda
+                   {
+                     ids = [ "a0" ];
+                     body =
+                       synthetic
+                         (App [ synthetic (Prim "null?"); synthetic (Var "a0") ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -172,7 +268,13 @@ let builtin_definitions : top_expr list =
             name = "pair?";
             expr =
               synthetic
-                (Lambda { ids = [ "a0" ]; body = synthetic (App [ synthetic (Prim "pair?"); synthetic (Var "a0") ]) });
+                (Lambda
+                   {
+                     ids = [ "a0" ];
+                     body =
+                       synthetic
+                         (App [ synthetic (Prim "pair?"); synthetic (Var "a0") ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -184,7 +286,13 @@ let builtin_definitions : top_expr list =
             name = "list?";
             expr =
               synthetic
-                (Lambda { ids = [ "a0" ]; body = synthetic (App [ synthetic (Prim "list?"); synthetic (Var "a0") ]) });
+                (Lambda
+                   {
+                     ids = [ "a0" ];
+                     body =
+                       synthetic
+                         (App [ synthetic (Prim "list?"); synthetic (Var "a0") ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -196,7 +304,18 @@ let builtin_definitions : top_expr list =
             name = "eq?";
             expr =
               synthetic
-                (Lambda { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "eq?"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+                (Lambda
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "eq?");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };
@@ -208,7 +327,18 @@ let builtin_definitions : top_expr list =
             name = "list-ref";
             expr =
               synthetic
-                (Lambda { ids = [ "a0"; "a1" ]; body = synthetic (App [ synthetic (Prim "list-ref"); synthetic (Var "a0"); synthetic (Var "a1") ]) });
+                (Lambda
+                   {
+                     ids = [ "a0"; "a1" ];
+                     body =
+                       synthetic
+                         (App
+                            [
+                              synthetic (Prim "list-ref");
+                              synthetic (Var "a0");
+                              synthetic (Var "a1");
+                            ]);
+                   });
           };
       id = fresh_node_tag ();
       loc = { file = ""; line = 0; column = 0 };

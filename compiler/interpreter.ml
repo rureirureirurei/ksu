@@ -1,7 +1,6 @@
 (* Interpreter module for KSU language *)
 open Compiler_lib
 
-
 (* Environment implementation *)
 module Env = Map.Make (String)
 
@@ -29,17 +28,23 @@ let rec string_of_value ?(offset = 0) = function
   | VNumber n -> string_of_int n
   | VBool b -> string_of_bool b
   | VString s -> s
-  | VClosure { args; body; _ } -> 
+  | VClosure { args; body; _ } ->
       let indent = String.make offset ' ' in
       let body_str = Ast.string_of_expr body in
-      "<function (" ^ String.concat " " args ^ ")\n" ^ indent ^ "  " ^ body_str ^ ">"
-  | VRecClosure { name; args; body; _ } -> 
+      "<function (" ^ String.concat " " args ^ ")\n" ^ indent ^ "  " ^ body_str
+      ^ ">"
+  | VRecClosure { name; args; body; _ } ->
       let indent = String.make offset ' ' in
       let body_str = Ast.string_of_expr body in
-      "<rec-function " ^ name ^ " (" ^ String.concat " " args ^ ")\n" ^ indent ^ "  " ^ body_str ^ ">"
+      "<rec-function " ^ name ^ " (" ^ String.concat " " args ^ ")\n" ^ indent
+      ^ "  " ^ body_str ^ ">"
   | VCont _ -> "<continuation>"
-  | VPair (a, b) -> 
-      "(" ^ string_of_value ~offset:(offset + 2) a ^ " . " ^ string_of_value ~offset:(offset + 2) b ^ ")"
+  | VPair (a, b) ->
+      "("
+      ^ string_of_value ~offset:(offset + 2) a
+      ^ " . "
+      ^ string_of_value ~offset:(offset + 2) b
+      ^ ")"
   | VNil -> "nil"
   | VPrim _ -> "<builtin>"
 
@@ -50,12 +55,14 @@ let print_env env =
 (* Helper function to extract number from value *)
 let value_to_number = function
   | VNumber n -> n
-  | v -> failwith (Printf.sprintf "Expected a number, got %s" (string_of_value v))
+  | v ->
+      failwith (Printf.sprintf "Expected a number, got %s" (string_of_value v))
 
 (* Helper function to extract boolean from value *)
-let value_to_bool = function 
-  | VBool b -> b 
-  | v -> failwith (Printf.sprintf "Expected a boolean, got %s" (string_of_value v))
+let value_to_bool = function
+  | VBool b -> b
+  | v ->
+      failwith (Printf.sprintf "Expected a boolean, got %s" (string_of_value v))
 
 (* Primitive function mapping *)
 let builtin_functions =
@@ -98,12 +105,18 @@ let builtin_functions =
       ( "car",
         function
         | [ VPair (x, _) ] -> x
-        | [ v ] -> failwith (Printf.sprintf "Expected a pair for car, got %s" (string_of_value v))
+        | [ v ] ->
+            failwith
+              (Printf.sprintf "Expected a pair for car, got %s"
+                 (string_of_value v))
         | _ -> failwith "Expected one argument for car" );
       ( "cdr",
         function
         | [ VPair (_, y) ] -> y
-        | [ v ] -> failwith (Printf.sprintf "Expected a pair for cdr, got %s" (string_of_value v))
+        | [ v ] ->
+            failwith
+              (Printf.sprintf "Expected a pair for cdr, got %s"
+                 (string_of_value v))
         | _ -> failwith "Expected one argument for cdr" );
       ( "list-ref",
         function
@@ -111,12 +124,17 @@ let builtin_functions =
             let rec aux lst idx =
               match lst with
               | VNil -> failwith "list-ref: index out of bounds"
-              | VPair (car, cdr) ->
-                  if idx = 0 then car else aux cdr (idx - 1)
-              | v -> failwith (Printf.sprintf "list-ref: expected a list, got %s" (string_of_value v))
+              | VPair (car, cdr) -> if idx = 0 then car else aux cdr (idx - 1)
+              | v ->
+                  failwith
+                    (Printf.sprintf "list-ref: expected a list, got %s"
+                       (string_of_value v))
             in
             aux list index
-        | [ _; v ] -> failwith (Printf.sprintf "Expected a number for list-ref index, got %s" (string_of_value v))
+        | [ _; v ] ->
+            failwith
+              (Printf.sprintf "Expected a number for list-ref index, got %s"
+                 (string_of_value v))
         | _ -> failwith "Expected a list and a number for list-ref" );
       ("null?", function [ VNil ] -> VBool true | _ -> VBool false);
       ("pair?", function [ VPair _ ] -> VBool true | _ -> VBool false);
@@ -133,16 +151,13 @@ let builtin_functions =
         | _ -> failwith "Expected two arguments for eq?" );
     ]
 
-
 (* Evalualte a list of expressions sequentially, expressions cannot reference variables in each other similar to regular let*)
 let rec eval_exprs :
     env -> Ast.expr list -> value list -> (value list -> value) -> value =
  fun env args acc k ->
   match args with
   | [] -> k acc
-  | a :: args -> 
-      eval_expr env a (fun v -> 
-          eval_exprs env args (acc @ [ v ]) k)
+  | a :: args -> eval_expr env a (fun v -> eval_exprs env args (acc @ [ v ]) k)
 
 and extend_env : env -> (string * value) list -> env =
   List.fold_left (fun acc (name, value) -> Env.add name value acc)
@@ -150,7 +165,7 @@ and extend_env : env -> (string * value) list -> env =
 (* Main expression evaluation function *)
 and eval_expr : env -> Ast.expr -> (value -> value) -> value =
  fun env expr k ->
-  let result = 
+  let result =
     match expr.value with
     | Ast.Number n -> k (VNumber n)
     | Ast.Bool b -> k (VBool b)
@@ -183,7 +198,8 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
                     else
                       let extended_env =
                         Env.add name func_value
-                          (extend_env captured_env (List.combine args arg_values))
+                          (extend_env captured_env
+                             (List.combine args arg_values))
                       in
                       eval_expr extended_env body k)
             | VCont f ->
@@ -191,7 +207,10 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
                     f (List.hd arg_values))
             | VPrim f ->
                 eval_exprs env arg_exprs [] (fun arg_values -> k (f arg_values))
-            | v -> failwith (Printf.sprintf "Expected a function, got %s" (string_of_value v)))
+            | v ->
+                failwith
+                  (Printf.sprintf "Expected a function, got %s"
+                     (string_of_value v)))
     | Ast.App [] -> failwith "Empty application"
     | Ast.Callcc { value = Ast.Lambda { ids; body }; _ } -> (
         match ids with
@@ -208,25 +227,28 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
             eval_expr extended_env body k)
     | Ast.If { cond; y; n } ->
         eval_expr env cond (fun condition_value ->
-            if value_to_bool condition_value then 
-              eval_expr env y k
-            else 
-              eval_expr env n k)
+            if value_to_bool condition_value then eval_expr env y k
+            else eval_expr env n k)
     | Ast.Pair (a, b) ->
         eval_expr env a (fun a_value ->
-            eval_expr env b (fun b_value -> 
-                k (VPair (a_value, b_value))))
+            eval_expr env b (fun b_value -> k (VPair (a_value, b_value))))
     | Ast.Nil -> k VNil
     | Ast.Car e ->
         eval_expr env e (fun e_value ->
             match e_value with
             | VPair (car, _) -> k car
-            | v -> failwith (Printf.sprintf "car: expected a pair, got %s" (string_of_value v)))
+            | v ->
+                failwith
+                  (Printf.sprintf "car: expected a pair, got %s"
+                     (string_of_value v)))
     | Ast.Cdr e ->
         eval_expr env e (fun e_value ->
             match e_value with
             | VPair (_, cdr) -> k cdr
-            | v -> failwith (Printf.sprintf "cdr: expected a pair, got %s" (string_of_value v)))
+            | v ->
+                failwith
+                  (Printf.sprintf "cdr: expected a pair, got %s"
+                     (string_of_value v)))
     | Ast.Prim name -> (
         let module StringMap = Map.Make (String) in
         match StringMap.find_opt name builtin_functions with
@@ -247,9 +269,9 @@ let process_definition : string -> Ast.expr -> env -> env =
       Env.add name v env
 
 (* Evaluate a list of top-level expressions *)
-let eval : Ast.top_expr list -> env -> (value list * env) =
+let eval : Ast.top_expr list -> env -> value list * env =
  fun exprs env ->
-    List.fold_left
+  List.fold_left
     (fun (acc, env) (expr : Ast.top_expr) ->
       match expr.value with
       | Ast.Define { name; expr } ->
@@ -257,5 +279,5 @@ let eval : Ast.top_expr list -> env -> (value list * env) =
           (acc, updated_env)
       | Ast.Expr expr ->
           let v = eval_expr env expr (fun v -> v) in
-          (acc @ [v], env))
-      ([], env) exprs
+          (acc @ [ v ], env))
+    ([], env) exprs
