@@ -8,10 +8,10 @@ let rec free : expr -> VarSet.t =
   match expr.value with
   | Lambda { ids; body } -> VarSet.diff (free body) (VarSet.of_list ids)
   | Var v -> VarSet.singleton v
-  | App args ->
+  | App { func; args } ->
       List.fold_left
         (fun acc arg -> VarSet.union acc (free arg))
-        VarSet.empty args
+        (free func) args
   | Let { defs; body } ->
       let defs_vars =
         List.fold_left
@@ -55,7 +55,14 @@ and t : expr -> state -> expr -> expr * top_expr list =
           let index_node = synthetic (Number index) in
           let list_ref_node = synthetic (Var "list-ref") in
           let fresh, fresh_id = fresh_var () in
-          let app_node = synthetic (App [ fresh; list_ref_node; env; index_node ]) in 
+          let app_node =
+            synthetic
+              (App
+                 {
+                   func = fresh;
+                   args = [ list_ref_node; env; index_node ];
+                 })
+          in
           (synthetic
               (Let { defs = [ (fresh_id, synthetic (Car list_ref_node)) ]; body = app_node}), [])
 
@@ -120,7 +127,7 @@ and t : expr -> state -> expr -> expr * top_expr list =
   | Cdr e ->
       let e', global = t e state env in
       (synthetic @@ Cdr e', global)
-  | App (f :: args) -> (
+  | App { func = f; args } -> (
       let (globals : top_expr list), args' =
         List.fold_left_map
           (fun globals arg ->
@@ -129,7 +136,7 @@ and t : expr -> state -> expr -> expr * top_expr list =
           [] args
       in
       match f.value with
-      | Prim _ -> (synthetic @@ App (f :: args'), globals)
+      | Prim _ -> (synthetic @@ App { func = f; args = args' }, globals)
       | _ ->
           (* I am not sure if we need it? I mean the idea is clear - to have applications to identifiers only. *)
           let f', f'_global = t f state env in
@@ -144,11 +151,10 @@ and t : expr -> state -> expr -> expr * top_expr list =
                      @@ Let
                           {
                             defs = [ (var_id', synthetic (Car var)) ];
-                            body = synthetic (App (var' :: var :: args'));
+                            body = synthetic (App { func = var'; args = var :: args' });
                           };
                  },
             f'_global @ globals ))
-  | App [] -> failwith "Empty application"
 
 (* Takes a list of top_exprs and returns a list of top_exprs with the closures converted *)
 let t_file : top_expr list -> top_expr list =

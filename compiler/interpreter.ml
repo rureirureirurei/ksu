@@ -175,8 +175,8 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
         | Some value -> k value
         | None -> failwith ("Unknown symbol: " ^ sym))
     | Ast.Lambda { ids; body } -> k (VClosure { args = ids; body; env })
-    | Ast.App (func_expr :: arg_exprs) ->
-        eval_expr env func_expr (fun func_value ->
+    | Ast.App { func; args = arg_exprs } ->
+        eval_expr env func (fun func_value ->
             match func_value with
             | VClosure { args; body; env = captured_env } ->
                 eval_exprs env arg_exprs [] (fun arg_values ->
@@ -211,7 +211,6 @@ and eval_expr : env -> Ast.expr -> (value -> value) -> value =
                 failwith
                   (Printf.sprintf "Expected a function, got %s"
                      (string_of_value v)))
-    | Ast.App [] -> failwith "Empty application"
     | Ast.Callcc { value = Ast.Lambda { ids; body }; _ } -> (
         match ids with
         | [ id ] ->

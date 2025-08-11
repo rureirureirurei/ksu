@@ -9,7 +9,7 @@ and expr_data =
   | Number of int
   | String of string
   | Var of var
-  | App of expr list
+  | App of { func : expr; args : expr list }
   | Lambda of { ids : var list; body : expr }
   | If of { cond : expr; y : expr; n : expr }
   | Callcc of expr
@@ -60,10 +60,12 @@ let string_of_expr expr =
     | Number n -> string_of_int n
     | String s -> s
     | Var s -> s
-    | App l ->
-        let indent = String.make offset ' ' in
-        let args_str = List.map (string_of_expr_aux (offset + 2)) l in
-        "(" ^ String.concat ("\n" ^ indent ^ "  ") args_str ^ ")"
+    | App { func; args } ->
+        "("
+        ^ string_of_expr_aux offset func
+        ^ " "
+        ^ String.concat " " (List.map (string_of_expr_aux (offset + 2)) args)
+        ^ ")"
     | Lambda { ids; body } ->
         let indent = String.make offset ' ' in
         "(lambda (" ^ String.concat " " ids ^ ")\n" ^ indent ^ "  "

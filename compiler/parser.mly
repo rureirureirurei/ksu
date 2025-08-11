@@ -49,7 +49,11 @@ atom:
   | list_expr { $1 }
 
 compound:
-  | app_expr { mk_node $loc (App $1) }
+  | app_expr {
+      match $1 with
+      | f :: args -> mk_node $loc (App { func = f; args = args })
+      | [] -> failwith "Empty application"
+    }
   | lambda_expr { $1}
   | if_expr { $1 }
   | let_expr { $1 }

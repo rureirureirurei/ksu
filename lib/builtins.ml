@@ -15,14 +15,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "+");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "+");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -38,14 +41,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "*");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "*");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -61,14 +67,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "-");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "-");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -84,14 +93,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "/");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "/");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -108,14 +120,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "=");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "=");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -131,14 +146,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "<");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "<");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -154,14 +172,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim ">");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim ">");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -177,14 +198,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "<=");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "<=");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -200,14 +224,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim ">=");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim ">=");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -223,14 +250,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "cons");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "cons");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -253,9 +283,9 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0" ];
-                     body =
-                       synthetic
-                         (App [ synthetic (Prim "null?"); synthetic (Var "a0") ]);
+                      body =
+                        synthetic
+                          (App { func = synthetic (Prim "null?"); args = [ synthetic (Var "a0") ] });
                    });
           };
       id = fresh_node_tag ();
@@ -271,9 +301,9 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0" ];
-                     body =
-                       synthetic
-                         (App [ synthetic (Prim "pair?"); synthetic (Var "a0") ]);
+                      body =
+                        synthetic
+                          (App { func = synthetic (Prim "pair?"); args = [ synthetic (Var "a0") ] });
                    });
           };
       id = fresh_node_tag ();
@@ -289,9 +319,9 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0" ];
-                     body =
-                       synthetic
-                         (App [ synthetic (Prim "list?"); synthetic (Var "a0") ]);
+                      body =
+                        synthetic
+                          (App { func = synthetic (Prim "list?"); args = [ synthetic (Var "a0") ] });
                    });
           };
       id = fresh_node_tag ();
@@ -307,14 +337,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "eq?");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "eq?");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
@@ -330,14 +363,17 @@ let builtin_definitions : top_expr list =
                 (Lambda
                    {
                      ids = [ "a0"; "a1" ];
-                     body =
-                       synthetic
-                         (App
-                            [
-                              synthetic (Prim "list-ref");
-                              synthetic (Var "a0");
-                              synthetic (Var "a1");
-                            ]);
+                      body =
+                        synthetic
+                          (App
+                             {
+                               func = synthetic (Prim "list-ref");
+                               args =
+                                 [
+                                   synthetic (Var "a0");
+                                   synthetic (Var "a1");
+                                 ];
+                             });
                    });
           };
       id = fresh_node_tag ();
