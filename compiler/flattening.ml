@@ -32,12 +32,11 @@ let disambiguate : expr -> expr =
         failwith
           "Did not expect lambda during flattening. All lambdas must be first \
            child of define."
-    | App (f :: args) -> (
+    | App { func = f; args } -> (
         match f.value with
         | Prim _ | Var _ ->
-            synthetic (App ((t f trans) :: List.map (fun e -> t e trans) args))
+            synthetic (App { func = t f trans; args = List.map (fun e -> t e trans) args })
         | _ -> failwith ("Expected application to identifier or builtin, found " ^ (Ast.string_of_expr f)))
-    | App [] -> failwith "Expected application to have at least one argument"
     | If { cond; y; n } ->
         let cond' = t cond trans in
         let y' = t y trans in
@@ -82,18 +81,25 @@ let disambiguate_top_expr : top_expr -> top_expr =
   does NOT contain any nested let expressions.
 *)
 let rec flatten : expr -> expr = fun expr -> match expr.value with 
-| Pair (a, b) ->
+ | Pair (a, b) ->
   let a' = flatten a in 
   let b' = flatten b in (
   match (a'.value, b'.value) with 
   | (Let { defs = adefs; body = abody }, Let {defs = bdefs; body = bbody }) -> 
     synthetic (Let {defs = adefs @ bdefs; body = synthetic (Pair (abody, bbody))})
   | _ -> failwith "Expected two Let's")
-| App args -> (
+| App { func; args } -> (
+  let func' = flatten func in
   let args' = List.map (fun e -> flatten e) args in 
-  let defs = List.map (fun (e : expr) -> match e.value with Let { defs; _ } -> defs | _ -> failwith "Expected let") args' in 
-  let bodies = List.map (fun (e : expr) -> match e.value with Let { body; _ } -> body | _ -> failwith "Expected let") args' in 
-  synthetic (Let { defs = List.concat defs; body = synthetic (App bodies) })
+  let defs =
+    (match func'.value with Let { defs; _ } -> defs | _ -> failwith "Expected let")
+    :: List.map (fun (e : expr) -> match e.value with Let { defs; _ } -> defs | _ -> failwith "Expected let") args' in 
+  let bodies =
+    (match func'.value with Let { body; _ } -> body | _ -> failwith "Expected let")
+    :: List.map (fun (e : expr) -> match e.value with Let { body; _ } -> body | _ -> failwith "Expected let") args' in 
+  let func_body = List.hd bodies in
+  let arg_bodies = List.tl bodies in
+  synthetic (Let { defs = List.concat defs; body = synthetic (App { func = func_body; args = arg_bodies }) })
 )
 | Let { defs; body } -> (
   let defs' = List.map (fun (v, e) -> (v, flatten e)) defs in 
