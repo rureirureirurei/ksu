@@ -160,4 +160,53 @@ static Value ListRef(Value list, Value idx) {
     }
     return *(cur.pair.valueptr);
 }
+
+static void ensure_int_pair(Value a, Value b, const char* op) {
+    if (a.t != INT || b.t != INT) {
+        runtime_error(op);
+    }
+}
+
+static Value Add(Value a, Value b) {
+    ensure_int_pair(a, b, "+ expects two integers");
+    return MakeInt(a.z.value + b.z.value);
+}
+
+static Value Sub(Value a, Value b) {
+    ensure_int_pair(a, b, "- expects two integers");
+    return MakeInt(a.z.value - b.z.value);
+}
+
+static Value Mul(Value a, Value b) {
+    ensure_int_pair(a, b, "* expects two integers");
+    return MakeInt(a.z.value * b.z.value);
+}
+
+static Value Div(Value a, Value b) {
+    ensure_int_pair(a, b, "/ expects two integers");
+    if (b.z.value == 0) {
+        runtime_error("division by zero");
+    }
+    return MakeInt(a.z.value / b.z.value);
+}
+
+static Value Lt(Value a, Value b) {
+    ensure_int_pair(a, b, "< expects two integers");
+    return MakeBool(a.z.value < b.z.value);
+}
+
+static Value Gt(Value a, Value b) {
+    ensure_int_pair(a, b, "> expects two integers");
+    return MakeBool(a.z.value > b.z.value);
+}
+
+static Value Le(Value a, Value b) {
+    ensure_int_pair(a, b, "<= expects two integers");
+    return MakeBool(a.z.value <= b.z.value);
+}
+
+static Value Ge(Value a, Value b) {
+    ensure_int_pair(a, b, ">= expects two integers");
+    return MakeBool(a.z.value >= b.z.value);
+}
 |}
