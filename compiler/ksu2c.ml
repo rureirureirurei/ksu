@@ -9,6 +9,7 @@ type c_expr =
 | Bool of bool
 | Int of int
 | String of string
+| Nil
 
 type top_c_expr = 
 | FuncDef of { name: string; args: string list; body: c_expr }
@@ -39,7 +40,17 @@ and ksu2c: Ast.expr -> c_expr = fun expr -> match expr.value with
 | Bool b -> Bool b
 | Number i -> Int i
 | String s -> String s
-| _ -> failwith "Other cases translation to C is not yet implemented"
+| Nil -> Nil
+| Var _ -> failwith "Var not implemented"
+| App _ -> failwith "App not implemented"
+| If _ -> failwith "If not implemented"
+| Let _ -> failwith "Let not implemented"
+| Pair (_, _) -> failwith "Pair not implemented"
+| Prim _ -> failwith "Prim not implemented"
+| Car _ -> failwith "Car not implemented"
+| Cdr _ -> failwith "Cdr not implemented"
+| Callcc _ -> failwith "Callcc not implemented"
+| Lambda _ -> failwith "Lambdas expected only on the top level"
 
 and ast2text: top_c_expr list -> string = function 
 | FuncDef _ as func :: rest -> func2text func ^ "\n" ^ ast2text rest
@@ -61,6 +72,7 @@ and c_expr2text: c_expr -> string = function
 | Bool b -> let b_str = if b then "true" else "false" in "MakeBool(" ^ b_str ^ ")"
 | Int i -> "MakeInt(" ^ (string_of_int i) ^ ")"
 | String _ -> failwith "c_expr2text :: todo strings are not implemented yet"
+| Nil -> "MakeNil()"
 
 and def2text: top_c_expr -> string = function 
 | VarDef {name; expr} -> "Value " ^ name ^ " = " ^ c_expr2text expr
@@ -68,4 +80,4 @@ and def2text: top_c_expr -> string = function
 
 
 and top_exprs2c: Ast.top_expr list -> string = fun exprs ->
-  ast2text (ksu2c_top exprs)
+  Ksu2c_header.header ^ "\n\n" ^ ast2text (ksu2c_top exprs)

@@ -2,7 +2,7 @@ let header = {|
 #include <stdio.h>
 #include <stdlib.h>
 
-enum Tag { INT, BOOL, LAMBDA, PAIR };
+enum Tag { INT, BOOL, LAMBDA, PAIR, NIL };
 
 union Value;
 typedef union Value Value;
@@ -25,7 +25,7 @@ struct Lambda {
 struct Pair {
     enum Tag t;
     union Value* valueptr;
-    struct Pair* nextptr;
+    union Value* restptr;
 };
 typedef struct Pair Pair;
 
@@ -51,14 +51,22 @@ static Value MakeBool(int b) {
     return v;
 }
 
-static Value MakePair(Value a, Pair *rest) {
+static Value MakeNil() {
+    Value v;
+    v.t = NIL;
+    return v;
+}
+
+static Value MakePair(Value a, Value rest) {
     Value *aprim = malloc(sizeof(Value));
     *aprim = a;
+    Value *rprim = malloc(sizeof(Value));
+    *rprim = rest;
     
     Value v;
     v.t = PAIR;
     v.pair.valueptr = aprim;
-    v.pair.nextptr = rest;
+    v.pair.restptr = rprim;
     return v;
 }
 
@@ -67,5 +75,24 @@ static Value MakeLambda(void* funptr) {
     v.t = LAMBDA;
     v.lam.ptr = funptr;
     return v;
+}
+
+static void runtime_error(const char* message) {
+    fprintf(stderr, "Runtime error: %s\n", message);
+    exit(1);
+}
+
+static Value Car(Value list) {
+    if (list.t != PAIR) {
+        runtime_error("car expects a pair");
+    }
+    return *(list.pair.valueptr);
+}
+
+static Value Cdr(Value list) {
+    if (list.t != PAIR) {
+        runtime_error("cdr expects a pair");
+    }
+    return *(list.pair.restptr);
 }
 |}
