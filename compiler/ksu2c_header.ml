@@ -95,4 +95,69 @@ static Value Cdr(Value list) {
     }
     return *(list.pair.restptr);
 }
+
+static Value is_cons(Value v) {
+    return MakeBool(v.t == PAIR);
+}
+
+static Value is_null(Value v) {
+    return MakeBool(v.t == NIL);
+}
+
+static Value Cond(Value c, Value yt, Value nt) {
+    if (c.t != BOOL) {
+        runtime_error("if expects a boolean");
+    }
+    return (c.b.value ? yt : nt);
+}
+
+static Value is_bool(Value v) {
+    return MakeBool(v.t == BOOL);
+}
+
+static Value is_int(Value v) {
+    return MakeBool(v.t == INT);
+}
+
+static Value is_lambda(Value v) {
+    return MakeBool(v.t == LAMBDA);
+}
+
+static Value is_list(Value v) {
+    while (v.t == PAIR) {
+        v = *(v.pair.restptr);
+    }
+    return MakeBool(v.t == NIL);
+}
+
+static Value Eq(Value a, Value b) {
+    if (a.t != b.t) return MakeBool(0);
+    switch (a.t) {
+        case INT: return MakeBool(a.z.value == b.z.value);
+        case BOOL: return MakeBool(a.b.value == b.b.value);
+        case NIL: return MakeBool(1);
+        case LAMBDA: return MakeBool(a.lam.ptr == b.lam.ptr);
+        case PAIR: return MakeBool(a.pair.valueptr == b.pair.valueptr && a.pair.restptr == b.pair.restptr);
+        default: return MakeBool(0);
+    }
+}
+
+static Value ListRef(Value list, Value idx) {
+    if (idx.t != INT) {
+        runtime_error("list-ref expects an integer index");
+    }
+    int n = idx.z.value;
+    Value cur = list;
+    while (n > 0) {
+        if (cur.t != PAIR) {
+            runtime_error("list-ref index out of range or not a list");
+        }
+        cur = *(cur.pair.restptr);
+        n--;
+    }
+    if (cur.t != PAIR) {
+        runtime_error("list-ref expects a pair at the final position");
+    }
+    return *(cur.pair.valueptr);
+}
 |}
