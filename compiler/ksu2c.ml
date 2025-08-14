@@ -35,12 +35,37 @@ let rec ksu2c_top: Ast.top_expr list -> top_c_expr list = fun exprs ->
   let main_func = FuncDef {name="main";args=[];body=(Block main_body)}
 in defs @ [main_func]
 
-
-
 and ksu2c: Ast.expr -> c_expr = fun expr -> match expr.value with 
 | Bool b -> Bool b
 | Number i -> Int i
 | String s -> String s
-| _ -> failwith "lol"
+| _ -> failwith "Other cases translation to C is not yet implemented"
+
+and ast2text: top_c_expr list -> string = function 
+| FuncDef _ as func :: rest -> func2text func ^ "\n" ^ ast2text rest
+| VarDef _ as def :: rest -> def2text def ^ "\n" ^ ast2text rest
+| [] -> ""
+
+and func2text: top_c_expr -> string = function 
+| FuncDef {name; args; body} -> 
+  let args_str = String.concat ", " (List.map (fun arg -> "Value " ^ arg) args) in 
+  let body_str = c_expr2text body in 
+  "Value " ^ name ^ "(" ^ args_str ^ ") {\n" ^ body_str ^ "\n}"
+| _ -> failwith "func2text expected FuncDef"
+
+and c_expr2text: c_expr -> string = function 
+| Block exprs -> String.concat "\n" (List.map c_expr2text exprs)
+| Apply {func; args} -> func ^ "(" ^ String.concat ", " (List.map (fun arg -> "(" ^ (c_expr2text arg) ^ ")") args) ^ ")"
+| Assign {lhs; rhs} -> lhs ^ " = " ^ c_expr2text rhs ^ ";"
+| Var name -> name
+| Bool b -> let b_str = if b then "true" else "false" in "MakeBool(" ^ b_str ^ ")"
+| Int i -> "MakeInt(" ^ (string_of_int i) ^ ")"
+| String _ -> failwith "c_expr2text :: todo strings are not implemented yet"
+
+and def2text: top_c_expr -> string = function 
+| VarDef {name; expr} -> "Value " ^ name ^ " = " ^ c_expr2text expr
+| _ -> "def2text expected variable definition"
 
 
+and top_exprs2c: Ast.top_expr list -> string = fun exprs ->
+  ast2text (ksu2c_top exprs)

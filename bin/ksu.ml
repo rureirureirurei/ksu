@@ -29,9 +29,12 @@ let () =
 
   let files_flattened_asts = List.map Flattening.disambiguate_top_expr files_converted_asts in
   let files_flattened_asts = List.map Flattening.flatten_top_expr files_flattened_asts in
+  let c_text = Ksu2c.top_exprs2c files_flattened_asts in 
   
   if (!debug_mode) then (
-    List.iter (fun ast -> print_endline @@ "\n" ^ (Ast.string_of_top_expr ast)) files_flattened_asts
+    List.iter (fun ast -> print_endline @@ "\n" ^ (Ast.string_of_top_expr ast)) files_flattened_asts;
+    print_endline "\nFILE CONVERTED TO C\n";
+    print_endline c_text;
   ) else ();
 
   let results, _ =
