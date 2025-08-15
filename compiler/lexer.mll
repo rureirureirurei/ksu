@@ -23,8 +23,6 @@ rule lex = parse
   | "define" { DEFINE }
   | "lambda" { LAMBDA }
   | "call/cc" { CALLCC }
-  | "car" { CAR }
-  | "cdr" { CDR }
   | "'" { QUOTE }
   | ';' [^ '\n' '\r']* { lex lexbuf }
   | newline { 

@@ -8,7 +8,6 @@
 %token IF LAMBDA CALLCC
 %token LET
 %token QUOTE
-%token CAR CDR
 %token EOF
 
 %start <Compiler_lib.Ast.top_expr list> parse
@@ -20,7 +19,6 @@
   let mk_node: Lexing.position * Lexing.position -> 'a -> 'a node =
   fun ({ pos_fname; pos_lnum; pos_cnum; _ }, _) data ->
     { value = data
-    ; id = fresh_node_tag ()
     ; loc = {
         file = pos_fname;
         line = pos_lnum;
@@ -51,15 +49,13 @@ atom:
 compound:
   | app_expr {
       match $1 with
-      | f :: args -> mk_node $loc (App { func = f; args = args })
+      | f :: args -> mk_node $loc (App (f, args))
       | [] -> failwith "Empty application"
     }
   | lambda_expr { $1}
   | if_expr { $1 }
   | let_expr { $1 }
   | callcc_expr { $1 }
-  | car_expr { $1 }
-  | cdr_expr { $1 }
 
 list_expr:
   | QUOTE LPAREN list_elements RPAREN { $3 }
@@ -73,10 +69,10 @@ lambda_args:
   | SYMBOL lambda_args { $1 :: $2 }
 
 lambda_expr:
-  | LAMBDA LPAREN lambda_args RPAREN expr { mk_node $loc (Lambda { ids = $3; body = $5 }) }
+  | LAMBDA LPAREN lambda_args RPAREN expr { mk_node $loc (Lambda ($3, $5) }
 
 if_expr:
-  | IF expr expr expr { mk_node $loc (If { cond = $2; y = $3; n = $4 }) }
+  | IF expr expr expr { mk_node $loc (If ($2, $3, $4)) }
 
 app_expr:
   | expr { [$1] }
@@ -90,14 +86,8 @@ let_args:
   | LBRACKET SYMBOL expr RBRACKET let_args { ($2, $3) :: $5 }
 
 let_expr:
-  | LET LPAREN let_args RPAREN expr { mk_node $loc (Let { defs = $3; body = $5 }) }
+  | LET LPAREN let_args RPAREN expr { mk_node $loc (Let ($3, $5)) }
 
 define_expr:
-  | DEFINE SYMBOL expr { mk_node $loc (Define { name = $2; expr = $3 }) }
-  | DEFINE LPAREN SYMBOL lambda_args RPAREN expr { mk_node $loc (Define { name = $3; expr = mk_node $loc (Lambda { ids = $4; body = $6 }) }) }
-
-car_expr:
-  | CAR expr { mk_node $loc (Car $2) }
-
-cdr_expr:
-  | CDR expr { mk_node $loc (Cdr $2) }
+  | DEFINE SYMBOL expr { mk_node $loc (Define ($2, $3)) }
+  | DEFINE LPAREN SYMBOL lambda_args RPAREN expr { mk_node $loc (Define ($3, mk_node $loc (Lambda ($4, $6)))) }

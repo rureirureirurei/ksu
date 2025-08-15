@@ -1,77 +1,71 @@
 type location = { file : string; line : int; column : int }
 
-type top_expr_data = Expr of expr | Define of { name : string; expr : expr }
+type prim = P_Car | P_Cdr | P_Cons | P_IsNil | P_IsPair | P_IsNumber | P_Plus | P_Minus | P_Mult | P_Div | P_Mod | P_Eq | P_Ne | P_Lt | P_Le | P_Gt | P_Ge | P_And | P_Or | P_Not
+
+type top_expr_data = E_Expr of expr | E_Define of var * expr
+
 and top_expr = top_expr_data node
 and var = string
 
 and expr_data =
-  | Bool of bool
-  | Number of int
-  | String of string
-  | Var of var
-  | App of { func : expr; args : expr list }
-  | Lambda of { ids : var list; body : expr }
-  | If of { cond : expr; y : expr; n : expr }
-  | Callcc of expr
-  | Let of { defs : (var * expr) list; body : expr }
-  | Pair of expr * expr
-  | Nil
-  | Prim of string
-  | Car of expr
-  | Cdr of expr
+  | E_Bool of bool
+  | E_Number of int
+  | E_String of string
+  | E_Var of var
+  | E_App of expr * expr list
+  | E_Lambda of var list * expr
+  | E_If of expr * expr * expr
+  | E_Callcc of expr
+  | E_Let of (var * expr) list * expr
+  | E_Pair of expr * expr
+  | E_Nil
+  | E_Prim of prim
 
 and expr = expr_data node
-and 'a node = { value : 'a; id : int; loc : location }
+and 'a node = { value : 'a;  loc : location }
 
-let fresh_node_tag : unit -> int =
-  let counter = ref 0 in
-  fun () ->
-    let result = !counter in
-    counter := result + 1;
-    result
-
-let synthetic : 'a -> 'a node =
- fun data ->
-  {
-    value = data;
-    id = fresh_node_tag ();
-    loc = { file = ""; line = 0; column = 0 };
-  }
-
-let fresh_var : unit -> expr * var =
-  let counter = ref 0 in
-  fun () ->
-    let result = "synthetic_var_" ^ string_of_int !counter in
-    counter := !counter + 1;
-    (synthetic (Var result), result)
-
-(* Takes OCaml list and returns list in the AST representation *)
-let rec genlist : expr list -> expr =
- fun l ->
-  match l with
-  | [] -> synthetic Nil
-  | x :: xs -> synthetic (Pair (x, genlist xs))
+let string_of_prim = function
+          | P_Car -> "car"
+          | P_Cdr -> "cdr"
+          | P_Cons -> "cons"
+          | P_IsNil -> "is-nil"
+          | P_IsPair -> "is-pair"
+          | P_IsNumber -> "is-number"
+          | P_Plus -> "+"
+          | P_Minus -> "-"
+          | P_Mult -> "*"
+          | P_Div -> "/"
+          | P_Mod -> "mod"
+          | P_Eq -> "="
+          | P_Ne -> "!="
+          | P_Lt -> "<"
+          | P_Le -> "<="
+          | P_Gt -> ">"
+          | P_Ge -> ">="
+          | P_And -> "and"
+          | P_Or -> "or"
+          | P_Not -> "not"
 
 (* Stringifies the AST *)
 let string_of_expr expr =
   let rec string_of_expr_aux offset { value; _ } =
     match value with
-    | Bool b -> string_of_bool b
-    | Number n -> string_of_int n
-    | String s -> s
-    | Var s -> s
-    | App { func; args } ->
+      | E_Bool b -> string_of_bool b
+    | E_Number n -> string_of_int n
+    | E_String s -> "\"" ^ s ^ "\""
+    | E_Var s -> s
+    | E_App (func, args) ->
         "("
         ^ string_of_expr_aux offset func
         ^ " "
         ^ String.concat " " (List.map (string_of_expr_aux (offset + 2)) args)
         ^ ")"
-    | Lambda { ids; body } ->
+    | E_Lambda (ids, body) ->
         let indent = String.make offset ' ' in
         "(lambda (" ^ String.concat " " ids ^ ")\n" ^ indent ^ "  "
         ^ string_of_expr_aux (offset + 2) body
         ^ ")"
-    | If { cond; y; n } ->
+    | E_If (cond, y, n) ->
         let indent = String.make offset ' ' in
         "(if "
         ^ string_of_expr_aux offset cond
@@ -80,8 +74,8 @@ let string_of_expr expr =
         ^ "\n" ^ indent ^ "    "
         ^ string_of_expr_aux (offset + 4) n
         ^ ")"
-    | Callcc e -> "(callcc " ^ string_of_expr_aux (offset + 2) e ^ ")"
-    | Let { defs; body } ->
+    | E_Callcc e -> "(callcc " ^ string_of_expr_aux (offset + 2) e ^ ")"
+    | E_Let (defs, body) ->
         let indent = String.make offset ' ' in
         let defs_str =
           List.map
@@ -94,21 +88,21 @@ let string_of_expr expr =
         ^ ")\n" ^ indent ^ "  "
         ^ string_of_expr_aux (offset + 2) body
         ^ ")"
-    | Pair (e1, e2) ->
+    | E_Pair (e1, e2) ->
         "(cons "
         ^ string_of_expr_aux offset e1
         ^ " "
         ^ string_of_expr_aux offset e2
         ^ ")"
-    | Nil -> "nil"
-    | Prim name -> "<primitive: \"" ^ name ^ "\">"
-    | Car e -> "(car " ^ string_of_expr_aux offset e ^ ")"
-    | Cdr e -> "(cdr " ^ string_of_expr_aux offset e ^ ")"
+    | E_Nil -> "nil"
+    | E_Prim prim -> "<primitive: \"" ^ string_of_prim prim ^ "\">"
   in
   string_of_expr_aux 0 expr
 
-let string_of_top_expr { value; _ } =
-  match value with
-  | Expr e -> string_of_expr e
-  | Define { name; expr } ->
-      "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")"
+let string_of_top_expr top_expr =
+  match top_expr.value with
+  | E_Expr e -> string_of_expr e ^ "\n"
+  | E_Define (name, expr) ->
+      "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")\n"
+
+

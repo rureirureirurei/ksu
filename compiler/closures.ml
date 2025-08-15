@@ -1,169 +1,102 @@
 open Compiler_lib
 open Ast
-module VarSet = Set.Make (String)
 
-(* Returns the free variables in the expression *)
-let rec free : expr -> VarSet.t =
- fun expr ->
-  match expr.value with
-  | Lambda { ids; body } -> VarSet.diff (free body) (VarSet.of_list ids)
-  | Var v -> VarSet.singleton v
-  | App { func; args } ->
-      List.fold_left
-        (fun acc arg -> VarSet.union acc (free arg))
-        (free func) args
-  | Let { defs; body } ->
-      let defs_vars =
-        List.fold_left
-          (fun acc (_, expr) -> VarSet.union acc (free expr))
-          VarSet.empty defs
-      in
-      VarSet.diff (free body) defs_vars
-  | Pair (e1, e2) -> VarSet.union (free e1) (free e2)
-  | Nil -> VarSet.empty
-  | If { cond; y; n } ->
-      VarSet.union (free cond) (VarSet.union (free y) (free n))
-  | Callcc _ -> failwith "Free variables analysis not implemented for callcc"
-  | Bool _ | Number _ | String _ -> VarSet.empty
-  | Prim _ -> VarSet.empty
-  | Car e -> free e
-  | Cdr e -> free e
 
-(* Contains mappings identifier -> index in the enviroment for the free variables *)
-module VarMap = Map.Make (String)
+type cc_top_expr = 
+| CC_FuncDef of var * var list * cc_expr
+| CC_VarDef of var * cc_expr
+| CC_Expr of cc_expr
 
-type state = int VarMap.t
+and cc_expr =
+| CC_MakeClosure of var * cc_expr (* function id, environment - must actually be the Env*)
+| CC_MakeEnv of var list 
+| CC_EnvRef of var * var
+| CC_AppClosure of cc_expr * cc_expr list
+(* And the regular stuff *)
+| CC_Bool of bool
+| CC_Number of int
+| CC_String of string
+| CC_Var of var
+| CC_App of cc_expr * cc_expr list
+| CC_If of cc_expr * cc_expr * cc_expr
+| CC_Callcc of cc_expr
+| CC_Let of (var * cc_expr) list * cc_expr
+| CC_Pair of cc_expr * cc_expr
+| CC_Nil
+| CC_Prim of prim
 
-let rec t_top_expr (expr : top_expr) : top_expr * top_expr list =
-  match expr.value with
-  | Define { name; expr } ->
-      (* Should we add the define name to the state? *)
-      let expr', globals = t expr VarMap.empty (fst @@ fresh_var ()) in
-      ( { value = Define { name; expr = expr' }; id = expr.id; loc = expr.loc },
-        globals )
-  | Expr expr ->
-      let expr', globals = t expr VarMap.empty (fst @@ fresh_var ()) in
-      ({ value = Expr expr'; id = expr.id; loc = expr.loc }, globals)
+module VarSet = Set.Make(String)
 
-(* Returns a tuple of the transformed expression and the list of global lambda definitions that need to be added to the state *)
-and t : expr -> state -> expr -> expr * top_expr list =
- fun expr state env ->
-  match expr.value with
-  | Var v -> (
-      match VarMap.find_opt v state with
-      | Some index ->
-          let index_node = synthetic (Number index) in
-          let list_ref_node = synthetic (Var "list-ref") in
-          let fresh, fresh_id = fresh_var () in
-          let app_node =
-            synthetic
-              (App
-                 {
-                   func = fresh;
-                   args = [ list_ref_node; env; index_node ];
-                 })
-          in
-          (synthetic
-              (Let { defs = [ (fresh_id, synthetic (Car list_ref_node)) ]; body = app_node}), [])
+(* Obtains set of free variables in an expression *)
+let rec free: expr -> VarSet.t = fun expr -> 
+  match expr.value with 
+  (* Trivial Stuff *)
+  | E_String _
+  | E_Number _
+  | E_Prim _
+  | E_Nil 
+  | E_Bool _ -> VarSet.empty
+  (* A bit less trivial *)
+  | E_App (f, args) -> List.fold_left (fun free_vars expr -> VarSet.union free_vars (free expr)) VarSet.empty (f :: args)
+  | E_Var v -> VarSet.singleton v
+  | E_Callcc expr -> free expr
+  | E_Pair (fst, snd) -> VarSet.union (free fst) (free snd)
+  | E_If (c, y, n) -> VarSet.union (free n) @@ VarSet.union (free c) (free y)
+  (* Lambda and Let *)
+  | E_Let (defs, body) -> VarSet.diff (free body) (List.map fst defs |> VarSet.of_list)
+  | E_Lambda (args, body) -> VarSet.diff (free body) (VarSet.of_list args)
 
-      | None -> (expr, []))
-  | Lambda { ids; body } ->
-      let free = free expr in
-      let env', env'id = fresh_var () in
-      let ids' = env'id :: ids in
-      let state' =
-        List.fold_left
-          (fun acc (id, index) -> VarMap.add id index acc)
-          VarMap.empty
-          (List.combine (VarSet.elements free)
-             (List.init (VarSet.cardinal free) (fun i -> i + 1)))
-      in
-      let body', body_globals = t body state' env' in
-      let lambda_node = synthetic (Lambda { ids = ids'; body = body' }) in
-      let lambda_name, lambda_name_id = fresh_var () in
-      let lambda_global =
-        synthetic (Define { name = lambda_name_id; expr = lambda_node })
-      in
-      let env =
-        List.map
-          (fun id -> fst @@ t (synthetic (Var id)) state env)
-          (VarSet.elements free)
-      in
-      ( synthetic (Pair (lambda_name, genlist env)),
-        body_globals @ [ lambda_global ] )
-  | Let { defs; body } ->
-      let defs_globals, defs' =
-        List.fold_left_map
-          (fun globals (id, expr) ->
-            let e', global = t expr state env in
-            (global @ globals, (id, e')))
-          [] defs
-      in
-      let body', body_globals =
-        t body
-          (List.fold_left (fun acc (id, _) -> VarMap.remove id acc) state defs')
-          env
-      in
-      ( synthetic @@ Let { defs = defs'; body = body' },
-        defs_globals @ body_globals )
-  | Pair (e1, e2) ->
-      let e1', g1 = t e1 state env in
-      let e2', g2 = t e2 state env in
-      (synthetic @@ Pair (e1', e2'), g1 @ g2)
-  | If { cond; y; n } ->
-      let cond', gc = t cond state env in
-      let y', gy = t y state env in
-      let n', gn = t n state env in
-      (synthetic @@ If { cond = cond'; y = y'; n = n' }, gc @ gy @ gn)
-  | Callcc f ->
-      let f', global_defs = t f state env in
-      (synthetic (Callcc f'), global_defs)
-  | Bool _ | Number _ | String _ -> (expr, [])
-  | Prim _ -> (expr, [])
-  | Nil -> (expr, [])
-  | Car e ->
-      let e', global = t e state env in
-      (synthetic @@ Car e', global)
-  | Cdr e ->
-      let e', global = t e state env in
-      (synthetic @@ Cdr e', global)
-  | App { func = f; args } -> (
-      let (globals : top_expr list), args' =
-        List.fold_left_map
-          (fun globals arg ->
-            let e', global = t arg state env in
-            (global @ globals, e'))
-          [] args
-      in
-      match f.value with
-      | Prim _ -> (synthetic @@ App { func = f; args = args' }, globals)
-      | _ ->
-          (* I am not sure if we need it? I mean the idea is clear - to have applications to identifiers only. *)
-          let f', f'_global = t f state env in
-          let var, var_id = fresh_var () in
-          let var', var_id' = fresh_var () in
-          ( synthetic
-            @@ Let
-                 {
-                   defs = [ (var_id, f') ];
-                   body =
-                     synthetic
-                     @@ Let
-                          {
-                            defs = [ (var_id', synthetic (Car var)) ];
-                            body = synthetic (App { func = var'; args = var :: args' });
-                          };
-                 },
-            f'_global @ globals ))
 
-(* Takes a list of top_exprs and returns a list of top_exprs with the closures converted *)
-let t_file : top_expr list -> top_expr list =
- fun exprs ->
-  let globals, exprs' =
-    List.fold_left_map
-      (fun globals arg ->
-        let expr', globals' = t_top_expr arg in
-        (globals @ globals', expr'))
-      [] exprs
-  in
-  globals @ exprs'
+(* Converts expression to the closure-converted. As all functions become global at this step, we also return list of FuncDefs *)
+let convert: top_expr list -> cc_top_expr list = 
+  let gen_fresh_var domain =
+    let num = ref 0 in 
+    (fun () -> num := !num + 1; (domain ^ "_" ^ (string_of_int !num))) in
+  let gen_lambda_id = gen_fresh_var "Lambda" in 
+  let gen_env_id = gen_fresh_var "Env" in 
+
+  let res = ref [] in 
+  let append: cc_top_expr -> unit = fun t -> res := t :: !res in 
+
+  (* Auxillary function, f *)
+  let rec t: VarSet.t -> var -> expr -> cc_expr = fun sub env_sym expr -> 
+    let t' = t sub env_sym in
+    
+    match expr.value with 
+    (* Trivial Stuff *)
+    | E_String s -> CC_String s
+    | E_Number n -> CC_Number n
+    | E_Prim p -> CC_Prim p
+    | E_Nil -> CC_Nil
+    | E_Bool b -> CC_Bool b
+    (* A bit trickier *)
+    | E_If (c, y, n) -> CC_If (t' c, t' y, t' n)
+    | E_Let (defs, body) -> 
+      let defs' = List.map (fun (v, expr) -> (v, t' expr)) defs in
+      let body' = t (free body) env_sym body in 
+      CC_Let (defs', body')
+    | E_Pair (a, b) -> CC_Pair (t' a, t' b)
+    | E_Callcc e -> CC_Callcc (t' e) 
+    (* Var *)
+    | E_Var v -> (match VarSet.find_opt v sub with Some v -> CC_EnvRef (env_sym, v) | None -> CC_Var v)
+    (* App & Lambda *)
+    | E_App (fn, args) -> CC_AppClosure (t' fn, List.map t' args)
+    | E_Lambda (args, body) -> 
+      let lamid = gen_lambda_id () in 
+      let envid = gen_env_id () in 
+      let body' = t (free body) envid body in 
+      append (CC_FuncDef (lamid, (envid :: args), body'));
+      CC_MakeClosure (lamid, CC_MakeEnv (VarSet.to_list @@ free body))
+    in
+
+  let t_top: top_expr -> unit = fun top_expr -> 
+    let t = t VarSet.empty "Nonexistent env" in
+    let transformed = match top_expr.value with 
+      | E_Expr e -> CC_Expr (t e)
+      | E_Define (name, e) -> CC_VarDef (name, t e)
+  in append transformed
+  
+
+  in fun exprs -> List.iter t_top exprs; !res
+
+  
