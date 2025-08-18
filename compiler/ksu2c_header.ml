@@ -94,21 +94,21 @@ static void runtime_error(const char* message) {
     exit(1);
 }
 
-static Value car(Value list) {
+static Value __builtin_car(Value list) {
     if (list.t != PAIR) {
         runtime_error("car expects a pair");
     }
     return *(list.pair.fst);
 }
 
-static Value cdr(Value list) {
+static Value __builtin_cdr(Value list) {
     if (list.t != PAIR) {
         runtime_error("cdr expects a pair");
     }
     return *(list.pair.snd);
 }
 
-static Value cons(Value fst, Value snd) {
+static Value __builtin_cons(Value fst, Value snd) {
     Value *fstptr = malloc(sizeof(Value));
     Value *sndptr = malloc(sizeof(Value));
     *fstptr = fst;
@@ -121,34 +121,34 @@ static Value cons(Value fst, Value snd) {
     return v;
 }
 
-static Value is_cons(Value v) {
+static Value __builtin_is_cons(Value v) {
     return MakeBool(v.t == PAIR);
 }
 
-static Value is_null(Value v) {
+static Value __builtin_is_null(Value v) {
     return MakeBool(v.t == NIL);
 }
 
-static Value is_bool(Value v) {
+static Value __builtin_is_bool(Value v) {
     return MakeBool(v.t == BOOL);
 }
 
-static Value is_int(Value v) {
+static Value __builtin_is_int(Value v) {
     return MakeBool(v.t == INT);
 }
 
-static Value is_lambda(Value v) {
+static Value __builtin_is_lambda(Value v) {
     return MakeBool(v.t == LAMBDA);
 }
 
-static Value is_list(Value v) {
+static Value __builtin_is_list(Value v) {
     while (v.t == PAIR) {
         v = *(v.pair.snd);
     }
     return MakeBool(v.t == NIL);
 }
 
-static Value eq(Value a, Value b) {
+static Value __builtin_eq(Value a, Value b) {
     if (a.t != b.t) return MakeBool(0);
     switch (a.t) {
         case INT: return MakeBool(a.z.value == b.z.value);
@@ -157,7 +157,7 @@ static Value eq(Value a, Value b) {
     }
 }
 
-static Value list_ref(Value list, Value idx) {
+static Value __builtin_list_ref(Value list, Value idx) {
     if (idx.t != INT) {
         runtime_error("list-ref expects an integer index");
     }
@@ -182,22 +182,22 @@ static void ensure_int_pair(Value a, Value b, const char* op) {
     }
 }
 
-static Value Add(Value a, Value b) {
+static Value __builtin_add(Value a, Value b) {
     ensure_int_pair(a, b, "+ expects two integers");
     return MakeInt(a.z.value + b.z.value);
 }
 
-static Value Sub(Value a, Value b) {
+static Value __builtin_sub(Value a, Value b) {
     ensure_int_pair(a, b, "- expects two integers");
     return MakeInt(a.z.value - b.z.value);
 }
 
-static Value Mul(Value a, Value b) {
+static Value __builtin_mul(Value a, Value b) {
     ensure_int_pair(a, b, "* expects two integers");
     return MakeInt(a.z.value * b.z.value);
 }
 
-static Value Div(Value a, Value b) {
+static Value __builtin_div(Value a, Value b) {
     ensure_int_pair(a, b, "/ expects two integers");
     if (b.z.value == 0) {
         runtime_error("division by zero");
@@ -205,23 +205,53 @@ static Value Div(Value a, Value b) {
     return MakeInt(a.z.value / b.z.value);
 }
 
-static Value Lt(Value a, Value b) {
+static Value __builtin_lt(Value a, Value b) {
     ensure_int_pair(a, b, "< expects two integers");
     return MakeBool(a.z.value < b.z.value);
 }
 
-static Value Gt(Value a, Value b) {
+static Value __builtin_gt(Value a, Value b) {
     ensure_int_pair(a, b, "> expects two integers");
     return MakeBool(a.z.value > b.z.value);
 }
 
-static Value Le(Value a, Value b) {
+static Value __builtin_le(Value a, Value b) {
     ensure_int_pair(a, b, "<= expects two integers");
     return MakeBool(a.z.value <= b.z.value);
 }
 
-static Value Ge(Value a, Value b) {
+static Value __builtin_ge(Value a, Value b) {
     ensure_int_pair(a, b, ">= expects two integers");
     return MakeBool(a.z.value >= b.z.value);
+}
+
+static Value __builtin_and(Value a, Value b) {
+    if (a.t != BOOL || b.t != BOOL) {
+        runtime_error("and expects two booleans");
+    }
+    return MakeBool(a.b.value && b.b.value);
+}
+
+static Value __builtin_or(Value a, Value b) {
+    if (a.t != BOOL || b.t != BOOL) {
+        runtime_error("or expects two booleans");
+    }
+    return MakeBool(a.b.value || b.b.value);
+}
+
+static Value __builtin_not(Value a) {
+    if (a.t != BOOL) {
+        runtime_error("not expects a boolean");
+    }
+    return MakeBool(!a.b.value);
+}
+
+static Value __builtin_ne(Value a, Value b) {
+    if (a.t != b.t) return MakeBool(1);
+    switch (a.t) {
+        case INT: return MakeBool(a.z.value != b.z.value);
+        case BOOL: return MakeBool(a.b.value != b.b.value);
+        default: runtime_error("Can only compare ints and bools");
+    }
 }
 |}
