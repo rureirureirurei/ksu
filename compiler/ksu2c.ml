@@ -41,7 +41,7 @@ let ksu2c: Closures.cc_top_expr list -> string =
   | CC_Number n -> "MakeInt(" ^ string_of_int n ^ ")"
   | CC_Bool b -> "MakeBool(" ^ string_of_bool b ^ ")"
   | CC_String s -> "MakeString(" ^ s ^ ")"
-  | CC_If (c, y, n) -> "(__builtin_eq(" ^ (string_of_cc_expr c) ^ ", MakeBool(1)) ? " ^ (string_of_cc_expr y) ^ " : " ^ (string_of_cc_expr n) ^ ")" 
+  | CC_If (c, y, n) -> "(__builtin_is_true(" ^ (string_of_cc_expr c) ^ ") ? " ^ (string_of_cc_expr y) ^ " : " ^ (string_of_cc_expr n) ^ ")" 
   | CC_Var v -> v
   (*C Closures *)
   | CC_MakeClosure (var, c_expr) -> "MakeClosure((Lambda)" ^ var ^ ", " ^ string_of_cc_expr c_expr ^ ")"
@@ -58,7 +58,7 @@ let ksu2c: Closures.cc_top_expr list -> string =
       else 
         "(union Value (*)(union Value, union Value, union Value, union Value))" in
       "({ Value " ^ tmp_var ^ " = " ^ string_of_cc_expr fn ^ "; " ^ 
-      "(" ^ cast_type ^ tmp_var ^ ".clo.lam)(" ^ tmp_var ^ ".clo.env" ^ 
+      "(" ^ cast_type ^ tmp_var ^ ".clo.lam)(MakeEnv(" ^ tmp_var ^ ".clo.env)" ^ 
       (if List.length args > 0 then ", " else "") ^ 
       args_str ^ "); })"
   | CC_MakeEnv (vars, env_struct_id) -> "alloc_" ^ env_struct_id ^ "(" ^ (String.concat "," vars) ^ ")"

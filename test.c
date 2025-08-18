@@ -1,4 +1,4 @@
-let header = {|
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -274,4 +274,315 @@ static Value __builtin_ne(Value a, Value b) {
         default: runtime_error("Can only compare ints and bools");
     }
 }
-|}
+
+
+Value factorial;
+Value not;
+Value or;
+Value and;
+Value number_quest_;
+Value pair_quest_;
+Value nil_quest_;
+Value nil;
+Value cdr;
+Value car;
+Value cons;
+Value _gt__equal_;
+Value _lt__equal_;
+Value _gt_;
+Value _lt_;
+Value _bang__equal_;
+Value eq_quest_;
+Value _equal_;
+Value _slash_;
+Value _minus_;
+Value _star_;
+Value _plus_;
+
+struct Env_21 {
+  Value _equal_;
+  Value _minus_;
+  Value _star_;
+  Value factorial;
+  Value n;
+};
+
+Value alloc_Env_21(Value _equal_, Value _minus_, Value _star_, Value factorial, Value n) {
+  struct Env_21* t = malloc(sizeof(struct Env_21));
+  t->_equal_ = _equal_;
+  t->_minus_ = _minus_;
+  t->_star_ = _star_;
+  t->factorial = factorial;
+  t->n = n;
+  return MakeEnv(t);
+}
+
+struct Env_20 {
+
+};
+
+Value alloc_Env_20() {
+  return MakeEnv(NULL);
+}
+
+struct Env_19 {
+
+};
+
+Value alloc_Env_19() {
+  return MakeEnv(NULL);
+}
+
+struct Env_18 {
+
+};
+
+Value alloc_Env_18() {
+  return MakeEnv(NULL);
+}
+
+struct Env_17 {
+
+};
+
+Value alloc_Env_17() {
+  return MakeEnv(NULL);
+}
+
+struct Env_16 {
+
+};
+
+Value alloc_Env_16() {
+  return MakeEnv(NULL);
+}
+
+struct Env_15 {
+
+};
+
+Value alloc_Env_15() {
+  return MakeEnv(NULL);
+}
+
+struct Env_14 {
+
+};
+
+Value alloc_Env_14() {
+  return MakeEnv(NULL);
+}
+
+struct Env_13 {
+
+};
+
+Value alloc_Env_13() {
+  return MakeEnv(NULL);
+}
+
+struct Env_12 {
+
+};
+
+Value alloc_Env_12() {
+  return MakeEnv(NULL);
+}
+
+struct Env_11 {
+
+};
+
+Value alloc_Env_11() {
+  return MakeEnv(NULL);
+}
+
+struct Env_10 {
+
+};
+
+Value alloc_Env_10() {
+  return MakeEnv(NULL);
+}
+
+struct Env_9 {
+
+};
+
+Value alloc_Env_9() {
+  return MakeEnv(NULL);
+}
+
+struct Env_8 {
+
+};
+
+Value alloc_Env_8() {
+  return MakeEnv(NULL);
+}
+
+struct Env_7 {
+
+};
+
+Value alloc_Env_7() {
+  return MakeEnv(NULL);
+}
+
+struct Env_6 {
+
+};
+
+Value alloc_Env_6() {
+  return MakeEnv(NULL);
+}
+
+struct Env_5 {
+
+};
+
+Value alloc_Env_5() {
+  return MakeEnv(NULL);
+}
+
+struct Env_4 {
+
+};
+
+Value alloc_Env_4() {
+  return MakeEnv(NULL);
+}
+
+struct Env_3 {
+
+};
+
+Value alloc_Env_3() {
+  return MakeEnv(NULL);
+}
+
+struct Env_2 {
+
+};
+
+Value alloc_Env_2() {
+  return MakeEnv(NULL);
+}
+
+struct Env_1 {
+
+};
+
+Value alloc_Env_1() {
+  return MakeEnv(NULL);
+}
+
+Value Lambda_1(Value $env, Value a0, Value a1) {
+return __builtin_add(a0, a1);
+}
+
+Value Lambda_2(Value $env, Value a0, Value a1) {
+return __builtin_mul(a0, a1);
+}
+
+Value Lambda_3(Value $env, Value a0, Value a1) {
+return __builtin_sub(a0, a1);
+}
+
+Value Lambda_4(Value $env, Value a0, Value a1) {
+return __builtin_div(a0, a1);
+}
+
+Value Lambda_5(Value $env, Value a0, Value a1) {
+return __builtin_eq(a0, a1);
+}
+
+Value Lambda_6(Value $env, Value a0, Value a1) {
+return __builtin_eq(a0, a1);
+}
+
+Value Lambda_7(Value $env, Value a0, Value a1) {
+return __builtin_ne(a0, a1);
+}
+
+Value Lambda_8(Value $env, Value a0, Value a1) {
+return __builtin_lt(a0, a1);
+}
+
+Value Lambda_9(Value $env, Value a0, Value a1) {
+return __builtin_gt(a0, a1);
+}
+
+Value Lambda_10(Value $env, Value a0, Value a1) {
+return __builtin_le(a0, a1);
+}
+
+Value Lambda_11(Value $env, Value a0, Value a1) {
+return __builtin_ge(a0, a1);
+}
+
+Value Lambda_12(Value $env, Value a0, Value a1) {
+return __builtin_cons(a0, a1);
+}
+
+Value Lambda_13(Value $env, Value a0) {
+return __builtin_car(a0);
+}
+
+Value Lambda_14(Value $env, Value a0) {
+return __builtin_cdr(a0);
+}
+
+Value Lambda_15(Value $env, Value a0) {
+return __builtin_is_null(a0);
+}
+
+Value Lambda_16(Value $env, Value a0) {
+return __builtin_is_cons(a0);
+}
+
+Value Lambda_17(Value $env, Value a0) {
+return __builtin_is_int(a0);
+}
+
+Value Lambda_18(Value $env, Value a0, Value a1) {
+return __builtin_and(a0, a1);
+}
+
+Value Lambda_19(Value $env, Value a0, Value a1) {
+return __builtin_or(a0, a1);
+}
+
+Value Lambda_20(Value $env, Value a0) {
+return __builtin_not(a0);
+}
+
+Value Lambda_21(Value $env, Value n) {
+return (__builtin_is_true(({ Value tmp_5 = EnvRef($env, _equal_); ((Value (*)(Value, Value, Value))tmp_5.clo.lam)(MakeEnv(tmp_5.clo.env), EnvRef($env, n), MakeInt(0)); })) ? MakeInt(1) : ({ Value tmp_2 = EnvRef($env, _star_); ((union Value (*)(union Value, union Value, union Value))tmp_2.clo.lam)(MakeEnv(tmp_2.clo.env), EnvRef($env, n), ({ Value tmp_3 = EnvRef($env, factorial); ((union Value (*)(union Value, union Value))tmp_3.clo.lam)(MakeEnv(tmp_3.clo.env), ({ Value tmp_4 = EnvRef($env, _minus_); ((union Value (*)(union Value, union Value, union Value))tmp_4.clo.lam)(MakeEnv(tmp_4.clo.env), EnvRef($env, n), MakeInt(1)); })); })); }));
+}
+
+int main() {
+_plus_ = MakeClosure((Lambda)Lambda_1, alloc_Env_1());
+_star_ = MakeClosure((Lambda)Lambda_2, alloc_Env_2());
+_minus_ = MakeClosure((Lambda)Lambda_3, alloc_Env_3());
+_slash_ = MakeClosure((Lambda)Lambda_4, alloc_Env_4());
+_equal_ = MakeClosure((Lambda)Lambda_5, alloc_Env_5());
+eq_quest_ = MakeClosure((Lambda)Lambda_6, alloc_Env_6());
+_bang__equal_ = MakeClosure((Lambda)Lambda_7, alloc_Env_7());
+_lt_ = MakeClosure((Lambda)Lambda_8, alloc_Env_8());
+_gt_ = MakeClosure((Lambda)Lambda_9, alloc_Env_9());
+_lt__equal_ = MakeClosure((Lambda)Lambda_10, alloc_Env_10());
+_gt__equal_ = MakeClosure((Lambda)Lambda_11, alloc_Env_11());
+cons = MakeClosure((Lambda)Lambda_12, alloc_Env_12());
+car = MakeClosure((Lambda)Lambda_13, alloc_Env_13());
+cdr = MakeClosure((Lambda)Lambda_14, alloc_Env_14());
+nil = MakeNil();
+nil_quest_ = MakeClosure((Lambda)Lambda_15, alloc_Env_15());
+pair_quest_ = MakeClosure((Lambda)Lambda_16, alloc_Env_16());
+number_quest_ = MakeClosure((Lambda)Lambda_17, alloc_Env_17());
+and = MakeClosure((Lambda)Lambda_18, alloc_Env_18());
+or = MakeClosure((Lambda)Lambda_19, alloc_Env_19());
+not = MakeClosure((Lambda)Lambda_20, alloc_Env_20());
+factorial = MakeClosure((Lambda)Lambda_21, alloc_Env_21(_equal_,_minus_,_star_,factorial,n));
+Value MainExpr_1 = ({ Value tmp_1 = factorial; ((union Value (*)(union Value, union Value))tmp_1.clo.lam)(MakeEnv(tmp_1.clo.env), MakeInt(5)); });
+}
