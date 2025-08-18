@@ -23,7 +23,7 @@ and cc_expr =
 | CC_Let of (var * cc_expr) list * cc_expr
 | CC_Pair of cc_expr * cc_expr
 | CC_Nil
-| CC_PrimApp of prim * var list
+| CC_PrimApp of prim * cc_expr list
 
 module VarSet = Set.Make(String)
 
@@ -33,10 +33,10 @@ let rec free: expr -> VarSet.t = fun expr ->
   (* Trivial Stuff *)
   | E_String _
   | E_Number _
-  | E_PrimApp _
   | E_Nil 
   | E_Bool _ -> VarSet.empty
   (* A bit less trivial *)
+  | E_PrimApp (_, args) -> List.fold_left (fun free_vars expr -> VarSet.union free_vars (free expr)) VarSet.empty args
   | E_App (f, args) -> List.fold_left (fun free_vars expr -> VarSet.union free_vars (free expr)) VarSet.empty (f :: args)
   | E_Var v -> VarSet.singleton v
   | E_Callcc expr -> free expr
@@ -66,7 +66,7 @@ let convert: top_expr list -> cc_top_expr list =
     (* Trivial Stuff *)
     | E_String s -> CC_String s
     | E_Number n -> CC_Number n
-    | E_PrimApp (p, args) -> CC_PrimApp (p, args)
+    | E_PrimApp (p, args) -> CC_PrimApp (p, List.map t' args)
     | E_Nil -> CC_Nil
     | E_Bool b -> CC_Bool b
     (* A bit trickier *)

@@ -4,14 +4,14 @@ open Ast
 (* Helper function to create synthetic expressions *)
 let syn expr = { value = expr; loc = { file = ""; line = 0; column = 0 } }
 
+(* Helper function to create variable reference *)
+let mk_var name = syn (E_Var name)
+
 (* Helper function to create lambda with given parameters *)
 let mk_lambda params body = syn (E_Lambda (params, body))
 
 (* Helper function to create primitive application *)
-let mk_prim_app prim vars = syn (E_PrimApp (prim, vars))
-
-(* Helper function to create variable reference *)
-let mk_var name = syn (E_Var name)
+let mk_prim_app prim vars = syn (E_PrimApp (prim, List.map mk_var vars))
 
 (* Helper function to create function application *)
 let mk_app func args = syn (E_App (func, args))

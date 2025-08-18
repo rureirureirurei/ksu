@@ -318,243 +318,311 @@ Value alloc_Env_21(Value _equal_, Value _minus_, Value _star_, Value factorial, 
 }
 
 struct Env_20 {
-
+  Value a0;
 };
 
-Value alloc_Env_20() {
-  return MakeEnv(NULL);
+Value alloc_Env_20(Value a0) {
+  struct Env_20* t = malloc(sizeof(struct Env_20));
+  t->a0 = a0;
+  return MakeEnv(t);
 }
 
 struct Env_19 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_19() {
-  return MakeEnv(NULL);
+Value alloc_Env_19(Value a0, Value a1) {
+  struct Env_19* t = malloc(sizeof(struct Env_19));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_18 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_18() {
-  return MakeEnv(NULL);
+Value alloc_Env_18(Value a0, Value a1) {
+  struct Env_18* t = malloc(sizeof(struct Env_18));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_17 {
-
+  Value a0;
 };
 
-Value alloc_Env_17() {
-  return MakeEnv(NULL);
+Value alloc_Env_17(Value a0) {
+  struct Env_17* t = malloc(sizeof(struct Env_17));
+  t->a0 = a0;
+  return MakeEnv(t);
 }
 
 struct Env_16 {
-
+  Value a0;
 };
 
-Value alloc_Env_16() {
-  return MakeEnv(NULL);
+Value alloc_Env_16(Value a0) {
+  struct Env_16* t = malloc(sizeof(struct Env_16));
+  t->a0 = a0;
+  return MakeEnv(t);
 }
 
 struct Env_15 {
-
+  Value a0;
 };
 
-Value alloc_Env_15() {
-  return MakeEnv(NULL);
+Value alloc_Env_15(Value a0) {
+  struct Env_15* t = malloc(sizeof(struct Env_15));
+  t->a0 = a0;
+  return MakeEnv(t);
 }
 
 struct Env_14 {
-
+  Value a0;
 };
 
-Value alloc_Env_14() {
-  return MakeEnv(NULL);
+Value alloc_Env_14(Value a0) {
+  struct Env_14* t = malloc(sizeof(struct Env_14));
+  t->a0 = a0;
+  return MakeEnv(t);
 }
 
 struct Env_13 {
-
+  Value a0;
 };
 
-Value alloc_Env_13() {
-  return MakeEnv(NULL);
+Value alloc_Env_13(Value a0) {
+  struct Env_13* t = malloc(sizeof(struct Env_13));
+  t->a0 = a0;
+  return MakeEnv(t);
 }
 
 struct Env_12 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_12() {
-  return MakeEnv(NULL);
+Value alloc_Env_12(Value a0, Value a1) {
+  struct Env_12* t = malloc(sizeof(struct Env_12));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_11 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_11() {
-  return MakeEnv(NULL);
+Value alloc_Env_11(Value a0, Value a1) {
+  struct Env_11* t = malloc(sizeof(struct Env_11));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_10 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_10() {
-  return MakeEnv(NULL);
+Value alloc_Env_10(Value a0, Value a1) {
+  struct Env_10* t = malloc(sizeof(struct Env_10));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_9 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_9() {
-  return MakeEnv(NULL);
+Value alloc_Env_9(Value a0, Value a1) {
+  struct Env_9* t = malloc(sizeof(struct Env_9));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_8 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_8() {
-  return MakeEnv(NULL);
+Value alloc_Env_8(Value a0, Value a1) {
+  struct Env_8* t = malloc(sizeof(struct Env_8));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_7 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_7() {
-  return MakeEnv(NULL);
+Value alloc_Env_7(Value a0, Value a1) {
+  struct Env_7* t = malloc(sizeof(struct Env_7));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_6 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_6() {
-  return MakeEnv(NULL);
+Value alloc_Env_6(Value a0, Value a1) {
+  struct Env_6* t = malloc(sizeof(struct Env_6));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_5 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_5() {
-  return MakeEnv(NULL);
+Value alloc_Env_5(Value a0, Value a1) {
+  struct Env_5* t = malloc(sizeof(struct Env_5));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_4 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_4() {
-  return MakeEnv(NULL);
+Value alloc_Env_4(Value a0, Value a1) {
+  struct Env_4* t = malloc(sizeof(struct Env_4));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_3 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_3() {
-  return MakeEnv(NULL);
+Value alloc_Env_3(Value a0, Value a1) {
+  struct Env_3* t = malloc(sizeof(struct Env_3));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_2 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_2() {
-  return MakeEnv(NULL);
+Value alloc_Env_2(Value a0, Value a1) {
+  struct Env_2* t = malloc(sizeof(struct Env_2));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 struct Env_1 {
-
+  Value a0;
+  Value a1;
 };
 
-Value alloc_Env_1() {
-  return MakeEnv(NULL);
+Value alloc_Env_1(Value a0, Value a1) {
+  struct Env_1* t = malloc(sizeof(struct Env_1));
+  t->a0 = a0;
+  t->a1 = a1;
+  return MakeEnv(t);
 }
 
 Value Lambda_1(Value $env, Value a0, Value a1) {
-return __builtin_add(a0, a1);
+return __builtin_add(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_2(Value $env, Value a0, Value a1) {
-return __builtin_mul(a0, a1);
+return __builtin_mul(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_3(Value $env, Value a0, Value a1) {
-return __builtin_sub(a0, a1);
+return __builtin_sub(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_4(Value $env, Value a0, Value a1) {
-return __builtin_div(a0, a1);
+return __builtin_div(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_5(Value $env, Value a0, Value a1) {
-return __builtin_eq(a0, a1);
+return __builtin_eq(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_6(Value $env, Value a0, Value a1) {
-return __builtin_eq(a0, a1);
+return __builtin_eq(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_7(Value $env, Value a0, Value a1) {
-return __builtin_ne(a0, a1);
+return __builtin_ne(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_8(Value $env, Value a0, Value a1) {
-return __builtin_lt(a0, a1);
+return __builtin_lt(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_9(Value $env, Value a0, Value a1) {
-return __builtin_gt(a0, a1);
+return __builtin_gt(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_10(Value $env, Value a0, Value a1) {
-return __builtin_le(a0, a1);
+return __builtin_le(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_11(Value $env, Value a0, Value a1) {
-return __builtin_ge(a0, a1);
+return __builtin_ge(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_12(Value $env, Value a0, Value a1) {
-return __builtin_cons(a0, a1);
+return __builtin_cons(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_13(Value $env, Value a0) {
-return __builtin_car(a0);
+return __builtin_car(EnvRef($env, a0));
 }
 
 Value Lambda_14(Value $env, Value a0) {
-return __builtin_cdr(a0);
+return __builtin_cdr(EnvRef($env, a0));
 }
 
 Value Lambda_15(Value $env, Value a0) {
-return __builtin_is_null(a0);
+return __builtin_is_null(EnvRef($env, a0));
 }
 
 Value Lambda_16(Value $env, Value a0) {
-return __builtin_is_cons(a0);
+return __builtin_is_cons(EnvRef($env, a0));
 }
 
 Value Lambda_17(Value $env, Value a0) {
-return __builtin_is_int(a0);
+return __builtin_is_int(EnvRef($env, a0));
 }
 
 Value Lambda_18(Value $env, Value a0, Value a1) {
-return __builtin_and(a0, a1);
+return __builtin_and(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_19(Value $env, Value a0, Value a1) {
-return __builtin_or(a0, a1);
+return __builtin_or(EnvRef($env, a0), EnvRef($env, a1));
 }
 
 Value Lambda_20(Value $env, Value a0) {
-return __builtin_not(a0);
+return __builtin_not(EnvRef($env, a0));
 }
 
 Value Lambda_21(Value $env, Value n) {
@@ -562,27 +630,27 @@ return (__builtin_is_true(({ Value tmp_5 = EnvRef($env, _equal_); ((Value (*)(Va
 }
 
 int main() {
-_plus_ = MakeClosure((Lambda)Lambda_1, alloc_Env_1());
-_star_ = MakeClosure((Lambda)Lambda_2, alloc_Env_2());
-_minus_ = MakeClosure((Lambda)Lambda_3, alloc_Env_3());
-_slash_ = MakeClosure((Lambda)Lambda_4, alloc_Env_4());
-_equal_ = MakeClosure((Lambda)Lambda_5, alloc_Env_5());
-eq_quest_ = MakeClosure((Lambda)Lambda_6, alloc_Env_6());
-_bang__equal_ = MakeClosure((Lambda)Lambda_7, alloc_Env_7());
-_lt_ = MakeClosure((Lambda)Lambda_8, alloc_Env_8());
-_gt_ = MakeClosure((Lambda)Lambda_9, alloc_Env_9());
-_lt__equal_ = MakeClosure((Lambda)Lambda_10, alloc_Env_10());
-_gt__equal_ = MakeClosure((Lambda)Lambda_11, alloc_Env_11());
-cons = MakeClosure((Lambda)Lambda_12, alloc_Env_12());
-car = MakeClosure((Lambda)Lambda_13, alloc_Env_13());
-cdr = MakeClosure((Lambda)Lambda_14, alloc_Env_14());
+_plus_ = MakeClosure((Lambda)Lambda_1, alloc_Env_1(a0,a1));
+_star_ = MakeClosure((Lambda)Lambda_2, alloc_Env_2(a0,a1));
+_minus_ = MakeClosure((Lambda)Lambda_3, alloc_Env_3(a0,a1));
+_slash_ = MakeClosure((Lambda)Lambda_4, alloc_Env_4(a0,a1));
+_equal_ = MakeClosure((Lambda)Lambda_5, alloc_Env_5(a0,a1));
+eq_quest_ = MakeClosure((Lambda)Lambda_6, alloc_Env_6(a0,a1));
+_bang__equal_ = MakeClosure((Lambda)Lambda_7, alloc_Env_7(a0,a1));
+_lt_ = MakeClosure((Lambda)Lambda_8, alloc_Env_8(a0,a1));
+_gt_ = MakeClosure((Lambda)Lambda_9, alloc_Env_9(a0,a1));
+_lt__equal_ = MakeClosure((Lambda)Lambda_10, alloc_Env_10(a0,a1));
+_gt__equal_ = MakeClosure((Lambda)Lambda_11, alloc_Env_11(a0,a1));
+cons = MakeClosure((Lambda)Lambda_12, alloc_Env_12(a0,a1));
+car = MakeClosure((Lambda)Lambda_13, alloc_Env_13(a0));
+cdr = MakeClosure((Lambda)Lambda_14, alloc_Env_14(a0));
 nil = MakeNil();
-nil_quest_ = MakeClosure((Lambda)Lambda_15, alloc_Env_15());
-pair_quest_ = MakeClosure((Lambda)Lambda_16, alloc_Env_16());
-number_quest_ = MakeClosure((Lambda)Lambda_17, alloc_Env_17());
-and = MakeClosure((Lambda)Lambda_18, alloc_Env_18());
-or = MakeClosure((Lambda)Lambda_19, alloc_Env_19());
-not = MakeClosure((Lambda)Lambda_20, alloc_Env_20());
+nil_quest_ = MakeClosure((Lambda)Lambda_15, alloc_Env_15(a0));
+pair_quest_ = MakeClosure((Lambda)Lambda_16, alloc_Env_16(a0));
+number_quest_ = MakeClosure((Lambda)Lambda_17, alloc_Env_17(a0));
+and = MakeClosure((Lambda)Lambda_18, alloc_Env_18(a0,a1));
+or = MakeClosure((Lambda)Lambda_19, alloc_Env_19(a0,a1));
+not = MakeClosure((Lambda)Lambda_20, alloc_Env_20(a0));
 factorial = MakeClosure((Lambda)Lambda_21, alloc_Env_21(_equal_,_minus_,_star_,factorial,n));
 Value MainExpr_1 = ({ Value tmp_1 = factorial; ((Value (*)(Value, Value))tmp_1.clo.lam)(MakeEnv(tmp_1.clo.env), MakeInt(5)); });
 }

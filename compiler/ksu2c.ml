@@ -67,7 +67,7 @@ let ksu2c: Closures.cc_top_expr list -> string =
   | CC_Nil -> "MakeNil()"
   | CC_Callcc _ -> failwith "todo"
   | CC_Pair (e1, e2) -> "MakePair(" ^ string_of_cc_expr e1 ^ ", " ^ string_of_cc_expr e2 ^ ")"
-  | CC_PrimApp (p, args) -> p2c p ^ "(" ^ String.concat ", " args ^ ")"
+  | CC_PrimApp (p, args) -> p2c p ^ "(" ^ String.concat ", " (List.map string_of_cc_expr args) ^ ")"
 
   and t_top: cc_top_expr -> unit = fun top_expr -> match top_expr with 
   | CC_FuncDef  (name, args, body) -> 
