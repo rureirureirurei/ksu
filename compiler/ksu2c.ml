@@ -3,25 +3,25 @@ open Closures
 open Ast
 
 let p2c: Ast.prim -> string = function
-| P_And -> "and"
-| P_Car -> "car"
-| P_Cdr -> "cdr"
-| P_Cons -> "cons"
-| P_IsNil -> "is_null"
-| P_IsPair -> "is_cons"
-| P_IsNumber -> "is_int"
-| P_Plus -> "Add"
-| P_Minus -> "Sub"
-| P_Mult -> "Mul"
-| P_Div -> "Div"
-| P_Or -> "or"
-| P_Not -> "not"
-| P_Eq -> "eq"
-| P_Ne -> "ne"
-| P_Lt -> "Lt"
-| P_Le -> "Le"
-| P_Gt -> "Gt"
-| P_Ge -> "Ge"
+| P_And -> "__builtin_and"
+| P_Car -> "__builtin_car"
+| P_Cdr -> "__builtin_cdr"
+| P_Cons -> "__builtin_cons"
+| P_IsNil -> "__builtin_is_null"
+| P_IsPair -> "__builtin_is_cons"
+| P_IsNumber -> "__builtin_is_int"
+| P_Plus -> "__builtin_add"
+| P_Minus -> "__builtin_sub"
+| P_Mult -> "__builtin_mul"
+| P_Div -> "__builtin_div"
+| P_Or -> "__builtin_or"
+| P_Not -> "__builtin_not"
+| P_Eq -> "__builtin_eq"
+| P_Ne -> "__builtin_ne"
+| P_Lt -> "__builtin_lt"
+| P_Le -> "__builtin_le"
+| P_Gt -> "__builtin_gt"
+| P_Ge -> "__builtin_ge"
 
 let ksu2c: Closures.cc_top_expr list -> string = 
   let gen_fresh_var domain =
@@ -31,6 +31,8 @@ let ksu2c: Closures.cc_top_expr list -> string =
   let gen_tmp = gen_fresh_var "tmp" in
 
   let res: string list ref = ref [] in 
+  let global_decls: string list ref = ref [] in
+  let global_inits: string list ref = ref [] in
 
   let main_body_exprs: string list ref = ref [] in 
   let closure_envs: string list ref = ref [] in
@@ -39,16 +41,26 @@ let ksu2c: Closures.cc_top_expr list -> string =
   | CC_Number n -> "MakeInt(" ^ string_of_int n ^ ")"
   | CC_Bool b -> "MakeBool(" ^ string_of_bool b ^ ")"
   | CC_String s -> "MakeString(" ^ s ^ ")"
-  | CC_If (c, y, n) -> "(" ^ (string_of_cc_expr c) ^ " ? " ^ (string_of_cc_expr y) ^ " : " ^ (string_of_cc_expr n) ^ ")" 
+  | CC_If (c, y, n) -> "(__builtin_eq(" ^ (string_of_cc_expr c) ^ ", MakeBool(1)) ? " ^ (string_of_cc_expr y) ^ " : " ^ (string_of_cc_expr n) ^ ")" 
   | CC_Var v -> v
   (*C Closures *)
   | CC_MakeClosure (var, c_expr) -> "MakeClosure((Lambda)" ^ var ^ ", " ^ string_of_cc_expr c_expr ^ ")"
   | CC_AppClosure (fn, args) -> 
       let tmp_var = gen_tmp () in
+      let args_str = String.concat ", " (List.map string_of_cc_expr args) in
+      let arg_count = List.length args in
+      let cast_type = if arg_count = 0 then 
+        "(union Value (*)(union Value))" 
+      else if arg_count = 1 then 
+        "(union Value (*)(union Value, union Value))" 
+      else if arg_count = 2 then 
+        "(union Value (*)(union Value, union Value, union Value))" 
+      else 
+        "(union Value (*)(union Value, union Value, union Value, union Value))" in
       "({ Value " ^ tmp_var ^ " = " ^ string_of_cc_expr fn ^ "; " ^ 
-      tmp_var ^ ".clo.lam(" ^ tmp_var ^ ".clo.env" ^ 
+      "(" ^ cast_type ^ tmp_var ^ ".clo.lam)(" ^ tmp_var ^ ".clo.env" ^ 
       (if List.length args > 0 then ", " else "") ^ 
-      String.concat ", " (List.map string_of_cc_expr args) ^ "); })"
+      args_str ^ "); })"
   | CC_MakeEnv (vars, env_struct_id) -> "alloc_" ^ env_struct_id ^ "(" ^ (String.concat "," vars) ^ ")"
   | CC_EnvRef (env, var) -> "EnvRef(" ^ string_of_cc_expr env ^ ", " ^ var ^ ")"
   | CC_Let (defs, body) ->
@@ -63,7 +75,9 @@ let ksu2c: Closures.cc_top_expr list -> string =
   | CC_FuncDef  (name, args, body) -> 
     let args_str = String.concat ", " (List.map (fun arg -> "Value " ^ arg) args) in 
     res := ("Value " ^ name ^ "(" ^ args_str ^ ") {\nreturn " ^ (string_of_cc_expr body) ^ ";\n}") :: !res
-  | CC_VarDef (name, e) -> res := ("Value " ^ name ^ " = " ^ (string_of_cc_expr e) ^ ";") :: !res
+  | CC_VarDef (name, e) -> 
+    global_decls := !global_decls @ [("Value " ^ name ^ ";")];
+    global_inits := (name ^ " = " ^ string_of_cc_expr e ^ ";") :: !global_inits
   | CC_Expr e -> main_body_exprs := !main_body_exprs @ [string_of_cc_expr e]
   | CC_EnvDef (envid, vars) -> closure_envs := !closure_envs @ [string_of_env envid vars]
 
@@ -95,5 +109,9 @@ let ksu2c: Closures.cc_top_expr list -> string =
 in fun exprs -> 
   List.iter t_top exprs;
   let main_exprs = List.map (fun e -> "Value " ^ (gen_main_expr ()) ^ " = " ^ e ^ ";") !main_body_exprs in 
-  let main_body = "int main() {\n" ^ (String.concat "\n" main_exprs) ^ "\n}" in 
-  Ksu2c_header.header ^ "\n\n" ^ String.concat "\n\n" (!closure_envs @ !res @ [main_body])
+  let main_body = "int main() {\n" ^ 
+                  (String.concat "\n" !global_inits) ^ "\n" ^
+                  (String.concat "\n" main_exprs) ^ "\n}" in 
+  Ksu2c_header.header ^ "\n\n" ^ 
+  (String.concat "\n" !global_decls) ^ "\n\n" ^
+  String.concat "\n\n" (!closure_envs @ !res @ [main_body])
