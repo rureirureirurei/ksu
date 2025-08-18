@@ -1,48 +1,35 @@
 (* Main entry point for KSU language *)
-open Compiler_lib
 open Compiler
 
 (* Command line argument parsing *)
-let usage_msg = "ksu [--repl] [--debug] <files>..."
-let debug_mode = ref false
-let repl_mode = ref false
-let input_files = ref []
-let anon_fun filename = input_files := filename :: !input_files
-let speclist = [ ("--repl", Arg.Set repl_mode, "Start interactive REPL mode"); ("--debug", Arg.Set debug_mode, "Print debug information") ]
+let usage_msg = "ksu <file>"
+let input_file = ref None
+let anon_fun filename = 
+  match !input_file with
+  | None -> input_file := Some filename
+  | Some _ -> failwith "Error: Only one file can be specified"
 
 let () =
-  Arg.parse speclist anon_fun usage_msg;
-
-  (* Initialize environment with builtin definitions *)
-  let builtin_ast = Builtins.builtin_definitions in
-
-  (* Parse provided files *)
-  let files = List.rev !input_files in
-  let parse_file =
-   fun file acc ->
-    acc @ Parser.parse Lexer.lex (Lexing.from_channel (open_in file))
-  in
-  let files_asts = List.fold_right parse_file files [] in
-  let files_converted_asts =
-    Closures.t_file builtin_ast @ 
-    Closures.t_file files_asts
-  in
-
-  let c_text = Ksu2c.top_exprs2c files_converted_asts in 
+  Arg.parse [] anon_fun usage_msg;
   
-  if (!debug_mode) then (
-    (* List.iter (fun ast -> print_endline @@ "\n" ^ (Ast.string_of_top_expr ast)) files_flattened_asts; *)
-    (* print_endline "\nFILE CONVERTED TO C\n"; *)
-    print_endline c_text;
-  ) else ();
-
-  let results, _ =
-    Interpreter.eval files_flattened_asts Interpreter.Env.empty
-  in
-
-  (* Start REPL if --repl flag is provided *)
-  if !repl_mode then failwith "REPL mode not implemented"
-  else
-    List.iter
-      (fun result -> print_endline (Interpreter.string_of_value result))
-      results
+  (* Check that exactly one file was provided *)
+  match !input_file with
+  | None -> 
+      print_endline "Error: No file specified";
+      print_endline usage_msg;
+      exit 1
+  | Some file ->
+      (* Parse the file *)
+      let ast = Builtins.builtin_definitions @ (Parser.parse Lexer.lex (Lexing.from_channel (open_in file))) in
+      
+      (* Sanitize variable names for C code generation *)
+      let sanitized_ast = Name_sanitizer.sanitize_top_exprs ast in
+      
+      (* Do closure conversion *)
+      let converted_ast = Closures.convert sanitized_ast in
+      
+      (* Generate C code *)
+      let c_text = Ksu2c.ksu2c converted_ast in
+      
+      (* Print the result *)
+      print_endline c_text
