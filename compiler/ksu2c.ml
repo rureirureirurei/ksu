@@ -16,6 +16,7 @@ let p2c: Ast.prim -> string = function
 | P_Div -> "__builtin_div"
 | P_Or -> "__builtin_or"
 | P_Not -> "__builtin_not"
+| P_Print -> "__builtin_print"
 | P_Eq -> "__builtin_eq"
 | P_Ne -> "__builtin_ne"
 | P_Lt -> "__builtin_lt"
@@ -45,7 +46,7 @@ let ksu2c: Closures.cc_top_expr list -> string =
   let rec string_of_cc_expr: cc_expr -> string = function
   | CC_Number n -> "MakeInt(" ^ string_of_int n ^ ")"
   | CC_Bool b -> "MakeBool(" ^ string_of_bool b ^ ")"
-  | CC_String s -> "MakeString(" ^ s ^ ")"
+  | CC_String s -> "MakeString(\"" ^ s ^ "\")"
   | CC_If (c, y, n) -> "(__builtin_is_true(" ^ (string_of_cc_expr c) ^ ") ? " ^ (string_of_cc_expr y) ^ " : " ^ (string_of_cc_expr n) ^ ")" 
   | CC_Var v -> v
   (*C Closures *)

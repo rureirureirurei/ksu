@@ -4,7 +4,7 @@ let header = {|
 
 static void runtime_error(const char* message);
 
-enum Tag { INT, BOOL, LAMBDA, PAIR, NIL, CLOSURE, ENV };
+enum Tag { INT, BOOL, STRING, LAMBDA, PAIR, NIL, CLOSURE, ENV };
 
 union Value;
 typedef union Value Value;
@@ -31,6 +31,11 @@ struct Bool {
     int value;
 };
 
+struct String {
+    enum Tag t;
+    const char* str;
+};
+
 struct Pair {
     enum Tag t;
     union Value* fst;
@@ -42,6 +47,7 @@ union Value {
     enum Tag t;
     struct Int z;
     struct Bool b;
+    struct String s;
     struct Closure clo;
     struct Env env;
     struct Pair pair;
@@ -58,6 +64,13 @@ static Value MakeBool(int b) {
     Value v;
     v.t = BOOL;
     v.b.value = b;
+    return v;
+}
+
+static Value MakeString(const char* s) {
+    Value v;
+    v.t = STRING;
+    v.s.str = s;
     return v;
 }
 
@@ -264,6 +277,23 @@ static int __builtin_is_true(Value a) {
         runtime_error("is_true expects a boolean");
     }
     return a.b.value;
+}
+
+static Value __builtin_print(Value a) {
+    switch (a.t) {
+        case INT:
+            printf("%d\n", a.z.value);
+            break;
+        case BOOL:
+            printf("%s\n", a.b.value ? "#t" : "#f");
+            break;
+        case STRING:
+            printf("%s\n", a.s.str);
+            break;
+        default:
+            runtime_error("print expects int, bool, or string");
+    }
+    return a;
 }
 
 static Value __builtin_ne(Value a, Value b) {
