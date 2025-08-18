@@ -1,6 +1,6 @@
 type location = { file : string; line : int; column : int }
 
-type prim = P_Car | P_Cdr | P_Cons | P_IsNil | P_IsPair | P_IsNumber | P_Plus | P_Minus | P_Mult | P_Div | P_Mod | P_Eq | P_Ne | P_Lt | P_Le | P_Gt | P_Ge | P_And | P_Or | P_Not
+type prim = P_Car | P_Cdr | P_Cons | P_IsNil | P_IsPair | P_IsNumber | P_Plus | P_Minus | P_Mult | P_Div | P_Eq | P_Ne | P_Lt | P_Le | P_Gt | P_Ge | P_And | P_Or | P_Not
 
 type top_expr_data = E_Expr of expr | E_Define of var * expr
 
@@ -35,7 +35,6 @@ let string_of_prim = function
           | P_Minus -> "-"
           | P_Mult -> "*"
           | P_Div -> "/"
-          | P_Mod -> "mod"
           | P_Eq -> "="
           | P_Ne -> "!="
           | P_Lt -> "<"
