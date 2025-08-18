@@ -65,7 +65,7 @@ static Value MakeNil() {
     return v;
 }
 
-static Value MakeClosure(Lambda lam, Value env) {
+static Value __attribute__((const)) MakeClosure(Lambda lam, Value env) {
     Value v;
     v.t = CLOSURE;
     v.clo.lam = lam;
@@ -225,14 +225,6 @@ static Value Ge(Value a, Value b) {
     return MakeBool(a.z.value >= b.z.value);
 }
 
-
-struct Env_20 {
-
-};
-
-Value alloc_Env_20() {
-  return MakeEnv(NULL);
-}
 
 struct Env_19 {
 
@@ -411,102 +403,96 @@ return Div(a0, a1);
 Value _slash_ = MakeClosure((Lambda)Lambda_4, alloc_Env_4());
 
 Value Lambda_5(Value $env, Value a0, Value a1) {
-return mod(a0, a1);
-}
-
-Value mod = MakeClosure((Lambda)Lambda_5, alloc_Env_5());
-
-Value Lambda_6(Value $env, Value a0, Value a1) {
 return eq(a0, a1);
 }
 
-Value _equal_ = MakeClosure((Lambda)Lambda_6, alloc_Env_6());
+Value _equal_ = MakeClosure((Lambda)Lambda_5, alloc_Env_5());
 
-Value Lambda_7(Value $env, Value a0, Value a1) {
+Value Lambda_6(Value $env, Value a0, Value a1) {
 return ne(a0, a1);
 }
 
-Value _bang__equal_ = MakeClosure((Lambda)Lambda_7, alloc_Env_7());
+Value _bang__equal_ = MakeClosure((Lambda)Lambda_6, alloc_Env_6());
 
-Value Lambda_8(Value $env, Value a0, Value a1) {
+Value Lambda_7(Value $env, Value a0, Value a1) {
 return Lt(a0, a1);
 }
 
-Value _lt_ = MakeClosure((Lambda)Lambda_8, alloc_Env_8());
+Value _lt_ = MakeClosure((Lambda)Lambda_7, alloc_Env_7());
 
-Value Lambda_9(Value $env, Value a0, Value a1) {
+Value Lambda_8(Value $env, Value a0, Value a1) {
 return Gt(a0, a1);
 }
 
-Value _gt_ = MakeClosure((Lambda)Lambda_9, alloc_Env_9());
+Value _gt_ = MakeClosure((Lambda)Lambda_8, alloc_Env_8());
 
-Value Lambda_10(Value $env, Value a0, Value a1) {
+Value Lambda_9(Value $env, Value a0, Value a1) {
 return Le(a0, a1);
 }
 
-Value _lt__equal_ = MakeClosure((Lambda)Lambda_10, alloc_Env_10());
+Value _lt__equal_ = MakeClosure((Lambda)Lambda_9, alloc_Env_9());
 
-Value Lambda_11(Value $env, Value a0, Value a1) {
+Value Lambda_10(Value $env, Value a0, Value a1) {
 return Ge(a0, a1);
 }
 
-Value _gt__equal_ = MakeClosure((Lambda)Lambda_11, alloc_Env_11());
+Value _gt__equal_ = MakeClosure((Lambda)Lambda_10, alloc_Env_10());
 
-Value Lambda_12(Value $env, Value a0, Value a1) {
+Value Lambda_11(Value $env, Value a0, Value a1) {
 return cons(a0, a1);
 }
 
-Value cons = MakeClosure((Lambda)Lambda_12, alloc_Env_12());
+Value cons = MakeClosure((Lambda)Lambda_11, alloc_Env_11());
 
-Value Lambda_13(Value $env, Value a0) {
+Value Lambda_12(Value $env, Value a0) {
 return car(a0);
 }
 
-Value car = MakeClosure((Lambda)Lambda_13, alloc_Env_13());
+Value car = MakeClosure((Lambda)Lambda_12, alloc_Env_12());
 
-Value Lambda_14(Value $env, Value a0) {
+Value Lambda_13(Value $env, Value a0) {
 return cdr(a0);
 }
 
-Value cdr = MakeClosure((Lambda)Lambda_14, alloc_Env_14());
+Value cdr = MakeClosure((Lambda)Lambda_13, alloc_Env_13());
 
 Value nil = MakeNil();
 
-Value Lambda_15(Value $env, Value a0) {
+Value Lambda_14(Value $env, Value a0) {
 return is_null(a0);
 }
 
-Value nil_quest_ = MakeClosure((Lambda)Lambda_15, alloc_Env_15());
+Value nil_quest_ = MakeClosure((Lambda)Lambda_14, alloc_Env_14());
 
-Value Lambda_16(Value $env, Value a0) {
+Value Lambda_15(Value $env, Value a0) {
 return is_cons(a0);
 }
 
-Value pair_quest_ = MakeClosure((Lambda)Lambda_16, alloc_Env_16());
+Value pair_quest_ = MakeClosure((Lambda)Lambda_15, alloc_Env_15());
 
-Value Lambda_17(Value $env, Value a0) {
+Value Lambda_16(Value $env, Value a0) {
 return is_int(a0);
 }
 
-Value number_quest_ = MakeClosure((Lambda)Lambda_17, alloc_Env_17());
+Value number_quest_ = MakeClosure((Lambda)Lambda_16, alloc_Env_16());
 
-Value Lambda_18(Value $env, Value a0, Value a1) {
+Value Lambda_17(Value $env, Value a0, Value a1) {
 return and(a0, a1);
 }
 
-Value and = MakeClosure((Lambda)Lambda_18, alloc_Env_18());
+Value and = MakeClosure((Lambda)Lambda_17, alloc_Env_17());
 
-Value Lambda_19(Value $env, Value a0, Value a1) {
+Value Lambda_18(Value $env, Value a0, Value a1) {
 return or(a0, a1);
 }
 
-Value or = MakeClosure((Lambda)Lambda_19, alloc_Env_19());
+Value or = MakeClosure((Lambda)Lambda_18, alloc_Env_18());
 
-Value Lambda_20(Value $env, Value a0) {
+Value Lambda_19(Value $env, Value a0) {
 return not(a0);
 }
 
-Value not = MakeClosure((Lambda)Lambda_20, alloc_Env_20());
+Value not = MakeClosure((Lambda)Lambda_19, alloc_Env_19());
 
 Value A = (({ Value tmp_2 = eq_quest_; tmp_2.clo.lam(tmp_2.clo.env, MakeInt(10), MakeInt(10)); }) ? _plus_ : _minus_);
 
