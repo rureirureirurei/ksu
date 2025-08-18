@@ -2,10 +2,22 @@ let header = {|
 #include <stdio.h>
 #include <stdlib.h>
 
-enum Tag { INT, BOOL, LAMBDA, PAIR, NIL };
+enum Tag { INT, BOOL, LAMBDA, PAIR, NIL, CLOSURE, ENV };
 
 union Value;
 typedef union Value Value;
+typedef union Value (*Lambda)();
+
+struct Closure {
+    enum Tag t;
+    Lambda lam;
+    void* env;
+};
+
+struct Env {
+    enum Tag t;
+    void* env;
+};
 
 struct Int {
     enum Tag t;
@@ -17,15 +29,10 @@ struct Bool {
     int value;
 };
 
-struct Lambda {
-    enum Tag t;
-    void* ptr;
-};
-
 struct Pair {
     enum Tag t;
-    union Value* valueptr;
-    union Value* restptr;
+    union Value* fst;
+    union Value* snd;
 };
 typedef struct Pair Pair;
 
@@ -33,7 +40,8 @@ union Value {
     enum Tag t;
     struct Int z;
     struct Bool b;
-    struct Lambda lam;
+    struct Closure clo;
+    struct Env env;
     struct Pair pair;
 };
 
@@ -57,43 +65,60 @@ static Value MakeNil() {
     return v;
 }
 
-static Value MakePair(Value a, Value rest) {
-    Value *aprim = malloc(sizeof(Value));
-    *aprim = a;
-    Value *rprim = malloc(sizeof(Value));
-    *rprim = rest;
-    
+static Value __attribute__((const)) MakeClosure(Lambda lam, Value env) {
     Value v;
-    v.t = PAIR;
-    v.pair.valueptr = aprim;
-    v.pair.restptr = rprim;
+    v.t = CLOSURE;
+    v.clo.lam = lam;
+    v.clo.env = env.env.env;
     return v;
 }
 
-static Value MakeLambda(void* funptr) {
-    Value v;
-    v.t = LAMBDA;
-    v.lam.ptr = funptr;
-    return v;
+static Value MakeEnv(void* env) {
+    Value v ;
+    v.env.t = ENV ;
+    v.env.env = env ;
+    return v ;
 }
+
+static Value MakePrimitive(Lambda prim) {
+    Value v ;
+    v.clo.t = CLOSURE ;
+    v.clo.lam = prim ;
+    v.clo.env = NULL ;
+    return v ;
+}
+// =============== BUILTINS ===============
 
 static void runtime_error(const char* message) {
     fprintf(stderr, "Runtime error: %s\n", message);
     exit(1);
 }
 
-static Value Car(Value list) {
+static Value car(Value list) {
     if (list.t != PAIR) {
         runtime_error("car expects a pair");
     }
-    return *(list.pair.valueptr);
+    return *(list.pair.fst);
 }
 
-static Value Cdr(Value list) {
+static Value cdr(Value list) {
     if (list.t != PAIR) {
         runtime_error("cdr expects a pair");
     }
-    return *(list.pair.restptr);
+    return *(list.pair.snd);
+}
+
+static Value cons(Value fst, Value snd) {
+    Value *fstptr = malloc(sizeof(Value));
+    Value *sndptr = malloc(sizeof(Value));
+    *fstptr = fst;
+    *sndptr = snd;
+    
+    Value v;
+    v.t = PAIR;
+    v.pair.fst = fstptr;
+    v.pair.snd = sndptr;
+    return v;
 }
 
 static Value is_cons(Value v) {
@@ -102,13 +127,6 @@ static Value is_cons(Value v) {
 
 static Value is_null(Value v) {
     return MakeBool(v.t == NIL);
-}
-
-static Value Cond(Value c, Value yt, Value nt) {
-    if (c.t != BOOL) {
-        runtime_error("if expects a boolean");
-    }
-    return (c.b.value ? yt : nt);
 }
 
 static Value is_bool(Value v) {
@@ -125,24 +143,21 @@ static Value is_lambda(Value v) {
 
 static Value is_list(Value v) {
     while (v.t == PAIR) {
-        v = *(v.pair.restptr);
+        v = *(v.pair.snd);
     }
     return MakeBool(v.t == NIL);
 }
 
-static Value Eq(Value a, Value b) {
+static Value eq(Value a, Value b) {
     if (a.t != b.t) return MakeBool(0);
     switch (a.t) {
         case INT: return MakeBool(a.z.value == b.z.value);
         case BOOL: return MakeBool(a.b.value == b.b.value);
-        case NIL: return MakeBool(1);
-        case LAMBDA: return MakeBool(a.lam.ptr == b.lam.ptr);
-        case PAIR: return MakeBool(a.pair.valueptr == b.pair.valueptr && a.pair.restptr == b.pair.restptr);
-        default: return MakeBool(0);
+        default: runtime_error("Can only compare ints and bools");
     }
 }
 
-static Value ListRef(Value list, Value idx) {
+static Value list_ref(Value list, Value idx) {
     if (idx.t != INT) {
         runtime_error("list-ref expects an integer index");
     }
@@ -152,13 +167,13 @@ static Value ListRef(Value list, Value idx) {
         if (cur.t != PAIR) {
             runtime_error("list-ref index out of range or not a list");
         }
-        cur = *(cur.pair.restptr);
+        cur = *(cur.pair.snd);
         n--;
     }
     if (cur.t != PAIR) {
         runtime_error("list-ref expects a pair at the final position");
     }
-    return *(cur.pair.valueptr);
+    return *(cur.pair.fst);
 }
 
 static void ensure_int_pair(Value a, Value b, const char* op) {
