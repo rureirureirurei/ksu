@@ -54,4 +54,7 @@ let builtin_definitions : top_expr list =
     mk_define "and" (mk_lambda ["a0"; "a1"] (mk_prim_app P_And ["a0"; "a1"]));
     mk_define "or" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Or ["a0"; "a1"]));
     mk_define "not" (mk_lambda ["a0"] (mk_prim_app P_Not ["a0"]));
+
+    (* Print primitive *)
+    mk_define "print" (mk_lambda ["a0"] (mk_prim_app P_Print ["a0"]));
   ]

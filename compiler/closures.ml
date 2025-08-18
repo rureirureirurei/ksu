@@ -84,8 +84,8 @@ let convert: top_expr list -> cc_top_expr list =
     | E_Lambda (args, body) -> 
       let lamid = gen_lambda_id () in 
       let envid = gen_env_id () in 
-      let free_vars = free body in 
-      let body' = t (free body) "$env" body in 
+      let free_vars = free expr in 
+      let body' = t (free expr) "$env" body in 
       append (CC_FuncDef (lamid, ("$env" :: args), body'));
       append (CC_EnvDef (envid, VarSet.to_list free_vars));
       CC_MakeClosure (lamid, CC_MakeEnv (VarSet.to_list free_vars, envid))
