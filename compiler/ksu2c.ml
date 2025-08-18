@@ -30,6 +30,11 @@ let ksu2c: Closures.cc_top_expr list -> string =
   let gen_main_expr = gen_fresh_var "MainExpr" in 
   let gen_tmp = gen_fresh_var "tmp" in
 
+  (* Helper function to generate cast type for function pointers *)
+  let gen_cast_type arg_count =
+    let value_params = "Value" ^ String.concat ", Value" (List.init (arg_count + 1) (fun _ -> "")) in
+    "(Value (*)(" ^ value_params ^ "))" in
+
   let res: string list ref = ref [] in 
   let global_decls: string list ref = ref [] in
   let global_inits: string list ref = ref [] in
@@ -49,14 +54,7 @@ let ksu2c: Closures.cc_top_expr list -> string =
       let tmp_var = gen_tmp () in
       let args_str = String.concat ", " (List.map string_of_cc_expr args) in
       let arg_count = List.length args in
-      let cast_type = if arg_count = 0 then 
-        "(union Value (*)(union Value))" 
-      else if arg_count = 1 then 
-        "(union Value (*)(union Value, union Value))" 
-      else if arg_count = 2 then 
-        "(union Value (*)(union Value, union Value, union Value))" 
-      else 
-        "(union Value (*)(union Value, union Value, union Value, union Value))" in
+      let cast_type = gen_cast_type arg_count in
       "({ Value " ^ tmp_var ^ " = " ^ string_of_cc_expr fn ^ "; " ^ 
       "(" ^ cast_type ^ tmp_var ^ ".clo.lam)(MakeEnv(" ^ tmp_var ^ ".clo.env)" ^ 
       (if List.length args > 0 then ", " else "") ^ 

@@ -558,7 +558,7 @@ return __builtin_not(a0);
 }
 
 Value Lambda_21(Value $env, Value n) {
-return (__builtin_is_true(({ Value tmp_5 = EnvRef($env, _equal_); ((Value (*)(Value, Value, Value))tmp_5.clo.lam)(MakeEnv(tmp_5.clo.env), EnvRef($env, n), MakeInt(0)); })) ? MakeInt(1) : ({ Value tmp_2 = EnvRef($env, _star_); ((union Value (*)(union Value, union Value, union Value))tmp_2.clo.lam)(MakeEnv(tmp_2.clo.env), EnvRef($env, n), ({ Value tmp_3 = EnvRef($env, factorial); ((union Value (*)(union Value, union Value))tmp_3.clo.lam)(MakeEnv(tmp_3.clo.env), ({ Value tmp_4 = EnvRef($env, _minus_); ((union Value (*)(union Value, union Value, union Value))tmp_4.clo.lam)(MakeEnv(tmp_4.clo.env), EnvRef($env, n), MakeInt(1)); })); })); }));
+return (__builtin_is_true(({ Value tmp_5 = EnvRef($env, _equal_); ((Value (*)(Value, Value, Value))tmp_5.clo.lam)(MakeEnv(tmp_5.clo.env), EnvRef($env, n), MakeInt(0)); })) ? MakeInt(1) : ({ Value tmp_2 = EnvRef($env, _star_); ((Value (*)(Value, Value, Value))tmp_2.clo.lam)(MakeEnv(tmp_2.clo.env), EnvRef($env, n), ({ Value tmp_3 = EnvRef($env, factorial); ((Value (*)(Value, Value))tmp_3.clo.lam)(MakeEnv(tmp_3.clo.env), ({ Value tmp_4 = EnvRef($env, _minus_); ((Value (*)(Value, Value, Value))tmp_4.clo.lam)(MakeEnv(tmp_4.clo.env), EnvRef($env, n), MakeInt(1)); })); })); }));
 }
 
 int main() {
@@ -584,5 +584,5 @@ and = MakeClosure((Lambda)Lambda_18, alloc_Env_18());
 or = MakeClosure((Lambda)Lambda_19, alloc_Env_19());
 not = MakeClosure((Lambda)Lambda_20, alloc_Env_20());
 factorial = MakeClosure((Lambda)Lambda_21, alloc_Env_21(_equal_,_minus_,_star_,factorial,n));
-Value MainExpr_1 = ({ Value tmp_1 = factorial; ((union Value (*)(union Value, union Value))tmp_1.clo.lam)(MakeEnv(tmp_1.clo.env), MakeInt(5)); });
+Value MainExpr_1 = ({ Value tmp_1 = factorial; ((Value (*)(Value, Value))tmp_1.clo.lam)(MakeEnv(tmp_1.clo.env), MakeInt(5)); });
 }
