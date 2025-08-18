@@ -27,7 +27,6 @@ let builtin_definitions : top_expr list =
     mk_define "*" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Mult ["a0"; "a1"]));
     mk_define "-" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Minus ["a0"; "a1"]));
     mk_define "/" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Div ["a0"; "a1"]));
-    mk_define "mod" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Mod ["a0"; "a1"]));
 
     (* Comparison primitives *)
     mk_define "=" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Eq ["a0"; "a1"]));
