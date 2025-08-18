@@ -30,6 +30,7 @@ let builtin_definitions : top_expr list =
 
     (* Comparison primitives *)
     mk_define "=" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Eq ["a0"; "a1"]));
+    mk_define "eq?" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Eq ["a0"; "a1"]));
     mk_define "!=" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Ne ["a0"; "a1"]));
     mk_define "<" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Lt ["a0"; "a1"]));
     mk_define ">" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Gt ["a0"; "a1"]));
