@@ -1,19 +1,22 @@
 let header = {|
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
 
 static void runtime_error(const char* message);
 
 enum Tag { INT, BOOL, STRING, LAMBDA, PAIR, NIL, CLOSURE, ENV };
 
 union Value;
+struct EnvEntry;
 typedef union Value Value;
 typedef union Value (*Lambda)();
 
 struct Closure {
     enum Tag t;
     Lambda lam;
-    void* env;
+    struct EnvEntry* env;
 };
 
 struct Env {
@@ -74,43 +77,58 @@ static Value MakeString(const char* s) {
     return v;
 }
 
+
+// =============== CLOSURES ===============
+
+struct EnvEntry {
+    const char* name;
+    Value* value;
+    struct EnvEntry* next;
+};
+typedef struct EnvEntry EnvEntry;
+
+static EnvEntry* MakeEnv(int pair_count, ...) {
+    va_list args;
+    va_start(args, pair_count);
+
+    EnvEntry* head = NULL;
+    for (int i = 0; i < pair_count; i++) {
+        const char* key = va_arg(args, const char*);
+        Value* value_ptr = va_arg(args, Value*);
+
+        EnvEntry* node = (EnvEntry*)malloc(sizeof(EnvEntry));
+        if (!node) {
+            runtime_error("Out of memory allocating EnvEntry");
+        }
+        node->name = key;
+        node->value = value_ptr;
+        node->next = head;
+        head = node;
+    }
+
+    va_end(args);
+    return head;
+}
+
+static Value EnvRef(EnvEntry* node, const char* key) {
+    while (node) { if (strcmp(node->name, key) == 0) return *(node->value); node = node->next; }
+    runtime_error("Unbound variable");
+}
+
+static Value MakeClosure(Lambda lam, EnvEntry* env) {
+    Value v ;
+    v.clo.t = CLOSURE ;
+    v.clo.lam = lam ;
+    v.clo.env = env ;
+    return v ;
+}
+
+// =============== BUILTINS ===============
+
 static Value MakeNil() {
     Value v;
     v.t = NIL;
     return v;
-}
-
-static Value __attribute__((const)) MakeClosure(Lambda lam, Value env) {
-    Value v;
-    v.t = CLOSURE;
-    v.clo.lam = lam;
-    v.clo.env = env.env.env;
-    return v;
-}
-
-static Value MakeEnv(void* env) {
-    Value v ;
-    v.env.t = ENV ;
-    v.env.env = env ;
-    return v ;
-}
-
-static Value EnvRef(Value env, Value var_name) {
-    if (env.t != ENV) {
-        runtime_error("EnvRef expects an environment");
-    }
-    // This is a simplified implementation - in practice, you'd need to look up the variable
-    // in the environment structure based on the variable name
-    // For now, we'll return a placeholder
-    return MakeInt(0);
-}
-
-static Value MakePrimitive(Lambda prim) {
-    Value v ;
-    v.clo.t = CLOSURE ;
-    v.clo.lam = prim ;
-    v.clo.env = NULL ;
-    return v ;
 }
 
 static void runtime_error(const char* message) {
@@ -118,7 +136,6 @@ static void runtime_error(const char* message) {
     exit(1);
 }
 
-// =============== BUILTINS ===============
 
 static Value __builtin_car(Value list) {
     if (list.t != PAIR) {
