@@ -1,3 +1,0 @@
-;11
-;Sequential let
-(let ([x 10] [y (+ 1 x)]) y)

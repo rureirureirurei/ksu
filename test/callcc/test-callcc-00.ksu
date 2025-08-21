@@ -1,2 +1,43 @@
-;10
-(call/cc (lambda (k) (k 10)))
+;49
+;Backtracking 
+(define cont-stack '())
+
+(define (choose options)
+  (let/cc k
+    (set! cont-stack (cons (cons k (cdr options)) cont-stack))
+    (car options)
+  )
+)
+
+(define cnt 0)
+
+(define (fail)
+  (if (null? cont-stack)
+      (print cnt)
+      (let* ([top (car cont-stack)] [k (car top)] [options (cdr top)])
+        (begin
+          (set! cont-stack (cdr cont-stack))
+          (if (null? options)
+              (fail)
+              (begin
+                (set! cont-stack (cons (cons k (cdr options)) cont-stack))
+                (k (car options))
+              )
+          )
+        )
+      )
+  )
+)
+
+(define (triples)
+  (let* ([ns (range 20)]
+        [a (choose ns)]
+        [b (choose ns)]
+        [c (choose ns)])
+    ;(display (list a b c))
+    (if (eq? (+ (* b b) (* c c)) (* a a)) (set! cnt (+ 1 cnt)) '())
+    (fail)
+  )
+)
+
+(triples)

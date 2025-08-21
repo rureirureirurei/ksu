@@ -3,4 +3,4 @@
 (define y 20)
 
 (define square (lambda (n) (* n n)))
-(square 5)  ; returns 25
+(print (square 5))  ; returns 25

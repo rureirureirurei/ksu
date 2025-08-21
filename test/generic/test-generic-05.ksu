@@ -1,4 +1,4 @@
 ;40
 ;defining global function as a result of expression, not direct lambda
 (define A (if (eq? 10 10) + -))
-(A 20 20)
+(print (A 20 20))

@@ -1,2 +1,2 @@
-;((1 . 2) . (3 . 4))
-(cons (cons 1 2) (cons 3 4)) 
+;4
+(print (cdr (cdr (cons (cons 1 2) (cons 3 4))  )))

@@ -8,4 +8,4 @@
                           (if (= n 0)
                               1
                               (* n (f (- n 1))))))))
-(factorial 5)
+(print (factorial 5))
