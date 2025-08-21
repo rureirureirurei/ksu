@@ -30,19 +30,19 @@ let sanitize_var_list (vars: var list) : var list =
   List.map sanitize_var_name vars
 
 (* Sanitize let bindings *)
-let sanitize_let_bindings (bindings: (var * expr) list) : (var * expr) list =
-  List.map (fun (var, expr) -> (sanitize_var_name var, expr)) bindings
+let rec sanitize_let_bindings (bindings: (var * expr) list) : (var * expr) list =
+  List.map (fun (var, expr) -> (sanitize_var_name var, sanitize_expr expr)) bindings
 
 (* Sanitize lambda arguments *)
-let sanitize_lambda_args (args: var list) : var list =
+and sanitize_lambda_args (args: var list) : var list =
   List.map sanitize_var_name args
 
 (* Sanitize define expressions *)
-let sanitize_define (name: var) : var =
+and sanitize_define (name: var) : var =
   sanitize_var_name name
 
 (* Sanitize an entire expression recursively *)
-let rec sanitize_expr (expr: expr) : expr =
+and sanitize_expr (expr: expr) : expr =
   match expr.value with
   | E_Var v -> { expr with value = E_Var (sanitize_var_name v) }
   | E_App (func, args) -> 
@@ -58,8 +58,9 @@ let rec sanitize_expr (expr: expr) : expr =
   | E_Bool _
   | E_Number _ 
   | E_String _
-  | E_Nil 
-  | E_PrimApp _ -> expr
+  | E_Nil -> expr
+  | E_PrimApp (prim, args) ->
+      { expr with value = E_PrimApp (prim, List.map sanitize_expr args) }
 
 (* Sanitize a top-level expression *)
 let sanitize_top_expr (top_expr: top_expr) : top_expr =

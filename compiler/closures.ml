@@ -10,7 +10,7 @@ type cc_top_expr =
 
 and cc_expr =
 | CC_MakeClosure of var * cc_expr (* function id, environment - must actually be the Env*)
-| CC_MakeEnv of var list * var (* env variables, env id (globalised function id)*)
+| CC_MakeEnv of (var * cc_expr) list * var (* env variables, env id (globalised function id)*)
 | CC_EnvRef of cc_expr * var
 | CC_AppClosure of cc_expr * cc_expr list
 (* And the regular stuff *)
@@ -56,9 +56,13 @@ let convert: top_expr list -> cc_top_expr list =
   let gen_env_id = gen_fresh_var "Env" in 
 
   let res = ref [] in 
-  let append: cc_top_expr -> unit = fun t -> res := t :: !res in 
+  let append: cc_top_expr -> unit = fun t -> res := !res @ [t] in 
 
   (* Auxillary function, f *)
+  let cc_expr_of_var (sub: VarSet.t) (env_sym: var) (v: var) : cc_expr =
+    if VarSet.mem v sub then CC_EnvRef (CC_Var env_sym, v) else CC_Var v
+  in
+
   let rec t: VarSet.t -> var -> expr -> cc_expr = fun sub env_sym expr -> 
     let t' = t sub env_sym in
     
@@ -73,12 +77,14 @@ let convert: top_expr list -> cc_top_expr list =
     | E_If (c, y, n) -> CC_If (t' c, t' y, t' n)
     | E_Let (defs, body) -> 
       let defs' = List.map (fun (v, expr) -> (v, t' expr)) defs in
-      let body' = t (free body) env_sym body in 
+      (* Shadow bound variables inside the body by removing them from the env-captured set *)
+      let bound = List.map fst defs |> VarSet.of_list in
+      let body' = t (VarSet.diff sub bound) env_sym body in 
       CC_Let (defs', body')
     | E_Pair (a, b) -> CC_Pair (t' a, t' b)
     | E_Callcc e -> CC_Callcc (t' e) 
     (* Var *)
-    | E_Var v -> (match VarSet.find_opt v sub with Some v -> CC_EnvRef (CC_Var env_sym, v) | None -> CC_Var v)
+    | E_Var v -> cc_expr_of_var sub env_sym v
     (* App & Lambda *)
     | E_App (fn, args) -> CC_AppClosure (t' fn, List.map t' args)
     | E_Lambda (args, body) -> 
@@ -87,8 +93,9 @@ let convert: top_expr list -> cc_top_expr list =
       let free_vars = free expr in 
       let body' = t (free expr) "$env" body in 
       append (CC_FuncDef (lamid, ("$env" :: args), body'));
-      append (CC_EnvDef (envid, VarSet.to_list free_vars));
-      CC_MakeClosure (lamid, CC_MakeEnv (VarSet.to_list free_vars, envid))
+      CC_MakeClosure (lamid, CC_MakeEnv (
+        List.map (fun v -> v, (cc_expr_of_var sub env_sym v)) (VarSet.to_list free_vars), 
+        envid))
     in
 
   let t_top: top_expr -> unit = fun top_expr -> 
