@@ -28,25 +28,49 @@ def extract_expected_result(file_path):
         raise ValueError(f"No expected result found in first line: {first_line}")
 
 def run_ksu_file(file_path):
-    """Run a KSU file and return the output."""
+    """Compile a KSU file to C, build it with gcc, run it, and return stdout."""
     try:
-        result = subprocess.run(
-            ['dune', 'exec', 'ksu', '--',str(file_path)],
+        # 1) Generate C from ksu
+        gen = subprocess.run(
+            ['dune', 'exec', 'ksu', '--', str(file_path)],
             capture_output=True,
             text=True,
-            cwd=Path(__file__).parent.parent  # Run from project root
+            cwd=Path(__file__).parent.parent
         )
-        
-        if result.returncode != 0:
-            return f"ERROR: {result.stderr.strip()}"
-        
-        # Return the complete output, stripping trailing whitespace
-        return result.stdout.strip()
-            
+        if gen.returncode != 0:
+            return f"ERROR: {gen.stderr.strip()}"
+
+        c_code = gen.stdout
+
+        # 2) Compile and run in an isolated temp dir
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            c_path = Path(td) / 'test.c'
+            exe_path = Path(td) / 'a.out'
+            c_path.write_text(c_code)
+
+            comp = subprocess.run(
+                ['gcc', str(c_path), '-o', str(exe_path)],
+                capture_output=True,
+                text=True,
+            )
+            if comp.returncode != 0:
+                return f"ERROR: C compile failed: {comp.stderr.strip()}"
+
+            run = subprocess.run(
+                [str(exe_path)],
+                capture_output=True,
+                text=True,
+            )
+            if run.returncode != 0:
+                return f"ERROR: Program exited with {run.returncode}: {run.stderr.strip()}"
+
+            return run.stdout.strip()
+
     except subprocess.CalledProcessError as e:
         return f"ERROR: Command failed with return code {e.returncode}"
-    except FileNotFoundError:
-        return "ERROR: 'dune' command not found"
+    except FileNotFoundError as e:
+        return f"ERROR: command not found: {e}"
 
 def run_tests():
     """Run all tests and report results."""
@@ -54,7 +78,8 @@ def run_tests():
             'test/callcc',
             'test/generic',
             'test/lists',
-            'test/closures'
+            'test/closures',
+            'test/state',
             ]
     total_tests = 0
     passed_tests = 0
