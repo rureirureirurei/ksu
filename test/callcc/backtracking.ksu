@@ -1,0 +1,47 @@
+(define cont-stack '())
+
+(define (choose opts)
+  (call/cc (lambda (k)
+      (begin
+        (set! cont-stack (cons (cons k (cdr opts)) cont-stack))
+        (car opts)
+      )
+  ))
+)
+
+
+(define count 0)
+
+(define (fail)
+  (if (null? cont-stack)
+      count
+      (let (
+             [top (car cont-stack)]
+             [k (car top)]
+             [remaining (cdr top)])
+        (set! cont-stack (cdr cont-stack))
+        (if (null? remaining)
+            (fail)
+            (begin
+              (set! cont-stack (cons (cons k (cdr remaining)) cont-stack))
+              (k (car remaining))
+        ))
+      )
+  )
+)
+
+(define (search)
+  (let (
+        [a (choose (range 1 100))]
+        [b (choose (range 1 100))]
+        [c (choose (range 1 100))]
+       )
+        (if (eq? (+ (* b b) (* c c)) (* a a))
+            (begin (display (list a b c)) (newline) (fail))
+            ;(begin (set! count (+ 1 count)) (fail))
+            (fail)
+        )
+      )
+    )
+
+(search)
