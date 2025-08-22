@@ -20,7 +20,7 @@ and expr_data =
   | E_Let of (var * expr) list * expr
   | E_Pair of expr * expr
   | E_Nil
-  | E_PrimApp of prim * expr list
+  | E_Prim of prim
 
 and expr = expr_data node
 and 'a node = { value : 'a;  loc : location }
@@ -106,7 +106,7 @@ let string_of_expr expr =
         ^ string_of_expr_aux offset e2
         ^ ")"
     | E_Nil -> "nil"
-    | E_PrimApp (prim, args) -> "<primitive: \"" ^ string_of_prim prim ^ "\">" ^ "(" ^ String.concat ", " (List.map (string_of_expr_aux 0) args) ^ ")"
+    | E_Prim prim -> "<primitive: \"" ^ string_of_prim prim ^ "\">"
   in
   string_of_expr_aux 0 expr
 

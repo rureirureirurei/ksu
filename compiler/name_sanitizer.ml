@@ -59,10 +59,8 @@ and sanitize_expr (expr: expr) : expr =
   | E_Bool _
   | E_Number _ 
   | E_String _
+  | E_Prim _
   | E_Nil -> expr
-  | E_PrimApp (prim, args) ->
-      { expr with value = E_PrimApp (prim, List.map sanitize_expr args) }
-  
 
 (* Sanitize a top-level expression *)
 let sanitize_top_expr (top_expr: top_expr) : top_expr =

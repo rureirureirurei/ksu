@@ -8,4 +8,4 @@
 
 (define x (f1 10))
 (define y (x 20))
-(print (cdr ( y )))
+(print (car ( y )))
