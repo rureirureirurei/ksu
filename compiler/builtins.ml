@@ -11,7 +11,7 @@ let mk_var name = syn (E_Var name)
 let mk_lambda params body = syn (E_Lambda (params, body))
 
 (* Helper function to create primitive application *)
-let mk_prim_app prim vars = syn (E_PrimApp (prim, List.map mk_var vars))
+let mk_prim_app prim vars = syn (E_App (syn (E_Prim prim), List.map mk_var vars))
 
 (* Helper function to create function application *)
 let mk_app func args = syn (E_App (func, args))

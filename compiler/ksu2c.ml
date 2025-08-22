@@ -2,7 +2,7 @@ open Compiler_lib
 open Closures
 open Ast
 
-let p2c: Ast.prim -> string = function
+let c_func_of_prim: Ast.prim -> string = function
 | P_And -> "__builtin_and"
 | P_Car -> "__builtin_car"
 | P_Cdr -> "__builtin_cdr"
@@ -30,13 +30,6 @@ let ksu2c: Closures.cc_top_expr list -> string =
     (fun () -> num := !num + 1; (domain ^ "_" ^ (string_of_int !num))) in
   let gen_main_expr = gen_fresh_var "MainExpr" in 
   let gen_tmp = gen_fresh_var "tmp" in
-  let gen_cast_type arg_count =
-    let params =
-      if arg_count = 0 then "EnvEntry*"
-      else "EnvEntry*, " ^ String.concat ", " (List.init arg_count (fun _ -> "Value"))
-    in
-    "(Value (*)(" ^ params ^ "))"
-  in
 
   let res: string list ref = ref [] in 
   let global_decls: string list ref = ref [] in
@@ -52,55 +45,75 @@ let ksu2c: Closures.cc_top_expr list -> string =
   | CC_Var v -> v
   (*C Closures *)
   | CC_MakeClosure (var, c_expr) ->
-    "MakeClosure( (Value (*)(void))" ^ var ^ ", " ^ string_of_cc_expr c_expr ^ ")"
-  | CC_AppClosure (fn, args) ->
-    let arg_count = List.length args in
-    let args_str = String.concat ", " (List.map string_of_cc_expr args) in
-    let fn_expr = string_of_cc_expr fn in
-    let tmp_var = gen_tmp () in
-    let cast_type = gen_cast_type arg_count in
-    "({ Value " ^ tmp_var ^ " = " ^ fn_expr ^ "; (" ^ cast_type ^ tmp_var ^ ".clo.lam)(" ^ tmp_var ^ ".clo.env" ^ (if arg_count = 0 then "" else ", " ^ args_str) ^ "); })"
+    "MakeClosure(" ^ var ^ ", " ^ string_of_cc_expr c_expr ^ ")"
+  | CC_AppClosure (fn, args) -> (match fn with 
+   | CC_Prim _ ->
+     let args_str = String.concat ", " (List.map (fun a -> "CellValue(" ^ string_of_cc_expr a ^ ")") args) in
+     (string_of_cc_expr fn) ^ "(" ^ args_str ^ ")"
+   | _ -> 
+     let args_str = String.concat ", " (List.map (fun a -> "CellValue(" ^ string_of_cc_expr a ^ ")") args) in
+     let fn_expr = string_of_cc_expr fn in
+     let tmp_var = gen_tmp () in
+     let argc = string_of_int (List.length args) in
+     let argv_decl = if args_str = "" then "Value* argv = NULL;" else "Value argv[] = { " ^ args_str ^ " };" in
+     "({ Value " ^ tmp_var ^ " = CellValue(" ^ fn_expr ^ "); " ^ argv_decl ^ " (" ^ tmp_var ^ ".clo.lam)(" ^ tmp_var ^ ".clo.env, " ^ argc ^ ", argv); })")
   | CC_MakeEnv (vars, _) ->
     let pair_count = List.length vars in
     if pair_count = 0 then
       "MakeEnv(0)"
     else (
-      let decls, addr_args =
-        List.fold_left (fun (decls_acc, args_acc) (name, expr) ->
+      let args_str =
+        List.fold_left (fun args_acc (name, expr) ->
           match expr with
           | CC_Var v ->
-              (decls_acc, args_acc @ ["\"" ^ name ^ "\""; "&" ^ v])
-          | _ ->
-              let init = "  Value " ^ name ^ " = " ^ string_of_cc_expr expr ^ ";\n" in
-              (decls_acc @ [init], args_acc @ ["\"" ^ name ^ "\""; "&" ^ name])
-        ) ([], []) vars
+              args_acc @ ["\"" ^ name ^ "\""; v]
+          | CC_EnvRef _ ->
+              args_acc @ ["\"" ^ name ^ "\"";  string_of_cc_expr expr]
+          | _ -> failwith "CC_MakeEnv expected either EnvRef or Var"
+        ) [] vars
       in
-      let args_str = String.concat ", " addr_args in
-      "({\n" ^ String.concat "" decls ^ "  MakeEnv(" ^ string_of_int pair_count ^ ", " ^ args_str ^ ");\n })"
+      "MakeEnv(" ^ string_of_int pair_count ^ ", " ^ (String.concat ", " args_str) ^ ")"
     )
   | CC_EnvRef (env, var) ->
     "EnvRef(" ^ string_of_cc_expr env ^ ", \"" ^ var ^ "\")"
   | CC_Let (defs, body) ->
-    let def_exprs = String.concat "" (List.map (fun (v, expr) -> "  Value " ^ v ^ " = " ^ string_of_cc_expr expr ^ ";\n") defs) in
+    let def_exprs = String.concat "" (List.map (fun (v, expr) -> "  Value " ^ v ^ " = NewCell(CellValue(" ^ string_of_cc_expr expr ^ "));\n") defs) in
     "({\n" ^ def_exprs ^ string_of_cc_expr body ^ ";\n })"
   | CC_Nil -> "MakeNil()"
   | CC_Callcc _ -> failwith "todo"
   | CC_Pair (e1, e2) -> "MakePair(" ^ string_of_cc_expr e1 ^ ", " ^ string_of_cc_expr e2 ^ ")"
-  | CC_PrimApp (p, args) -> p2c p ^ "(" ^ String.concat ", " (List.map string_of_cc_expr args) ^ ")"
+  | CC_Prim p -> (c_func_of_prim p)
 
   and t_top: cc_top_expr -> unit = fun top_expr -> match top_expr with 
   | CC_FuncDef  (name, args, body) -> 
-    let args_str =
+    let func_src =
       match args with
       | env :: rest when env = "$env" ->
-          let rest_str = String.concat ", " (List.map (fun a -> "Value " ^ a) rest) in
-          if rest = [] then "EnvEntry* " ^ env else "EnvEntry* " ^ env ^ ", " ^ rest_str
+          let arity = List.length rest in
+          let bindings =
+            if arity = 0 then ""
+            else
+              String.concat "\n" (List.mapi (fun i a -> "  Value " ^ a ^ " = argv[" ^ string_of_int i ^ "];") rest) ^ "\n"
+          in
+          "Value " ^ name ^ "(EnvEntry* " ^ env ^ ", int argc, Value* argv) {\n" ^
+          ("  if (argc != " ^ string_of_int arity ^ ") runtime_error(\"arity mismatch\");\n") ^
+          bindings ^
+          "  return " ^ (string_of_cc_expr body) ^ ";\n}"
       | _ -> failwith "CC_FuncDef expected $env as a first argument"
     in 
-    res := !res @ [("Value " ^ name ^ "(" ^ args_str ^ ") {\nreturn " ^ (string_of_cc_expr body) ^ ";\n}")]
+    res := !res @ [func_src]
   | CC_VarDef (name, e) -> 
     global_decls := !global_decls @ [("Value " ^ name ^ ";")];
-    global_inits := !global_inits @ [(name ^ " = " ^ string_of_cc_expr e ^ ";") ]
+    (match e with
+     | CC_MakeClosure _ ->
+        global_inits := !global_inits @ [
+          (name ^ " = NewEmptyCell();");
+          ("SetCell(" ^ name ^ ", " ^ string_of_cc_expr e ^ ");")
+        ]
+     | _ ->
+        global_inits := !global_inits @ [
+          (name ^ " = NewCell(CellValue(" ^ string_of_cc_expr e ^ "));")
+        ])
   | CC_Expr e -> main_body_exprs := !main_body_exprs @ [string_of_cc_expr e]
   | CC_EnvDef _ -> ()
 

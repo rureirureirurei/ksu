@@ -6,22 +6,21 @@ let header = {|
 
 static void runtime_error(const char* message);
 
-enum Tag { INT, BOOL, STRING, LAMBDA, PAIR, NIL, CLOSURE, ENV };
+enum Tag { INT, BOOL, STRING, PAIR, NIL, CLOSURE, CELL };
+
+
+struct EnvEntry;
 
 union Value;
-struct EnvEntry;
 typedef union Value Value;
-typedef union Value (*Lambda)();
+
+// Lambda in C-land takes environment, number of arguments and arguments as array of Value's
+typedef union Value (*Lambda)(struct EnvEntry*, int, union Value*);
 
 struct Closure {
     enum Tag t;
     Lambda lam;
     struct EnvEntry* env;
-};
-
-struct Env {
-    enum Tag t;
-    void* env;
 };
 
 struct Int {
@@ -46,14 +45,19 @@ struct Pair {
 };
 typedef struct Pair Pair;
 
+struct Cell {
+    enum Tag t;
+    union Value* addr;
+};
+
 union Value {
     enum Tag t;
     struct Int z;
     struct Bool b;
     struct String s;
     struct Closure clo;
-    struct Env env;
     struct Pair pair;
+    struct Cell cell;
 };
 
 static Value MakeInt(int n) {
@@ -77,12 +81,60 @@ static Value MakeString(const char* s) {
     return v;
 }
 
+static Value MakeNil() {
+    Value v;
+    v.t = NIL;
+    return v;
+}
+
+static Value NewCell(Value initialValue) {
+    Value v ;
+    v.cell.t = CELL ;
+    v.cell.addr = malloc(sizeof(Value)) ;
+    *v.cell.addr = initialValue ;
+    return v ;
+}
+
+static Value NewEmptyCell() {
+    Value v;
+    v.cell.t = CELL;
+    v.cell.addr = malloc(sizeof(Value));
+    if (!v.cell.addr) {
+        runtime_error("Out of memory allocating Cell");
+    }
+    *v.cell.addr = MakeNil();
+    return v;
+}
+
+static Value CellValue(Value cell) {
+    if (cell.t != CELL) {
+        return cell;
+    }
+    if (!cell.cell.addr) {
+        runtime_error("Expected non NULL address in CellValue");
+    }
+    if ((cell.cell.addr)->t == CELL) {
+        runtime_error("Are you sure we have Cell in Cell? Seems buggy");
+    }
+    return *(cell.cell.addr);
+}
+
+static Value SetCell(Value cell, Value value) {
+    if (cell.t != CELL) {
+        runtime_error("SetCell expects a CELL");
+    }
+    if (!cell.cell.addr) {
+        runtime_error("SetCell on NULL address");
+    }
+    *(cell.cell.addr) = value;
+    return cell;
+}
 
 // =============== CLOSURES ===============
 
 struct EnvEntry {
     const char* name;
-    Value* value;
+    Value value; // Implicitly, we expect all of those to be Cells
     struct EnvEntry* next;
 };
 typedef struct EnvEntry EnvEntry;
@@ -94,14 +146,14 @@ static EnvEntry* MakeEnv(int pair_count, ...) {
     EnvEntry* head = NULL;
     for (int i = 0; i < pair_count; i++) {
         const char* key = va_arg(args, const char*);
-        Value* value_ptr = va_arg(args, Value*);
+        Value value = va_arg(args, Value);
 
         EnvEntry* node = (EnvEntry*)malloc(sizeof(EnvEntry));
         if (!node) {
             runtime_error("Out of memory allocating EnvEntry");
         }
         node->name = key;
-        node->value = value_ptr;
+        node->value = value;
         node->next = head;
         head = node;
     }
@@ -111,7 +163,7 @@ static EnvEntry* MakeEnv(int pair_count, ...) {
 }
 
 static Value EnvRef(EnvEntry* node, const char* key) {
-    while (node) { if (strcmp(node->name, key) == 0) return *(node->value); node = node->next; }
+    while (node) { if (strcmp(node->name, key) == 0) return node->value; node= node->next; }
     runtime_error("Unbound variable");
 }
 
@@ -124,12 +176,6 @@ static Value MakeClosure(Lambda lam, EnvEntry* env) {
 }
 
 // =============== BUILTINS ===============
-
-static Value MakeNil() {
-    Value v;
-    v.t = NIL;
-    return v;
-}
 
 static void runtime_error(const char* message) {
     fprintf(stderr, "Runtime error: %s\n", message);
@@ -152,11 +198,12 @@ static Value __builtin_cdr(Value list) {
 }
 
 static Value __builtin_cons(Value fst, Value snd) {
-    Value *fstptr = malloc(sizeof(Value));
     Value *sndptr = malloc(sizeof(Value));
-    *fstptr = fst;
     *sndptr = snd;
-    
+    Value *fstptr = malloc(sizeof(Value));
+    *fstptr = fst;
+
+
     Value v;
     v.t = PAIR;
     v.pair.fst = fstptr;
@@ -178,10 +225,6 @@ static Value __builtin_is_bool(Value v) {
 
 static Value __builtin_is_int(Value v) {
     return MakeBool(v.t == INT);
-}
-
-static Value __builtin_is_lambda(Value v) {
-    return MakeBool(v.t == LAMBDA);
 }
 
 static Value __builtin_is_list(Value v) {
