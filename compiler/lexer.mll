@@ -19,6 +19,7 @@ rule lex = parse
   | '[' { LBRACKET }
   | ']' { RBRACKET }
   | "let" { LET }
+  | "begin" { BEGIN }
   | "if" { IF }
   | "define" { DEFINE }
   | "lambda" { LAMBDA }

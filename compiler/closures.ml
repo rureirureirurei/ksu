@@ -44,6 +44,7 @@ let rec free: expr -> VarSet.t = fun expr ->
   | E_If (c, y, n) -> VarSet.union (free n) @@ VarSet.union (free c) (free y)
   (* Lambda and Let *)
   | E_Let (defs, body) -> VarSet.diff (free body) (List.map fst defs |> VarSet.of_list)
+  | E_Begin exprs -> List.fold_left (fun acc e -> VarSet.union acc (free e)) VarSet.empty exprs
   | E_Lambda (args, body) -> VarSet.diff (free body) (VarSet.of_list args)
 
 
@@ -75,6 +76,12 @@ let convert: top_expr list -> cc_top_expr list =
     | E_Bool b -> CC_Bool b
     (* A bit trickier *)
     | E_If (c, y, n) -> CC_If (t' c, t' y, t' n)
+    | E_Begin exprs ->
+      (match List.rev exprs with
+       | [] -> CC_Nil
+       | last :: rev_rest ->
+         let defs = List.rev rev_rest |> List.mapi (fun i e -> ("__seq_tmp_" ^ string_of_int i, t' e)) in
+         CC_Let (defs, t' last))
     | E_Let (defs, body) -> 
       let defs' = List.map (fun (v, expr) -> (v, t' expr)) defs in
       (* Shadow bound variables inside the body by removing them from the env-captured set *)

@@ -52,6 +52,7 @@ and sanitize_expr (expr: expr) : expr =
   | E_If (cond, then_expr, else_expr) ->
       { expr with value = E_If (sanitize_expr cond, sanitize_expr then_expr, sanitize_expr else_expr) }
   | E_Callcc e -> { expr with value = E_Callcc (sanitize_expr e) }
+  | E_Begin exprs -> { expr with value = E_Begin (List.map sanitize_expr exprs) }
   | E_Let (bindings, body) ->
       { expr with value = E_Let (sanitize_let_bindings bindings, sanitize_expr body) }
   | E_Pair (e1, e2) -> { expr with value = E_Pair (sanitize_expr e1, sanitize_expr e2) }
@@ -61,6 +62,7 @@ and sanitize_expr (expr: expr) : expr =
   | E_Nil -> expr
   | E_PrimApp (prim, args) ->
       { expr with value = E_PrimApp (prim, List.map sanitize_expr args) }
+  
 
 (* Sanitize a top-level expression *)
 let sanitize_top_expr (top_expr: top_expr) : top_expr =

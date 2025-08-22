@@ -7,6 +7,7 @@
 %token DEFINE
 %token IF LAMBDA CALLCC
 %token LET
+%token BEGIN
 %token QUOTE
 %token EOF
 
@@ -28,12 +29,12 @@
 %}
 
 %%
-parse: exprs EOF { $1 }
+parse: top_exprs EOF { $1 }
 
-exprs:
+top_exprs:
   | { [] }
-  | expr exprs { mk_node $loc (E_Expr $1) :: $2 }
-  | LPAREN define_expr RPAREN exprs { $2 :: $4 }
+  | expr top_exprs { mk_node $loc (E_Expr $1) :: $2 }
+  | LPAREN define_expr RPAREN top_exprs { $2 :: $4 }
 
 expr:
   | atom { $1 }
@@ -47,15 +48,19 @@ atom:
   | list_expr { $1 }
 
 compound:
-  | app_expr {
+  | lambda_expr { $1}
+  | if_expr { $1 }
+  | let_expr { $1 }
+  | begin_expr { $1 }
+  | callcc_expr { $1 }
+  | exprs {
       match $1 with
       | f :: args -> mk_node $loc (E_App (f, args))
       | [] -> failwith "Empty application"
     }
-  | lambda_expr { $1}
-  | if_expr { $1 }
-  | let_expr { $1 }
-  | callcc_expr { $1 }
+  
+begin_expr:
+  | BEGIN exprs { mk_node $loc (E_Begin $2) }
 
 list_expr:
   | QUOTE LPAREN list_elements RPAREN { $3 }
@@ -74,9 +79,9 @@ lambda_expr:
 if_expr:
   | IF expr expr expr { mk_node $loc (E_If ($2, $3, $4)) }
 
-app_expr:
+exprs:
   | expr { [$1] }
-  | expr app_expr { $1 :: $2 }
+  | expr exprs { $1 :: $2 }
 
 callcc_expr:
   | CALLCC expr { mk_node $loc (E_Callcc $2) }

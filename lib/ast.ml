@@ -16,6 +16,7 @@ and expr_data =
   | E_Lambda of var list * expr
   | E_If of expr * expr * expr
   | E_Callcc of expr
+  | E_Begin of expr list
   | E_Let of (var * expr) list * expr
   | E_Pair of expr * expr
   | E_Nil
@@ -88,6 +89,16 @@ let string_of_expr expr =
         ^ ")\n" ^ indent ^ "  "
         ^ string_of_expr_aux (offset + 2) body
         ^ ")"
+    | E_Begin exprs ->
+        let indent = String.make offset ' ' in
+        let parts = List.map (string_of_expr_aux (offset + 2)) exprs in
+        if parts = [] then "(begin)"
+        else
+          "(begin " ^
+          (match parts with
+           | [one] -> one
+           | _ -> "\n" ^ indent ^ "  " ^ String.concat ("\n" ^ indent ^ "  ") parts) ^
+          ")"
     | E_Pair (e1, e2) ->
         "(cons "
         ^ string_of_expr_aux offset e1
