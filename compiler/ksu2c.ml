@@ -23,6 +23,7 @@ let c_func_of_prim: Ast.prim -> string = function
 | P_Le -> "__builtin_le"
 | P_Gt -> "__builtin_gt"
 | P_Ge -> "__builtin_ge"
+ | P_Set -> "__builtin_set__should_not_be_called_directly"
 
 let ksu2c: Closures.cc_top_expr list -> string = 
   let gen_fresh_var domain =
@@ -47,6 +48,18 @@ let ksu2c: Closures.cc_top_expr list -> string =
   | CC_MakeClosure (var, c_expr) ->
     "MakeClosure(" ^ var ^ ", " ^ string_of_cc_expr c_expr ^ ")"
   | CC_AppClosure (fn, args) -> (match fn with 
+   | CC_Prim P_Set -> (
+       match args with
+       | [cell_expr; value_expr] -> "SetCell(" ^ (string_of_cc_expr cell_expr) ^ ", CellValue(" ^ string_of_cc_expr value_expr ^ "))"
+       | _ -> failwith "set! expects exactly 2 arguments")
+   | CC_Var v when v = "set_bang_" -> (
+       match args with
+       | [cell_expr; value_expr] -> "SetCell(" ^ (string_of_cc_expr cell_expr) ^ ", CellValue(" ^ string_of_cc_expr value_expr ^ "))"
+       | _ -> failwith "set! expects exactly 2 arguments")
+   | CC_EnvRef (_, v) when v = "set_bang_" -> (
+       match args with
+       | [cell_expr; value_expr] -> "SetCell(" ^ (string_of_cc_expr cell_expr) ^ ", CellValue(" ^ string_of_cc_expr value_expr ^ "))"
+       | _ -> failwith "set! expects exactly 2 arguments")
    | CC_Prim _ ->
      let args_str = String.concat ", " (List.map (fun a -> "CellValue(" ^ string_of_cc_expr a ^ ")") args) in
      (string_of_cc_expr fn) ^ "(" ^ args_str ^ ")"
@@ -81,7 +94,7 @@ let ksu2c: Closures.cc_top_expr list -> string =
     "({\n" ^ def_exprs ^ string_of_cc_expr body ^ ";\n })"
   | CC_Nil -> "MakeNil()"
   | CC_Callcc _ -> failwith "todo"
-  | CC_Pair (e1, e2) -> "MakePair(" ^ string_of_cc_expr e1 ^ ", " ^ string_of_cc_expr e2 ^ ")"
+  | CC_Pair (e1, e2) -> "__builtin_cons(" ^ string_of_cc_expr e1 ^ ", " ^ string_of_cc_expr e2 ^ ")"
   | CC_Prim p -> (c_func_of_prim p)
 
   and t_top: cc_top_expr -> unit = fun top_expr -> match top_expr with 

@@ -121,7 +121,9 @@ static Value CellValue(Value cell) {
 
 static Value SetCell(Value cell, Value value) {
     if (cell.t != CELL) {
-        runtime_error("SetCell expects a CELL");
+        char msg[100];
+        sprintf(msg, "SetCell expects a CELL but got %s", cell.t);
+        runtime_error(msg);
     }
     if (!cell.cell.addr) {
         runtime_error("SetCell on NULL address");
@@ -363,5 +365,9 @@ static Value __builtin_ne(Value a, Value b) {
         case BOOL: return MakeBool(a.b.value != b.b.value);
         default: runtime_error("Can only compare ints and bools");
     }
+}
+
+static Value __builtin_set(Value cell, Value value) {
+    return SetCell(cell, CellValue(value));
 }
 |}

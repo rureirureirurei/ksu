@@ -57,4 +57,7 @@ let builtin_definitions : top_expr list =
 
     (* Print primitive *)
     mk_define "print" (mk_lambda ["a0"] (mk_prim_app P_Print ["a0"]));
+
+    (* Mutation primitive *)
+    mk_define "set!" (mk_lambda ["cell"; "value"] (mk_prim_app P_Set ["cell"; "value"]));
   ]

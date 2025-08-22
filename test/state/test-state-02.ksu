@@ -4,4 +4,4 @@
 
 (define f (lambda () x))
 (set! x 20)
-(f)
+(print (f))

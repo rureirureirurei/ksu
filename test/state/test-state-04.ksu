@@ -1,12 +1,13 @@
 ;30
 ;We also test that global functions can be defined as non-direct expression
 (define print30
-(let
-([x 10])
-
-(let ([f (lambda () x)]) (begin (set! x 30) f))
-
+  (let ([x 10])
+    (let ([f (lambda () x)]) 
+      (begin 
+        (set! x 30)
+        f
+    ))
+  )
 )
-)
 
-(print30)
+(print (print30))
