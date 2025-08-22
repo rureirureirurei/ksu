@@ -1,0 +1,7 @@
+;20
+;In racket, global variable is rather a cell, closures capture pointer to actual data
+(define x 10)
+
+(define f (lambda () x))
+(set! x 20)
+(f)

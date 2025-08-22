@@ -1,0 +1,8 @@
+;30
+;In local bindings - the same, variable is rather a pointer to the location, functions capture cell
+(let
+([x 10])
+
+(let ([f (lambda () x)]) (begin (set! x 30) (print (f))))
+
+)

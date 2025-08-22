@@ -1,0 +1,9 @@
+;Hello World
+;Testing functions assignment
+(define printval #f)
+
+(let () (begin
+(set! printval (lambda () (print "Hello World")))
+))
+
+(printval)

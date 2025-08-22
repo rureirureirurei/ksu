@@ -1,0 +1,5 @@
+;2
+;Updating cons
+(define lst '(1 2 3))
+(set! lst (cdr lst))
+(length lst)

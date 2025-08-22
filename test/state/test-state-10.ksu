@@ -1,0 +1,21 @@
+;10
+;Counters as independent mutable state via closures
+
+(define (make-counter init)
+  (let ([x init])
+    (let ([inc (lambda () (set! x (+ x 1)))]
+          [dec (lambda () (set! x (- x 1)))]
+          [show (lambda () (print x))])
+      (lambda (cmd)
+        (if (= cmd 0)
+            (inc)
+            (if (= cmd 1)
+                (dec)
+                (show)))))))
+
+(define c1 (make-counter 7))
+
+(c1 0)
+(c1 0)
+(c1 0)
+(c1 2)
