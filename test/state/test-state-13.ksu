@@ -1,0 +1,4 @@
+;10
+;When making 'copy', the new value is created, not new reference
+
+(let ([x 10]) (let ([y x]) (begin (set! x 30) (print y))))

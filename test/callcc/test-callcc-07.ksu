@@ -1,3 +1,5 @@
+;100
+; Sophisticated backtracking example
 (define cont-stack '())
 
 (define (choose opts)
@@ -14,11 +16,11 @@
 
 (define (fail)
   (if (null? cont-stack)
-      count
+      (print count)
       (let (
              [top (car cont-stack)]
-             [k (car top)]
-             [remaining (cdr top)])
+             [k (car (car cont-stack))]
+             [remaining (cdr (car cont-stack))])
         (set! cont-stack (cdr cont-stack))
         (if (null? remaining)
             (fail)
@@ -37,8 +39,8 @@
         [c (choose (range 1 100))]
        )
         (if (eq? (+ (* b b) (* c c)) (* a a))
-            (begin (display (list a b c)) (newline) (fail))
-            ;(begin (set! count (+ 1 count)) (fail))
+            ;(begin (display (list a b c)) (newline) (fail))
+            (begin (set! count (+ 1 count)) (fail))
             (fail)
         )
       )
