@@ -106,7 +106,7 @@ let ksu2c: Closures.cc_top_expr list -> string =
           let bindings =
             if arity = 0 then ""
             else
-              String.concat "\n" (List.mapi (fun i a -> "  Value " ^ a ^ " = argv[" ^ string_of_int i ^ "];") rest) ^ "\n"
+              String.concat "\n" (List.mapi (fun i a -> "  Value " ^ a ^ " = NewCell(argv[" ^ string_of_int i ^ "]);") rest) ^ "\n"
           in
           "Value " ^ name ^ "(EnvEntry* " ^ env ^ ", int argc, Value* argv) {\n" ^
           ("  if (argc != " ^ string_of_int arity ^ ") runtime_error(\"arity mismatch\");\n") ^

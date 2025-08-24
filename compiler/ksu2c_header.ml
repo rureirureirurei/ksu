@@ -60,6 +60,19 @@ union Value {
     struct Cell cell;
 };
 
+static const char* tag_to_string(enum Tag t) {
+    switch (t) {
+        case INT: return "INT";
+        case BOOL: return "BOOL";
+        case STRING: return "STRING";
+        case PAIR: return "PAIR";
+        case NIL: return "NIL";
+        case CLOSURE: return "CLOSURE";
+        case CELL: return "CELL";
+        default: return "UNKNOWN";
+    }
+}
+
 static Value MakeInt(int n) {
     Value v;
     v.t = INT;
@@ -122,7 +135,7 @@ static Value CellValue(Value cell) {
 static Value SetCell(Value cell, Value value) {
     if (cell.t != CELL) {
         char msg[100];
-        sprintf(msg, "SetCell expects a CELL but got %s", cell.t);
+        sprintf(msg, "SetCell expects a CELL but got %s", tag_to_string(cell.t));
         runtime_error(msg);
     }
     if (!cell.cell.addr) {
