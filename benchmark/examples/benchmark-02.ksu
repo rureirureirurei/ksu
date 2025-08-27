@@ -1,0 +1,31 @@
+;#t
+
+(define find
+  (lambda (needle lst)
+    (if (= lst #f)
+        #f
+        (if (= (car lst) needle)
+            #t
+            (find needle (cdr lst))
+        )
+    )
+  )
+)
+
+(define buildlist
+  (lambda (n acc)
+    (if (= n 0)
+        acc
+        (buildlist (- n 1) (cons n acc))
+    )
+  )
+)
+
+(define upto
+  (lambda (n)
+    (buildlist n #f)
+  )
+)
+
+(define biglist (upto 100000))
+(print (find 100000 biglist))
