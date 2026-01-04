@@ -1,141 +1,151 @@
-# ksu
+ksu is implementation of the subset of lisp language that compiles to C. 
 
-*ksu* is a functional language that supports first-class continuations.
-Its syntax resembles Scheme.
+Compiler structure: 
 
-## Usage
-
-The `ksu` executable can be used in two modes:
-
-### Interpreter Mode (Default)
-```bash
-ksu program.ksu
-```
-Runs the program directly by interpreting it. This is the default behavior.
-
-### Compiler Mode
-```bash
-ksu --compile program.ksu -o output
-```
-Compiles the program to a native executable. The `-o` flag specifies the output filename.
-
-### Interactive Mode
-```bash
-ksu
-```
-Starts an interactive REPL (Read-Eval-Print Loop) where you can enter expressions directly.
-
-## TODO
-  - Refactor constructor for the App ast node - make function and arguments separate. It would remove stupid App [] checks and make parsing simpler (2)
-  - Adequately propagate node locations during closure conversion and flattening (3)
-
-## In general
-
-Program is a sequence of S-expressions. Each expression is either:
-- **Atom**: number, string, symbol, or boolean
-- **Compound**: `(expr expr ...)`
-
-Compound is either special form, or function application.
-
-Special forms:
-- `(lambda (params...) body)` - function definition
-- `(let ([var val]...) body)` - local bindings  
-- `(if test then else)` - conditional
-- `(define name value)` - top-level binding
-- `(call/cc proc)` - first-class continuations
-
-## Examples
-
-Basic arithmetic and functions:
-```scheme
-(define x 10)
-(define y 20)
-(+ x y)  ; returns 30
-
-(define square (lambda (n) (* n n)))
-(square 5)  ; returns 25
-```
-
-Conditionals and recursion:
-```scheme
-(define factorial 
-  (lambda (n)
-    (if (= n 0) 
-        1 
-        (* n (factorial (- n 1))))))
-
-(factorial 5)  ; returns 120
-```
-
-First-class continuations:
-```scheme
-(+ 1 (call/cc (lambda (k) (+ 2 (k 3)))))  ; returns 4
-
-(define saved-cont #f)
-(define result
-  (+ 1 (call/cc (lambda (k) 
-                  (set! saved-cont k) ; (2) set!
-                  10))))
-; result is 11, but saved-cont can be called later
-(saved-cont 99)  ; jumps back, returns 100
-```
-
-## Types
-
-Main types (runtime representation):
-- **Number**: integers and floats
-- **Boolean**: `#t` and `#f`  
-- **String**: `"hello world"`
-- **Function**: `(lambda (x) ...)`
-- **Continuation**: captured by `call/cc`
-
-## Built-in Functions
-
-### Arithmetic: `+`, `-`, `*`, `/`, `=`, `<`, `>`, `<=`, `>=`
-- `+`, `*` - variadic, fold over all arguments
-- `-`, `/` - variadic, fold left-to-right starting with first argument  
-- `=` - variadic, returns true if all arguments are equal
-- `<`, `>`, `<=`, `>=` - binary comparison operators
+AST -> 
+Closure Converted AST (all functions are closed and global) ->
+??? CPS ->
+C 
 
 
-### Keywords
 
-#### `call/cc`
-First-class continuations. Captures the current continuation and passes it to the given procedure. Only lambda expr with with arity 1 can be passed to it.
++ Parser and Lexer are OK
++ Closure Conversion (kinda ok)
 
-#### `define`
-Top-level binding for variables and functions. Only allowed at the top level.
-
-**Forms:**
-- `(define <id> <expr>)` - bind a value to an identifier
-- `(define (<id> <arg0> <arg1> ... <argn>) <expr>)` - define a function (equivalent to `(define <id> (lambda (<arg0> <arg1> ... <argn>) <expr>))`)
-
-**Limitations compared to racket:**
-- No optional arguments or variable arguments (rest parameters)
-- No multiple sequential expressions in the body
-- No forward-referencing other defines
-- No nested function definitions like `(define ((<name> <arg0>) <arg1>) <expr>)`
-- Recursion is allowed (currently only in lambdas)
-
-#### `lambda`
-Function definition. Creates a procedure with the given parameters and body. Can have multiple arguments.
-
-#### `let`
-Local bindings. Creates a new scope with bound variables. Can have multiple non-recursive definitions.
-
-#### `if`
-Conditional expression. Evaluates the test and returns either the then or else expression in the lazy manner.
-
-### `quotes and pairs`
-
-Quotes are not implemented. Cons are, though.
-List operations: `car`, `cdr`, `cons` and `null` primitive value are supported.
-At the moment, quotes are evaluated as list of exressions (the same as in proper quotes assuming that all values are primitives), and, 
-are rather syntactic sugar to cons, than separate mechanism of preserving thing as unevaluated symbols.
+- Translation to C is complete bullshit
+- call/cc is not supported at all 
 
 
-### `I/O: `display`, `newline` (2)`
-Type predicates: `number?`, `boolean?`, `string?`, `procedure?`, `continuation?`, `null?`, `cons?`
+What we want? 
+call/cc
+mutable state 
+recursive functions 
 
-## Liturature 
-- https://matt.might.net/articles/closure-conversion/
+
+1. Every variable is actually a box. What values may we have? 
+
+int
+global function
+boolean 
+string 
+list???
+
+each variable when translated to C is actually:
+pointer to location in memory where union is located: 
+union is tag + some data 
+int, boolean, string - straightforward. 
+funcion is address to function 
+
+for lists, only operations we could want is 
+x = (tail y)
+or 
+x = a :: y 
+
+so, we could represent lists as immutable data structures in memory (when list cells are added to memory, they are not changed) 
+
+so, assume that we have this structure in memory 
+
+x0 -> x1 -> x2 
+
+and we parse line 
+y = ? :: x 
+
+then it means allocating memory, creating new list entry ?, setting it's next to x and 
+y is pointer to struct in memory { TAG: LIST, headptr: ? }
+
+if we write y = tail x 
+then y is ptr to struct in memory {TAG : LIST, headptr: next(x) }
+
+now it's trivial to implement :: and rest 
+
+what about mutability / call.cc ??
+
+call/cc only captures context, but not the values. of the variables - so if they were changed, then it's ok. 
+
+so, let's think about the model once again and confirm the details and think about some edge cases. 
+where we may create new variables? 
+let, function call, global define 
+
+how do we translate this to C ? 
+
+first, we define our union type: 
+{ tag, other_details } - so that's our values. structs in memory. all identifiers are just 
+pointers to those structures. and the assumption is that those structures do not ever change, we only change 
+for our identifiers point to . 
+like if we say set! x (+ 1 x) then it translates to 
+
+// alloc_new_int: takes int, allocates memory creates int struct and returns pointer to it. 
+// x is of type Value
+x = alloc_new_int(1 + x.int_val)
+if we say x = (lambda x x) 
+then it's going to be like this: during the closure conv, the lambda will be transalted to global function: 
+
+Value lamda_69(Value x, Env e) {
+    return x
+}
+
+
+the struct for lambdas would look like 
+{ tag: LAMBDA, Value fptr*(Value): *(lambda_69)}
+and in C, translated to sth like 
+x = alloc_new_lam(*lambda69)
+
+Now lists, there would be 3 functions: empty, append, tail 
+
+x = ( empty ())
+would translate to 
+// alloc_new_list takes ptr to the first list item, if NULL - then it means list is empty
+x = alloc_new_list(null)
+
+
+## CLOSURES 
+how do we actually translate lambdas? 
+ok, also tricky questions - what should be passed to the env? cause for example: 
+
+(define inc (let ([cnt 0 ])
+    (lambda () (begin (set! cnt (+ 1 cnt)) cnt  ))
+))
+
+here this would translate to 
+
+Value lamda_<id> (Value arg, Env e) {
+    e
+}
+
+so, and here's the issue - if we use set only on the global variables / variables passed to the function, 
+then we can translate set <id> <val> to basically <id> = alloc_new_??? <val> 
+
+but when setting things from env, we don't have id. 
+so, env should be basically be map 
+<string id> 
+or list 
+of *Value (pointer to value). and Value is pointer to the structure in memory. 
+so and when we create enviroment, it should be sthe like 
+
+Value x ....
+MakeClosure(... Env(&x, ... )) 
+
+ok, now how should we handle closures and lambdas? 
+maybe we can have structure 
+tag: CLOSURE 
+lambda: ptr to function 
+env: Env 
+
+and Env type may be list of string -> &Value. This works because even though when compiled, closure can be thought of 
+as argument list, but we can only capture variables, so all the values in this list should be variable pointers. 
+(Compared to usual arguments - even if we pass variables i.e. f(x,y) - we don't actually pass &x, &y, but create new
+fresh vars that point to the same struct in memory. 
+about closures - we definitely have to define all the lambdas, no doubt here. 
+but I'm ZZ
+
+
+=============================
+how do we compile bulitin functions? i.e. print, or + ? 
+(btw all functions are postfix, so no worries about that. )
+basically we can add the lambdas in the 
+
+
+=============================
+how to compile call/cc ? 
+
+
