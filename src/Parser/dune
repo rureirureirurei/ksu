@@ -1,0 +1,9 @@
+(library
+ (name ksu_parser)
+ (libraries lang)
+ (modules parser lexer))
+
+(menhir
+ (modules parser))
+
+(ocamllex lexer)

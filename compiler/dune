@@ -1,9 +1,0 @@
-(library
- (name compiler)
- (libraries compiler_lib)
- (modules parser lexer closures ksu2c ksu2c_header name_sanitizer builtins))
-
-(menhir
- (modules parser))
-
-(ocamllex lexer)

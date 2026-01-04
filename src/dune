@@ -1,0 +1,4 @@
+(executable
+ (name ksu)
+ (public_name ksu)
+ (libraries lang ksu_parser compiler))

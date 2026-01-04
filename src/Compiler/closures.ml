@@ -1,4 +1,4 @@
-open Compiler_lib
+open Lang
 open Ast
 
 

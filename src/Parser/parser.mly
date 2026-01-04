@@ -11,10 +11,10 @@
 %token QUOTE
 %token EOF
 
-%start <Compiler_lib.Ast.top_expr list> parse
+%start <Lang.Ast.top_expr list> parse
 
 %{
-  open Compiler_lib
+  open Lang
   open Ast
 
   let mk_node: Lexing.position * Lexing.position -> 'a -> 'a node =

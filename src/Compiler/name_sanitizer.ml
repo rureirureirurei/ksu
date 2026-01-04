@@ -1,5 +1,5 @@
 (* Name sanitizer for C code generation *)
-open Compiler_lib
+open Lang
 open Ast
 
 (* Replace dangerous characters in variable names with C-safe alternatives *)

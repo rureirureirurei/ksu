@@ -1,4 +1,5 @@
 (* Main entry point for KSU language *)
+open Ksu_parser
 open Compiler
 
 (* Command line argument parsing *)

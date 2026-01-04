@@ -1,4 +1,4 @@
-open Compiler_lib
+open Lang
 open Closures
 open Ast
 
@@ -23,7 +23,7 @@ let c_func_of_prim: Ast.prim -> string = function
 | P_Le -> "__builtin_le"
 | P_Gt -> "__builtin_gt"
 | P_Ge -> "__builtin_ge"
- | P_Set -> "__builtin_set__should_not_be_called_directly"
+| P_Set -> "__builtin_set"
 
 let ksu2c: Closures.cc_top_expr list -> string = 
   let gen_fresh_var domain =
@@ -137,6 +137,6 @@ in fun exprs ->
   let main_body = "int main() {\n" ^ 
                   (String.concat "\n" !global_inits) ^ "\n" ^
                   (String.concat "\n" main_exprs) ^ "\n}" in 
-  Ksu2c_header.header ^ "\n\n" ^ 
+  "#include \"ksu_runtime.h\"\n#include \"ksu_builtins.c\"\n\n" ^
   (String.concat "\n" !global_decls) ^ "\n\n" ^
   String.concat "\n\n" (!res @ [main_body])
