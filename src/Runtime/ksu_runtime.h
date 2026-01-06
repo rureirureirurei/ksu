@@ -10,6 +10,7 @@
 union Value;
 typedef union Value Value;
 struct ListItem;
+struct EnvEntry;
 
 // ============ VALUE TAGS ============
 typedef enum ValueTag {
@@ -37,23 +38,18 @@ struct ValueBool {
 };
 
 // ============ LISTS ============
-typedef struct ListItem {
-    Value v;
-    struct ListItem* next;  // NULL = end of list
-} ListItem;
-
 struct ValueList {
     ValueTag t;
-    ListItem* ptr;  // NULL = empty list
+    struct ListItem* ptr;  // NULL = empty list
 };
 
 // ============ CLOSURES ============
-typedef Value** ClosureEnv;
-typedef Value (*Lambda_t)(Value*, ClosureEnv);
+typedef struct EnvEntry* ClosureEnv;
+typedef Value (*Lambda_t)(ClosureEnv, int, Value*);
 
 struct ValueClosure {
     ValueTag t;
-    Lambda_t fn;
+    Lambda_t lam;
     ClosureEnv env;
 };
 
@@ -67,14 +63,30 @@ union Value {
     struct ValueClosure closure;
 };
 
+// ============ NOW DEFINE COMPLETE STRUCTS ============
+struct ListItem {
+    Value v;
+    struct ListItem* next;
+};
+typedef struct ListItem ListItem;
+
+struct EnvEntry {
+    char* name;
+    Value val;
+};
+typedef struct EnvEntry EnvEntry;
+
 // ============ CONSTRUCTORS ============
 #define MakeInt(x)        (Value){ .t = NUMBER,  .integer.value = (x) }
 #define MakeBool(x)       (Value){ .t = BOOLEAN, .boolean.value = (x) }
 #define MakeString(x)     (Value){ .t = STRING,  .string.value = (x) }
 #define MakeEmptyList()   (Value){ .t = LIST,    .list.ptr = NULL }
-#define MakeClosure(e, f) (Value){ .t = CLOSURE, .closure.fn = (f), .closure.env = (e) }
+#define MakeClosure(f, e) (Value){ .t = CLOSURE, .closure.lam = (f), .closure.env = (e) }
 
 // ============ RUNTIME FUNCTIONS ============
 void runtime_error(const char* msg);
+ClosureEnv MakeEnv(int count, ...);
+Value EnvRef(ClosureEnv env, const char* id);
+bool is_true(Value v);
 
 #endif // KSU_RUNTIME_H
