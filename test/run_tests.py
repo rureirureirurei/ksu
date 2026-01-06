@@ -49,8 +49,13 @@ def run_ksu_file(file_path):
             exe_path = Path(td) / 'a.out'
             c_path.write_text(c_code)
 
+            # Get project root directory
+            project_root = Path(__file__).parent.parent
+            runtime_c = project_root / 'src' / 'Runtime' / 'ksu_runtime.c'
+            runtime_include = project_root / 'src' / 'Runtime'
+
             comp = subprocess.run(
-                ['gcc', str(c_path), '-o', str(exe_path)],
+                ['gcc', str(c_path), str(runtime_c), '-I', str(runtime_include), '-o', str(exe_path)],
                 capture_output=True,
                 text=True,
             )
