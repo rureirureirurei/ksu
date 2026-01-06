@@ -177,4 +177,11 @@ static Value __builtin_print(Value a) {
     return a;
 }
 
-// TODO: __builtin_set requires Cell type (not yet implemented in new runtime)
+// ============ MUTATION ============
+// TODO: Proper cell/mutation support not implemented yet
+static Value __builtin_set(Value cell, Value value) {
+    (void)cell;
+    (void)value;
+    runtime_error("set! not yet implemented");
+    return MakeInt(0);  // unreachable
+}
