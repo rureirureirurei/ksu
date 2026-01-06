@@ -2,7 +2,23 @@ open Lang
 open Ast
 
 type cc_top_expr =
-  | CC_FuncDef of var * var list * cc_expr
+(* One may ask why do we need both VarDef and FuncDef?
+  Can't we replace FuncDef with Vardef f = lambda ... ?
+  Actually no. In the converted code, we won't have any lambdas.
+  Only globally defined named functions. That's the FuncDef.
+  If we are having some Variable defined to equal expr where
+  there is some lambda, i.e. 
+  (define id (lambda y y))
+  then it will be translated to 
+  
+  (define lambda_69 y y)
+  (define id lambda_69)
+  There is a minor tricky part - what about functions 
+  that are already globally defined, i.e. 
+  (define (id y) y)? That's syntax sugar for lambda, 
+  check parser.mly
+*)
+  | CC_FuncDef of var * var list * cc_expr 
   | CC_VarDef of var * cc_expr
   | CC_Expr of cc_expr
 
@@ -18,6 +34,7 @@ and cc_expr =
   | CC_Number of int
   | CC_String of string
   | CC_Nil
+  | CC_Begin of cc_expr list
   (* Non-literals *)
   | CC_Var of var
   | CC_If of cc_expr * cc_expr * cc_expr
@@ -45,11 +62,13 @@ let rec free : expr -> VarSet.t =
   | E_If (c, y, n) -> VarSet.union (free n) @@ VarSet.union (free c) (free y)
   (* Lambda and Let *)
   | E_Let (defs, body) ->
-      let free_defs =
+      (* Sequential let: each binding can see variables bound before it *)
+      let (free_defs, _) =
         List.fold_left
-          (fun acc (v, e) ->
-            VarSet.union acc (VarSet.diff (free e) (VarSet.singleton v)))
-          VarSet.empty defs
+          (fun (acc_free, acc_bound) (v, e) ->
+            let free_e = VarSet.diff (free e) acc_bound in
+            (VarSet.union acc_free free_e, VarSet.add v acc_bound))
+          (VarSet.empty, VarSet.empty) defs
       in
       let free_body =
         VarSet.diff (free body) (List.map fst defs |> VarSet.of_list)
@@ -70,14 +89,15 @@ let convert : top_expr list -> cc_top_expr list =
   let gen_lambda_id = gen_fresh_var "Lambda" in
 
   let res = ref [] in
-  let append : cc_top_expr -> unit = fun t -> res := !res @ [ t ] in
+  let append t = res := !res @ [ t ] in
 
-  (* Auxillary function, f *)
+  (* Auxillary function, checks if var is captured by closure  *)
   let cc_expr_of_var (sub : VarSet.t) (env_sym : var) (v : var) : cc_expr =
     if VarSet.mem v sub then CC_EnvRef (env_sym, v) else CC_Var v
   in
 
   let rec t : VarSet.t -> var -> expr -> cc_expr =
+    (* Sub is set of variables that should be taken from the captured env via EnvRef *)
    fun sub env_sym expr ->
     let t' = t sub env_sym in
 
@@ -90,19 +110,16 @@ let convert : top_expr list -> cc_top_expr list =
     | E_Bool b -> CC_Bool b
     (* A bit trickier *)
     | E_If (c, y, n) -> CC_If (t' c, t' y, t' n)
-    | E_Begin exprs -> (
-        match List.rev exprs with
-        | [] -> CC_Nil
-        | last :: rev_rest ->
-            let defs =
-              List.rev rev_rest
-              |> List.mapi (fun i e -> ("__seq_tmp_" ^ string_of_int i, t' e))
-            in
-            CC_Let (defs, t' last))
+    | E_Begin exprs -> CC_Begin (List.map t' exprs)
     | E_Let (defs, body) ->
-        let defs' = List.map (fun (v, expr) -> (v, t' expr)) defs in
-        (* Shadow bound variables inside the body by removing them from the env-captured set *)
-        let bound = List.map fst defs |> VarSet.of_list in
+        (* Sequential let: adjust substitution set for each binding *)
+        let (defs', bound) =
+          List.fold_left
+            (fun (acc_defs, prev_bound) (v, expr) ->
+              let expr' = t (VarSet.diff sub prev_bound) env_sym expr in
+              (acc_defs @ [(v, expr')], VarSet.add v prev_bound))
+            ([], VarSet.empty) defs
+        in
         let body' = t (VarSet.diff sub bound) env_sym body in
         CC_Let (defs', body')
     | E_Pair (a, b) -> CC_Pair (t' a, t' b)
@@ -113,17 +130,28 @@ let convert : top_expr list -> cc_top_expr list =
     | E_App (fn, args) -> CC_App (t' fn, List.map t' args)
     | E_Lambda (args, body) ->
         let lamid = gen_lambda_id () in
-        let free_vars = free expr in
         let body' = t (free expr) "$env" body in
+        let env =
+          CC_MakeEnv
+            (List.map
+               (fun v -> (v, cc_expr_of_var sub env_sym v))
+               (VarSet.to_list @@ free expr))
+        in
         append (CC_FuncDef (lamid, "$env" :: args, body'));
-        CC_MakeClosure
-          ( lamid,
-            CC_MakeEnv
-              (List.map
-                 (fun v -> (v, cc_expr_of_var sub env_sym v))
-                 (VarSet.to_list free_vars)) )
+        CC_MakeClosure (lamid, env)
   in
 
+  (* FIXME 
+    I'm not sure if this's correct - like assume that we 
+    are inside the VarDef and reference previoously defined global def
+    need to check that this is working as expected.  
+
+    Ok, we don't pass global functions to the VarSet, even though we could. 
+    
+    What's going to happen now? actually it seems as it should work. If we call global functions
+    on the top level - it's not in the sub, works alright. If we call some lambdas, then those functions 
+    will be identified as free and passed to the env.
+  *)
   let t_top : top_expr -> unit =
    fun top_expr ->
     let t = t VarSet.empty "If this env is called, it's a bug" in
