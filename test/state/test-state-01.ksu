@@ -1,7 +1,6 @@
 ;20
-;In racket, global variable is rather a cell, closures capture pointer to actual data
-(define x 10)
+(define x (box 10))
 
-(define (generator) (lambda () x))
+(define (generator) (lambda () (unwrap x)))
 (set! x 20)
 (print ((generator)))

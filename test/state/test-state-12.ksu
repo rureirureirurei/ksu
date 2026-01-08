@@ -1,7 +1,7 @@
 ;10
 ;When making 'copy', the new value is created, not new reference
 
-(define x 10)
-(define y x)
+(define x (box 10))
+(define y (unwrap x))
 (set! x 20)
 (print y)

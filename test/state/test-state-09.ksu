@@ -2,6 +2,6 @@
 ;Updating pair
 (define (length lst) (if (nil? lst) 0 (+ 1 (length (snd lst)))))
 
-(define lst '(1 2 3))
-(set! lst (snd lst))
-(print (length lst))
+(define lst (box '(1 2 3)))
+(set! lst (snd (unwrap lst)))
+(print (length (peek lst)))

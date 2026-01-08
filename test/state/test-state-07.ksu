@@ -1,8 +1,7 @@
-;Hello (changed)
-;Functions setting and global variables being pointers
-(define printval (lambda () (print "Hello (unchanged)")))
+;Hello (unchanged)
+(define printval (box (lambda () (print "Hello (unchanged)"))))
 
-(define (wrapper) (printval))
+(define (wrapper) (unwrap printval))
 (set! printval (lambda () (print "Hello (changed)")))
 
-(wrapper)
+((wrapper))

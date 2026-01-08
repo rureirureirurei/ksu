@@ -1,14 +1,15 @@
 ;#t
 ;Setting functions and mutable variable escaping closure
-(define set2t #f)
-(define set2f #f)
-(define printval #f)
+(define set2t (box #f))
+(define set2f (box #f))
+(define printval (box #f))
 
-(let ([x #f]) (begin
+(let ([x (box #f)]) (begin
     (set! set2t (lambda () (set! x #t)))
     (set! set2f (lambda () (set! x #f)))
-    (set! printval (lambda () (print x)))
+    (set! printval (lambda () (print (unwrap x))))
 ))
 
-(set2t)
-(printval)
+
+((unwrap set2t))
+((unwrap printval))

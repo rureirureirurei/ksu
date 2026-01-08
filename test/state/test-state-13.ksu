@@ -1,4 +1,3 @@
-;10
-;When making 'copy', the new value is created, not new reference
-
-(let ([x 10]) (let ([y x]) (begin (set! x 30) (print y))))
+;30
+; box reassignment works as shallow copy (aliasing)
+(let ([x (box 10)]) (let ([y x]) (begin (set! x 30) (print (peek y)))))

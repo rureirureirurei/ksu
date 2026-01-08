@@ -1,5 +1,5 @@
 ;20
 ;Global variable is not updated if it's shadowed
 (define x 20)
-((lambda (x) (set! x 10)) 55)
+((lambda (x) (set! x 10)) (box 55))
 (print x)

@@ -2,10 +2,10 @@
 ;Counters as independent mutable state via closures
 
 (define (make-counter init)
-  (let ([x init])
-    (let ([inc (lambda () (set! x (+ x 1)))]
-          [dec (lambda () (set! x (- x 1)))]
-          [show (lambda () (print x))])
+  (let ([x (box init)])
+    (let ([inc (lambda () (set! x (+ (unwrap x) 1)))]
+          [dec (lambda () (set! x (- (unwrap x) 1)))]
+          [show (lambda () (print (unwrap x)))])
       (lambda (cmd)
         (if (= cmd 0)
             (inc)

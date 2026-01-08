@@ -3,6 +3,6 @@
 
 (define (length lst) (if (nil? lst) 0 (+ 1 (length (snd lst)))))
 
-(define lst '(1 2 3))
-(set! lst (pair 0 lst))
-(print (length lst))
+(define lst (box '(1 2 3)))
+(set! lst (pair 0 (unwrap lst)))
+(print (length (peek lst)))

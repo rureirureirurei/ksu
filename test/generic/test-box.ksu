@@ -1,0 +1,12 @@
+;0\n42\n10\n99
+(define x (box 0))
+(print (unwrap x))
+(set! x 42)
+(print (unwrap x))
+
+;; Test that unwrap creates a copy (independence)
+(define y (box 10))
+(define z (unwrap y))
+(set! y 99)
+(print z)  ; should still be 10
+(print (unwrap y))  ; should be 99
