@@ -2,6 +2,14 @@
 open Lang
 open Ast
 
+(* C reserved words that need prefixing *)
+let c_reserved = ["and"; "or"; "not"; "int"; "char"; "void"; "if"; "else";
+                  "while"; "for"; "return"; "break"; "continue"; "switch";
+                  "case"; "default"; "struct"; "union"; "enum"; "typedef";
+                  "static"; "extern"; "const"; "volatile"; "auto"; "register";
+                  "sizeof"; "goto"; "do"; "float"; "double"; "long"; "short";
+                  "signed"; "unsigned"; "true"; "false"; "bool"; "NULL"]
+
 (* Replace dangerous characters in variable names with C-safe alternatives *)
 let sanitize_var_name (name: string) : string =
   let char_map = function
@@ -23,7 +31,9 @@ let sanitize_var_name (name: string) : string =
   in
   let buf = Buffer.create (String.length name * 2) in
   String.iter (fun c -> Buffer.add_string buf (char_map c)) name;
-  Buffer.contents buf
+  let result = Buffer.contents buf in
+  (* Prefix reserved words with underscore *)
+  if List.mem result c_reserved then "_" ^ result else result
 
 (* Sanitize a list of variable names *)
 let sanitize_var_list (vars: var list) : var list =
