@@ -90,23 +90,32 @@ let ksu2c: cc_top_expr list -> string =
       let n = List.length vars in
       if n = 0 then "MakeEnv(0)"
       else
-        let args = List.map (fun (name, e) -> "\"" ^ name ^ "\", " ^ t_expr e) vars in
+        let args = List.map (fun (name, e) ->
+          let val_expr = match e with
+            | CC_Var v -> "&" ^ v
+            | CC_EnvRef (env, var) -> "EnvRef(" ^ env ^ ", \"" ^ var ^ "\")"
+            | _ -> failwith "CC_MakeEnv: expected Var or EnvRef"
+          in
+          "\"" ^ name ^ "\", " ^ val_expr
+        ) vars in
         "MakeEnv(" ^ string_of_int n ^ ", " ^ String.concat ", " args ^ ")"
 
   | CC_EnvRef (env, var) ->
-      "EnvRef(" ^ env ^ ", \"" ^ var ^ "\")"
+      "*EnvRef(" ^ env ^ ", \"" ^ var ^ "\")"
 
   (* Application *)
   | CC_App (fn, args) ->
       let args_str = String.concat ", " (List.map t_expr args) in
       (match fn with
+      | CC_Prim P_Set -> "not implemented"
       | CC_Prim p ->
           c_func_of_prim p ^ "(" ^ args_str ^ ")"
       | _ ->
           let fn_str = t_expr fn in
+          let argc = string_of_int (List.length args) in
+          let argv = if args_str = "" then "NULL" else "(Value[]){" ^ args_str ^ "}" in
           "({ Value _f = " ^ fn_str ^ "; " ^
-          "_f.closure.lam(_f.closure.env, " ^ string_of_int (List.length args) ^
-          ", (Value[]){" ^ args_str ^ "}); })")
+          "_f.closure.lam(_f.closure.env, " ^ argc ^ ", " ^ argv ^ "); })")
 
   | CC_Prim _ -> failwith "bug: CC_Prim should be handled in CC_App"
   | CC_Callcc _ -> failwith "callcc not implemented"

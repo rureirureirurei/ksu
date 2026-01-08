@@ -72,21 +72,21 @@ typedef struct ListItem ListItem;
 
 struct EnvEntry {
     char* name;
-    Value val;
+    Value* val;
 };
 typedef struct EnvEntry EnvEntry;
 
 // ============ CONSTRUCTORS ============
-#define MakeInt(x)        (Value){ .t = NUMBER,  .integer.value = (x) }
-#define MakeBool(x)       (Value){ .t = BOOLEAN, .boolean.value = (x) }
-#define MakeString(x)     (Value){ .t = STRING,  .string.value = (x) }
-#define MakeEmptyList()   (Value){ .t = LIST,    .list.ptr = NULL }
-#define MakeClosure(f, e) (Value){ .t = CLOSURE, .closure.lam = (f), .closure.env = (e) }
+#define MakeInt(x)        (Value){ .integer = { .t = NUMBER,  .value = (x) } }
+#define MakeBool(x)       (Value){ .boolean = { .t = BOOLEAN, .value = (x) } }
+#define MakeString(x)     (Value){ .string  = { .t = STRING,  .value = (x) } }
+#define MakeEmptyList()   (Value){ .list    = { .t = LIST,    .ptr = NULL } }
+#define MakeClosure(f, e) (Value){ .closure = { .t = CLOSURE, .lam = (f), .env = (e) } }
 
 // ============ RUNTIME FUNCTIONS ============
 void runtime_error(const char* msg);
 ClosureEnv MakeEnv(int count, ...);
-Value EnvRef(ClosureEnv env, const char* id);
+Value* EnvRef(ClosureEnv env, const char* id);
 bool is_true(Value v);
 
 #endif // KSU_RUNTIME_H

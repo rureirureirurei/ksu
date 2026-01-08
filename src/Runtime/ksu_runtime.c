@@ -21,9 +21,9 @@ ClosureEnv MakeEnv(int count, ...) {
 
     for (int i = 0; i < count; i++) {
         char* name = va_arg(args, char*);
-        Value val = va_arg(args, Value);
+        Value* val_ptr = va_arg(args, Value*);
         env[i].name = name;
-        env[i].val = val;
+        env[i].val = val_ptr;
     }
 
     env[count].name = NULL;
@@ -32,7 +32,7 @@ ClosureEnv MakeEnv(int count, ...) {
     return env;
 }
 
-Value EnvRef(ClosureEnv env, const char* id) {
+Value* EnvRef(ClosureEnv env, const char* id) {
     if (!env) {
         runtime_error("unbound variable");
     }
@@ -44,6 +44,7 @@ Value EnvRef(ClosureEnv env, const char* id) {
     }
 
     runtime_error("unbound variable");
+    return NULL; // unreachable
 }
 
 bool is_true(Value v) {
