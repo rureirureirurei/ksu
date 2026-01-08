@@ -4,9 +4,9 @@
   (lambda (needle lst)
     (if (= lst #f)
         #f
-        (if (= (car lst) needle)
+        (if (= (fst lst) needle)
             #t
-            (find needle (cdr lst))
+            (find needle (snd lst))
         )
     )
   )
@@ -16,7 +16,7 @@
   (lambda (n acc)
     (if (= n 0)
         acc
-        (buildlist (- n 1) (cons n acc))
+        (buildlist (- n 1) (pair n acc))
     )
   )
 )

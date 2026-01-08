@@ -4,11 +4,12 @@ open Closures
 
 let c_func_of_prim: Ast.prim -> string = function
 | P_And -> "__builtin_and"
-| P_Car -> "__builtin_car"
-| P_Cdr -> "__builtin_cdr"
-| P_Cons -> "__builtin_cons"
-| P_IsNil -> "__builtin_is_null"
-| P_IsPair -> "__builtin_is_cons"
+| P_fst -> "__builtin_fst"
+| P_snd -> "__builtin_snd"
+| P_pair -> "__builtin_pair"
+| P_IsNil -> "__builtin_is_nil"
+| P_IsPair -> "__builtin_is_pair"
+| P_IsList -> "__builtin_is_list"
 | P_IsNumber -> "__builtin_is_int"
 | P_Plus -> "__builtin_add"
 | P_Minus -> "__builtin_sub"
@@ -60,12 +61,12 @@ let ksu2c: cc_top_expr list -> string =
 
   (* Translate expression to C expression string *)
   let rec t_expr (e: cc_expr): string = match e with
-  (* Literals - use constructors, actual structs on stack *)
+  (* Literals - use pairtructors, actual structs on stack *)
   | CC_Bool b -> "MakeBool(" ^ string_of_bool b ^ ")"
   | CC_Number n -> "MakeInt(" ^ string_of_int n ^ ")"
   | CC_String s -> "MakeString(\"" ^ String.escaped s ^ "\")"
-  | CC_Nil -> "MakeEmptyList()"
-  | CC_Pair (a, b) -> "__builtin_cons(" ^ t_expr a ^ ", " ^ t_expr b ^ ")"
+  | CC_Nil -> "MakeNil()"
+  | CC_Pair (a, b) -> "__builtin_pair(" ^ t_expr a ^ ", " ^ t_expr b ^ ")"
 
   (* Variables *)
   | CC_Var v -> v
@@ -107,7 +108,7 @@ let ksu2c: cc_top_expr list -> string =
   | CC_App (fn, args) ->
       let args_str = String.concat ", " (List.map t_expr args) in
       (match fn with
-      | CC_Prim P_Set -> "not implemented"
+      (* | CC_Prim P_Set -> "not implemented" *)
       | CC_Prim p ->
           c_func_of_prim p ^ "(" ^ args_str ^ ")"
       | _ ->

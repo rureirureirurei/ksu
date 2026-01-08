@@ -1,6 +1,6 @@
 type location = { file : string; line : int; column : int }
 
-type prim = P_Car | P_Cdr | P_Cons | P_IsNil | P_IsPair | P_IsNumber | P_Plus | P_Minus | P_Mult | P_Div | P_Eq | P_Ne | P_Lt | P_Le | P_Gt | P_Ge | P_And | P_Or | P_Not | P_Print | P_Set
+type prim = P_fst | P_snd | P_pair | P_IsNil | P_IsPair | P_IsNumber | P_Plus | P_Minus | P_Mult | P_Div | P_Eq | P_Ne | P_Lt | P_Le | P_Gt | P_Ge | P_And | P_Or | P_Not | P_Print | P_Set | P_IsList
 
 type top_expr_data = E_Expr of expr | E_Define of var * expr
 
@@ -26,9 +26,9 @@ and expr = expr_data node
 and 'a node = { value : 'a;  loc : location }
 
 let string_of_prim = function
-          | P_Car -> "car"
-          | P_Cdr -> "cdr"
-          | P_Cons -> "cons"
+          | P_fst -> "fst"
+          | P_snd -> "snd"
+          | P_pair -> "pair"
           | P_IsNil -> "is-nil"
           | P_IsPair -> "is-pair"
           | P_IsNumber -> "is-number"
@@ -47,6 +47,7 @@ let string_of_prim = function
           | P_Not -> "not"
           | P_Print -> "print"
           | P_Set -> "set!"
+          | P_IsList -> "list?"
 
 (* Stringifies the AST *)
 let string_of_expr expr =
@@ -101,7 +102,7 @@ let string_of_expr expr =
            | _ -> "\n" ^ indent ^ "  " ^ String.concat ("\n" ^ indent ^ "  ") parts) ^
           ")"
     | E_Pair (e1, e2) ->
-        "(cons "
+        "(pair "
         ^ string_of_expr_aux offset e1
         ^ " "
         ^ string_of_expr_aux offset e2

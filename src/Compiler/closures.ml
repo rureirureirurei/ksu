@@ -177,7 +177,7 @@ let rec string_of_cc_expr = function
   | CC_Let (defs, body) ->
       let defs_str = String.concat " " (List.map (fun (v, e) -> "(" ^ v ^ " " ^ string_of_cc_expr e ^ ")") defs) in
       "(let (" ^ defs_str ^ ") " ^ string_of_cc_expr body ^ ")"
-  | CC_Pair (a, b) -> "(cons " ^ string_of_cc_expr a ^ " " ^ string_of_cc_expr b ^ ")"
+  | CC_Pair (a, b) -> "(pair " ^ string_of_cc_expr a ^ " " ^ string_of_cc_expr b ^ ")"
   | CC_App (fn, args) ->
       let args_str = String.concat " " (List.map string_of_cc_expr args) in
       "(" ^ string_of_cc_expr fn ^ " " ^ args_str ^ ")"

@@ -2,34 +2,35 @@
 
 // ============ LIST OPERATIONS ============
 
-static Value __builtin_car(Value v) {
-    if (v.t != LIST) runtime_error("car expects a list");
-    if (v.list.ptr == NULL) runtime_error("car of empty list");
-    return v.list.ptr->v;
+static Value __builtin_fst(Value v) {
+    if (v.t != PAIR) runtime_error("fst expects a pair");
+    if (v.pair.first == NULL) runtime_error("first element of pair is ptr null");
+    return *(v.pair.first);
 }
 
-static Value __builtin_cdr(Value v) {
-    if (v.t != LIST) runtime_error("cdr expects a list");
-    if (v.list.ptr == NULL) runtime_error("cdr of empty list");
-    return (Value){ .t = LIST, .list.ptr = v.list.ptr->next };
+static Value __builtin_snd(Value v) {
+    if (v.t != PAIR) runtime_error("snd expects a pair");
+    if (v.pair.second == NULL) runtime_error("second element of pair is ptr null");
+    return *(v.pair.second);
 }
 
-static Value __builtin_cons(Value elem, Value lst) {
-    if (lst.t != LIST) runtime_error("cons expects list as second arg");
-    ListItem *node = malloc(sizeof(ListItem));
-    node->v = elem;
-    node->next = lst.list.ptr;
-    return (Value){ .t = LIST, .list.ptr = node };
+static Value __builtin_pair(Value l, Value r) {
+    Value* l_ptr = (Value*)malloc(sizeof(Value));
+    Value* r_ptr = (Value*)malloc(sizeof(Value));
+    if (!l_ptr || !r_ptr) runtime_error("failed to allocate pair");
+    *l_ptr = l;
+    *r_ptr = r;
+    return (Value){ .t = PAIR, .pair = { .t = PAIR, .first = l_ptr, .second = r_ptr } };
 }
 
 // ============ TYPE PREDICATES ============
 
-static Value __builtin_is_cons(Value v) {
-    return MakeBool(v.t == LIST && v.list.ptr != NULL);
+static Value __builtin_is_pair(Value v) {
+    return MakeBool(v.t == PAIR);
 }
 
-static Value __builtin_is_null(Value v) {
-    return MakeBool(v.t == LIST && v.list.ptr == NULL);
+static Value __builtin_is_nil(Value v) {
+    return MakeBool(v.t == NIL);
 }
 
 static Value __builtin_is_bool(Value v) {
@@ -41,7 +42,8 @@ static Value __builtin_is_int(Value v) {
 }
 
 static Value __builtin_is_list(Value v) {
-    return MakeBool(v.t == LIST);
+    // todo check that last in the right chain is NIL
+    return MakeBool(v.t == PAIR);
 }
 
 // ============ COMPARISON ============
@@ -66,15 +68,15 @@ static Value __builtin_ne(Value a, Value b) {
 
 static Value __builtin_list_ref(Value lst, Value idx) {
     if (idx.t != NUMBER) runtime_error("list-ref expects integer index");
-    if (lst.t != LIST) runtime_error("list-ref expects a list");
     int n = idx.integer.value;
-    ListItem* cur = lst.list.ptr;
-    while (n > 0 && cur != NULL) {
-        cur = cur->next;
+    Value cur = lst;
+    while (n > 0) {
+        if (cur.t != PAIR) runtime_error("list-ref index out of range");
+        cur = *(cur.pair.second);
         n--;
     }
-    if (cur == NULL) runtime_error("list-ref index out of range");
-    return cur->v;
+    if (cur.t != PAIR) runtime_error("list-ref index out of range");
+    return *(cur.pair.first);
 }
 
 // ============ ARITHMETIC ============

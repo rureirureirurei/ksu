@@ -38,16 +38,16 @@ let builtin_definitions : top_expr list =
     mk_define ">=" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Ge ["a0"; "a1"]));
 
     (* List primitives *)
-    mk_define "cons" (mk_lambda ["a0"; "a1"] (mk_prim_app P_Cons ["a0"; "a1"]));
-    mk_define "car" (mk_lambda ["a0"] (mk_prim_app P_Car ["a0"]));
-    mk_define "cdr" (mk_lambda ["a0"] (mk_prim_app P_Cdr ["a0"]));
+    mk_define "pair" (mk_lambda ["a0"; "a1"] (mk_prim_app P_pair ["a0"; "a1"]));
+    mk_define "fst" (mk_lambda ["a0"] (mk_prim_app P_fst ["a0"]));
+    mk_define "snd" (mk_lambda ["a0"] (mk_prim_app P_snd ["a0"]));
 
     (* Constants *)
     mk_define "nil" (syn E_Nil);
 
     (* Predicates *)
     mk_define "nil?" (mk_lambda ["a0"] (mk_prim_app P_IsNil ["a0"]));
-    mk_define "pair?" (mk_lambda ["a0"] (mk_prim_app P_IsPair ["a0"]));
+    mk_define "list?" (mk_lambda ["a0"] (mk_prim_app P_IsPair ["a0"]));
     mk_define "number?" (mk_lambda ["a0"] (mk_prim_app P_IsNumber ["a0"]));
 
     (* Logical primitives *)

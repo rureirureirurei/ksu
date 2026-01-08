@@ -18,7 +18,8 @@ typedef enum ValueTag {
     STRING,
     CLOSURE,
     BOOLEAN,
-    LIST
+    PAIR,
+    NIL,
 } ValueTag;
 
 // ============ PRIMITIVE VALUES ============
@@ -37,12 +38,6 @@ struct ValueBool {
     bool value;
 };
 
-// ============ LISTS ============
-struct ValueList {
-    ValueTag t;
-    struct ListItem* ptr;  // NULL = empty list
-};
-
 // ============ CLOSURES ============
 typedef struct EnvEntry* ClosureEnv;
 typedef Value (*Lambda_t)(ClosureEnv, int, Value*);
@@ -53,35 +48,46 @@ struct ValueClosure {
     ClosureEnv env;
 };
 
+// ============ PAIR (pair) ============
+// (pair 1 2) would be   MakeInt(1) <- ValuePair -> MakeInt(2)
+// (pair 1 (pair 2 3)) would be   MakeInt(1) <- ValuePair -> (MakeInt(2) <- ValuePair -> MakeInt(3))
+// List (not pair) (1 2 3) would be 
+// MakeInt(1) <- ValuePair -> (MakeInt(2) <- ValuePair -> (MakeInt(3) <- ValuePair -> MakeNil())
+struct ValuePair {
+    ValueTag t;
+    Value* first;  
+    Value* second;
+};
+
+struct ValueNil {
+    ValueTag t;
+};
+
 // ============ VALUE UNION ============
 union Value {
     ValueTag t;
     struct ValueInt integer;
     struct ValueString string;
     struct ValueBool boolean;
-    struct ValueList list;
+    struct ValuePair pair;
+    struct ValuePair nil;
     struct ValueClosure closure;
 };
 
 // ============ NOW DEFINE COMPLETE STRUCTS ============
-struct ListItem {
-    Value v;
-    struct ListItem* next;
-};
-typedef struct ListItem ListItem;
-
 struct EnvEntry {
     char* name;
     Value* val;
 };
 typedef struct EnvEntry EnvEntry;
 
-// ============ CONSTRUCTORS ============
+// ============ pairTRUCTORS ============
 #define MakeInt(x)        (Value){ .integer = { .t = NUMBER,  .value = (x) } }
 #define MakeBool(x)       (Value){ .boolean = { .t = BOOLEAN, .value = (x) } }
 #define MakeString(x)     (Value){ .string  = { .t = STRING,  .value = (x) } }
-#define MakeEmptyList()   (Value){ .list    = { .t = LIST,    .ptr = NULL } }
-#define MakeClosure(f, e) (Value){ .closure = { .t = CLOSURE, .lam = (f), .env = (e) } }
+#define MakeClosure(f, e) (Value){ .closure = { .t = CLOSURE, .lam = (f),   .env = (e) } }
+#define MakePair(l, r)    (Value){ .pair    = { .t = PAIR,    .first = (l), .second = (r) } }
+#define MakeNil()         (Value){ .nil     = { .t = NIL } }
 
 // ============ RUNTIME FUNCTIONS ============
 void runtime_error(const char* msg);
