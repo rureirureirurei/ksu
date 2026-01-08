@@ -33,30 +33,13 @@ let prim_to_c_name p =
 (* Translation strategy:
 
    In C we have: global functions, global variable declarations, and main function.
+   ALL VALUES ARE HEAP-ALLOCATED POINTERS (Value pointers).
 
-   1. FuncDefs → global C functions
-   2. VarDefs → global C variable declaration + initialization in main
-   3. Top-level Exprs → execute in main
+   1. FuncDefs -> global C functions (return pointer, take pointer array)
+   2. VarDefs -> global pointer declaration + initialization in main
+   3. Top-level Exprs -> execute in main
 
-   IMPORTANT: We preserve order in main body. If source has:
-     (define x 1)
-     (print x)
-     (define y 2)
-     (print y)
-
-   We generate:
-     Value x;  // global declarations
-     Value y;
-
-     int main() {
-       x = ...;  // init in order
-       print(x);
-       y = ...;
-       print(y);
-     }
-
-   All expressions use gcc block expression extension ({ ... }).
-*)
+   All expressions use gcc block expression extension. *)
 
 let ksu2c: cc_top_expr list -> string =
   let global_funcs = ref [] in
@@ -84,7 +67,7 @@ let ksu2c: cc_top_expr list -> string =
       "({ " ^ String.concat " " stmts ^ " })"
 
   | CC_Let (defs, body) ->
-      let decls = List.map (fun (v, e) -> "Value " ^ v ^ " = " ^ t_expr e ^ ";") defs in
+      let decls = List.map (fun (v, e) -> "Value* " ^ v ^ " = " ^ t_expr e ^ ";") defs in
       "({ " ^ String.concat " " decls ^ " " ^ t_expr body ^ "; })"
 
   (* Closures *)
@@ -93,20 +76,22 @@ let ksu2c: cc_top_expr list -> string =
 
   | CC_MakeEnv vars ->
       let n = List.length vars in
-      if n = 0 then "MakeEnv(0)"
+      (* Add one extra slot for self-reference patching (dirty fix for recursion) *)
+      if n = 0 then "MakeEnv(1, \"\", NULL)"
       else
         let args = List.map (fun (name, e) ->
           let val_expr = match e with
-            | CC_Var v -> "&" ^ v
+            | CC_Var v -> v  (* already a Value* pointer *)
             | CC_EnvRef (env, var) -> "EnvRef(" ^ env ^ ", \"" ^ var ^ "\")"
             | _ -> failwith "CC_MakeEnv: expected Var or EnvRef"
           in
           "\"" ^ name ^ "\", " ^ val_expr
         ) vars in
-        "MakeEnv(" ^ string_of_int n ^ ", " ^ String.concat ", " args ^ ")"
+        (* First entry is reserved for self-reference *)
+        "MakeEnv(" ^ string_of_int (n + 1) ^ ", \"\", NULL, " ^ String.concat ", " args ^ ")"
 
   | CC_EnvRef (env, var) ->
-      "*EnvRef(" ^ env ^ ", \"" ^ var ^ "\")"
+      "EnvRef(" ^ env ^ ", \"" ^ var ^ "\")"  (* returns Value* directly *)
 
   (* Application *)
   | CC_App (fn, args) ->
@@ -118,9 +103,9 @@ let ksu2c: cc_top_expr list -> string =
       | _ ->
           let fn_str = t_expr fn in
           let argc = string_of_int (List.length args) in
-          let argv = if args_str = "" then "NULL" else "(Value[]){" ^ args_str ^ "}" in
-          "({ Value _f = " ^ fn_str ^ "; " ^
-          "_f.closure.lam(_f.closure.env, " ^ argc ^ ", " ^ argv ^ "); })")
+          let argv = if args_str = "" then "NULL" else "(Value*[]){" ^ args_str ^ "}" in
+          "({ Value* _f = " ^ fn_str ^ "; " ^
+          "_f->closure.lam(_f->closure.env, " ^ argc ^ ", " ^ argv ^ "); })")
 
   | CC_Prim _ -> failwith "bug: CC_Prim should be handled in CC_App"
   | CC_Callcc _ -> failwith "callcc not implemented"
@@ -132,16 +117,16 @@ let ksu2c: cc_top_expr list -> string =
   | CC_FuncDef (name, args, body) ->
       (* First arg is always $env *)
       let c_args = match args with
-        | "$env" :: _ -> "EnvEntry* $env, int argc, Value* argv"
+        | "$env" :: _ -> "EnvEntry* $env, int argc, Value** argv"
         | _ -> failwith "CC_FuncDef: expected $env as first arg"
       in
       let arg_bindings = match args with
         | "$env" :: rest ->
-            List.mapi (fun i a -> "  Value " ^ a ^ " = argv[" ^ string_of_int i ^ "];") rest
+            List.mapi (fun i a -> "  Value* " ^ a ^ " = argv[" ^ string_of_int i ^ "];") rest
         | _ -> []
       in
       let func =
-        "Value " ^ name ^ "(" ^ c_args ^ ") {\n" ^
+        "Value* " ^ name ^ "(" ^ c_args ^ ") {\n" ^
         String.concat "\n" arg_bindings ^
         (if arg_bindings <> [] then "\n" else "") ^
         "  return " ^ t_expr body ^ ";\n}"
@@ -149,8 +134,15 @@ let ksu2c: cc_top_expr list -> string =
       global_funcs := !global_funcs @ [func]
 
   | CC_VarDef (name, expr) ->
-      global_decls := !global_decls @ ["Value " ^ name ^ ";"];
-      main_body := !main_body @ [name ^ " = " ^ t_expr expr ^ ";"]
+      global_decls := !global_decls @ ["Value* " ^ name ^ ";"];
+      (* For closures, add self-reference patching *)
+      (match expr with
+      | CC_MakeClosure _ ->
+          main_body := !main_body @ [name ^ " = " ^ t_expr expr ^ ";"];
+          main_body := !main_body @ [name ^ "->closure.env[0].val = " ^ name ^ ";"];
+          main_body := !main_body @ [name ^ "->closure.env[0].name = \"" ^ name ^ "\";"]
+      | _ ->
+          main_body := !main_body @ [name ^ " = " ^ t_expr expr ^ ";"])
 
   | CC_Expr e ->
       main_body := !main_body @ [t_expr e ^ ";"]

@@ -47,9 +47,9 @@ Value* EnvRef(ClosureEnv env, const char* id) {
     return NULL; // unreachable
 }
 
-bool is_true(Value v) {
-    if (v.t == BOOLEAN) {
-        return v.boolean.value;
+bool is_true(Value* v) {
+    if (v->t == BOOLEAN) {
+        return v->boolean.value;
     }
     return true;  // Non-false values are truthy
 }
