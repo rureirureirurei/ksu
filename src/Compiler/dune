@@ -1,4 +1,4 @@
 (library
  (name compiler)
  (libraries lang ksu_parser)
- (modules closures ksu2c name_sanitizer builtins))
+ (modules closures ksu2c name_sanitizer))

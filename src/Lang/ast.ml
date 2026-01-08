@@ -1,6 +1,6 @@
 type location = { file : string; line : int; column : int }
 
-type prim = P_fst | P_snd | P_pair | P_IsNil | P_IsPair | P_IsNumber | P_Plus | P_Minus | P_Mult | P_Div | P_Eq | P_Ne | P_Lt | P_Le | P_Gt | P_Ge | P_And | P_Or | P_Not | P_Print | P_Set | P_IsList
+type prim = Builtins.prim
 
 type top_expr_data = E_Expr of expr | E_Define of var * expr
 
@@ -24,30 +24,6 @@ and expr_data =
 
 and expr = expr_data node
 and 'a node = { value : 'a;  loc : location }
-
-let string_of_prim = function
-          | P_fst -> "fst"
-          | P_snd -> "snd"
-          | P_pair -> "pair"
-          | P_IsNil -> "is-nil"
-          | P_IsPair -> "is-pair"
-          | P_IsNumber -> "is-number"
-          | P_Plus -> "+"
-          | P_Minus -> "-"
-          | P_Mult -> "*"
-          | P_Div -> "/"
-          | P_Eq -> "="
-          | P_Ne -> "!="
-          | P_Lt -> "<"
-          | P_Le -> "<="
-          | P_Gt -> ">"
-          | P_Ge -> ">="
-          | P_And -> "and"
-          | P_Or -> "or"
-          | P_Not -> "not"
-          | P_Print -> "print"
-          | P_Set -> "set!"
-          | P_IsList -> "list?"
 
 (* Stringifies the AST *)
 let string_of_expr expr =
@@ -108,7 +84,7 @@ let string_of_expr expr =
         ^ string_of_expr_aux offset e2
         ^ ")"
     | E_Nil -> "nil"
-    | E_Prim prim -> "<primitive: \"" ^ string_of_prim prim ^ "\">"
+    | E_Prim prim -> "<primitive: \"" ^ Builtins.builtin_to_string prim ^ "\">"
   in
   string_of_expr_aux 0 expr
 
@@ -117,5 +93,56 @@ let string_of_top_expr top_expr =
   | E_Expr e -> string_of_expr e ^ "\n"
   | E_Define (name, expr) ->
       "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")\n"
+
+(* Helper functions for creating builtin definitions *)
+let syn expr = { value = expr; loc = { file = ""; line = 0; column = 0 } }
+let mk_var name = syn (E_Var name)
+let mk_lambda params body = syn (E_Lambda (params, body))
+let mk_prim_app prim vars = syn (E_App (syn (E_Prim prim), List.map mk_var vars))
+let mk_define name expr = syn (E_Define (name, expr))
+
+(* Builtin primitive definitions as AST expressions *)
+let builtin_definitions : top_expr list =
+  [
+    (* Arithmetic primitives *)
+    mk_define "+" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Plus ["a0"; "a1"]));
+    mk_define "*" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Mult ["a0"; "a1"]));
+    mk_define "-" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Minus ["a0"; "a1"]));
+    mk_define "/" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Div ["a0"; "a1"]));
+
+    (* Comparison primitives *)
+    mk_define "=" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Eq ["a0"; "a1"]));
+    mk_define "eq?" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Eq ["a0"; "a1"]));
+    mk_define "!=" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Ne ["a0"; "a1"]));
+    mk_define "<" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Lt ["a0"; "a1"]));
+    mk_define ">" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Gt ["a0"; "a1"]));
+    mk_define "<=" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Le ["a0"; "a1"]));
+    mk_define ">=" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Ge ["a0"; "a1"]));
+
+    (* List primitives *)
+    mk_define "pair" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_pair ["a0"; "a1"]));
+    mk_define "fst" (mk_lambda ["a0"] (mk_prim_app Builtins.P_fst ["a0"]));
+    mk_define "snd" (mk_lambda ["a0"] (mk_prim_app Builtins.P_snd ["a0"]));
+
+    (* Constants *)
+    mk_define "nil" (syn E_Nil);
+
+    (* Predicates *)
+    mk_define "nil?" (mk_lambda ["a0"] (mk_prim_app Builtins.P_IsNil ["a0"]));
+    mk_define "pair?" (mk_lambda ["a0"] (mk_prim_app Builtins.P_IsPair ["a0"]));
+    mk_define "list?" (mk_lambda ["a0"] (mk_prim_app Builtins.P_IsList ["a0"]));
+    mk_define "number?" (mk_lambda ["a0"] (mk_prim_app Builtins.P_IsNumber ["a0"]));
+
+    (* Logical primitives *)
+    mk_define "and" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_And ["a0"; "a1"]));
+    mk_define "or" (mk_lambda ["a0"; "a1"] (mk_prim_app Builtins.P_Or ["a0"; "a1"]));
+    mk_define "not" (mk_lambda ["a0"] (mk_prim_app Builtins.P_Not ["a0"]));
+
+    (* Print primitive *)
+    mk_define "print" (mk_lambda ["a0"] (mk_prim_app Builtins.P_Print ["a0"]));
+
+    (* Mutation primitive *)
+    mk_define "set!" (mk_lambda ["cell"; "value"] (mk_prim_app Builtins.P_Set ["cell"; "value"]));
+  ]
 
 

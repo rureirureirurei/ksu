@@ -37,7 +37,7 @@ static Value __builtin_is_bool(Value v) {
     return MakeBool(v.t == BOOLEAN);
 }
 
-static Value __builtin_is_int(Value v) {
+static Value __builtin_is_number(Value v) {
     return MakeBool(v.t == NUMBER);
 }
 

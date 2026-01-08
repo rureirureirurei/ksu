@@ -1,0 +1,26 @@
+> let's identify all the places in @ksu2c.ml where we create variable bindings.
+  context: I want to refactor the generated code so that each variable is not Value, but rather Value*.
+
+  the issue at the current moment is that we use Value* when capturing enviroment for closures, but now we may take
+  the pointer to the Value that is on stack and this would cause segmentation fault when variable in closure outlives
+  the scope where it was created.
+
+  so we should create new helper function in the @src/Runtime/ that would takeValue (generally, the one created with
+  the pairtructor Make* , allocate memory on heap and return pointer.
+
+  everything in our translation is an expression, and variable bindings occur in
+
+  let, functions and app for function.
+  so the idea is that now each expression (and functions) return Value* - the tricky part is that we would have to
+  copy values and create new pointers in some cases .
+
+  for example, the function (lambda) takes 2 lists of arguments: captured env and also it's arguments.
+  arguments are Value*, but when calling function - we should create copies of it's arguments
+
+  so it's gonna be sth like
+
+  (adjusted translation of app translation) -
+  f( MakeCopy(*arg1), ...)
+  The same goes for let
+
+  what's important, is that we don't create copies in the MakeEnv.

@@ -1,30 +1,34 @@
 open Lang
-open Ast
 open Closures
 
-let c_func_of_prim: Ast.prim -> string = function
-| P_And -> "__builtin_and"
-| P_fst -> "__builtin_fst"
-| P_snd -> "__builtin_snd"
-| P_pair -> "__builtin_pair"
-| P_IsNil -> "__builtin_is_nil"
-| P_IsPair -> "__builtin_is_pair"
-| P_IsList -> "__builtin_is_list"
-| P_IsNumber -> "__builtin_is_int"
-| P_Plus -> "__builtin_add"
-| P_Minus -> "__builtin_sub"
-| P_Mult -> "__builtin_mul"
-| P_Div -> "__builtin_div"
-| P_Or -> "__builtin_or"
-| P_Not -> "__builtin_not"
-| P_Print -> "__builtin_print"
-| P_Eq -> "__builtin_eq"
-| P_Ne -> "__builtin_ne"
-| P_Lt -> "__builtin_lt"
-| P_Le -> "__builtin_le"
-| P_Gt -> "__builtin_gt"
-| P_Ge -> "__builtin_ge"
-| P_Set -> "__builtin_set"
+(* Convert primitive to C function name *)
+let prim_to_c_name p =
+  let name = Builtins.builtin_to_string p in
+  (* Special short names for common operators and predicates *)
+  let sanitized = match name with
+  | "+" -> "add"
+  | "-" -> "sub"
+  | "*" -> "mul"
+  | "/" -> "div"
+  | "=" -> "eq"
+  | "!=" -> "ne"
+  | "<" -> "lt"
+  | "<=" -> "le"
+  | ">" -> "gt"
+  | ">=" -> "ge"
+  | "set!" -> "set"
+  (* Predicates: convert ? suffix to is_ prefix *)
+  | _ when String.length name > 0 && name.[String.length name - 1] = '?' ->
+      "is_" ^ String.sub name 0 (String.length name - 1)
+  (* Everything else: use name_sanitizer but strip leading underscore *)
+  | _ ->
+      let sanitized = Name_sanitizer.sanitize_var_name name in
+      if String.length sanitized > 0 && sanitized.[0] = '_' then
+        String.sub sanitized 1 (String.length sanitized - 1)
+      else
+        sanitized
+  in
+  "__builtin_" ^ sanitized
 
 (* Translation strategy:
 
@@ -110,7 +114,7 @@ let ksu2c: cc_top_expr list -> string =
       (match fn with
       (* | CC_Prim P_Set -> "not implemented" *)
       | CC_Prim p ->
-          c_func_of_prim p ^ "(" ^ args_str ^ ")"
+          prim_to_c_name p ^ "(" ^ args_str ^ ")"
       | _ ->
           let fn_str = t_expr fn in
           let argc = string_of_int (List.length args) in

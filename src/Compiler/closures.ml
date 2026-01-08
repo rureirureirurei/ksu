@@ -186,7 +186,7 @@ let rec string_of_cc_expr = function
       let vars_str = String.concat " " (List.map (fun (name, e) -> "(" ^ name ^ " " ^ string_of_cc_expr e ^ ")") vars) in
       "(env " ^ vars_str ^ ")"
   | CC_EnvRef (env, var) -> "(env-ref " ^ env ^ " \"" ^ var ^ "\")"
-  | CC_Prim p -> "<prim:" ^ string_of_prim p ^ ">"
+  | CC_Prim p -> "<prim:" ^ Builtins.builtin_to_string p ^ ">"
   | CC_Callcc e -> "(callcc " ^ string_of_cc_expr e ^ ")"
   | CC_Begin exprs -> "(begin " ^ String.concat " " (List.map string_of_cc_expr exprs) ^ ")"
 

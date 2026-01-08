@@ -4,26 +4,26 @@ open Ast
 
 (* Replace dangerous characters in variable names with C-safe alternatives *)
 let sanitize_var_name (name: string) : string =
-  let rec sanitize_chars chars =
-    match chars with
-    | [] -> []
-    | '+' :: rest -> '_' :: 'p' :: 'l' :: 'u' :: 's' :: '_' :: sanitize_chars rest
-    | '-' :: rest -> '_' :: 'm' :: 'i' :: 'n' :: 'u' :: 's' :: '_' :: sanitize_chars rest
-    | '?' :: rest -> '_' :: 'q' :: 'u' :: 'e' :: 's' :: 't' :: '_' :: sanitize_chars rest
-    | '!' :: rest -> '_' :: 'b' :: 'a' :: 'n' :: 'g' :: '_' :: sanitize_chars rest
-    | '=' :: rest -> '_' :: 'e' :: 'q' :: 'u' :: 'a' :: 'l' :: '_' :: sanitize_chars rest
-    | '<' :: rest -> '_' :: 'l' :: 't' :: '_' :: sanitize_chars rest
-    | '>' :: rest -> '_' :: 'g' :: 't' :: '_' :: sanitize_chars rest
-    | '*' :: rest -> '_' :: 's' :: 't' :: 'a' :: 'r' :: '_' :: sanitize_chars rest
-    | '/' :: rest -> '_' :: 's' :: 'l' :: 'a' :: 's' :: 'h' :: '_' :: sanitize_chars rest
-    | '%' :: rest -> '_' :: 'p' :: 'e' :: 'r' :: 'c' :: 'e' :: 'n' :: 't' :: '_' :: sanitize_chars rest
-    | '&' :: rest -> '_' :: 'a' :: 'm' :: 'p' :: '_' :: sanitize_chars rest
-    | '|' :: rest -> '_' :: 'p' :: 'i' :: 'p' :: 'e' :: '_' :: sanitize_chars rest
-    | '^' :: rest -> '_' :: 'c' :: 'a' :: 'r' :: 'e' :: 't' :: '_' :: sanitize_chars rest
-    | '~' :: rest -> '_' :: 't' :: 'i' :: 'l' :: 'd' :: 'e' :: '_' :: sanitize_chars rest
-    | c :: rest -> c :: sanitize_chars rest
+  let char_map = function
+    | '+' -> "_plus_"
+    | '-' -> "_minus_"
+    | '?' -> "_quest_"
+    | '!' -> "_bang_"
+    | '=' -> "_equal_"
+    | '<' -> "_lt_"
+    | '>' -> "_gt_"
+    | '*' -> "_star_"
+    | '/' -> "_slash_"
+    | '%' -> "_percent_"
+    | '&' -> "_amp_"
+    | '|' -> "_pipe_"
+    | '^' -> "_caret_"
+    | '~' -> "_tilde_"
+    | c -> String.make 1 c
   in
-  String.of_seq (List.to_seq (sanitize_chars (String.to_seq name |> List.of_seq)))
+  let buf = Buffer.create (String.length name * 2) in
+  String.iter (fun c -> Buffer.add_string buf (char_map c)) name;
+  Buffer.contents buf
 
 (* Sanitize a list of variable names *)
 let sanitize_var_list (vars: var list) : var list =

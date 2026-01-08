@@ -24,7 +24,7 @@ let () =
       (* Parse the file *)
       let lexbuf = Lexing.from_channel (open_in file) in
       let ast =
-        try Builtins.builtin_definitions @ Parser.parse Lexer.lex lexbuf
+        try Lang.Ast.builtin_definitions @ Parser.parse Lexer.lex lexbuf
         with Parser.Error ->
           let pos = lexbuf.lex_curr_p in
           Printf.eprintf ("Parsing error at line %d, column %d, file %s\n") pos.pos_lnum

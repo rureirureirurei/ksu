@@ -1,3 +1,3 @@
 (library
  (name lang)
- (modules ast))
+ (modules ast builtins))
