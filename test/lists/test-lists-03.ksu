@@ -1,2 +1,2 @@
 ;4
-(print (cdr (cdr (cons (cons 1 2) (cons 3 4))  )))
+(print (snd (snd (pair (pair 1 2) (pair 3 4))  )))

@@ -1,7 +1,7 @@
 ;2
-;Updating cons
-(define (length lst) (if (nil? lst) 0 (+ 1 (length (cdr lst)))))
+;Updating pair
+(define (length lst) (if (nil? lst) 0 (+ 1 (length (snd lst)))))
 
 (define lst '(1 2 3))
-(set! lst (cdr lst))
+(set! lst (snd lst))
 (print (length lst))

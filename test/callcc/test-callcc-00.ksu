@@ -4,8 +4,8 @@
 
 (define (choose options)
   (let/cc k
-    (set! cont-stack (cons (cons k (cdr options)) cont-stack))
-    (car options)
+    (set! cont-stack (pair (pair k (snd options)) cont-stack))
+    (fst options)
   )
 )
 
@@ -14,14 +14,14 @@
 (define (fail)
   (if (null? cont-stack)
       (print cnt)
-      (let* ([top (car cont-stack)] [k (car top)] [options (cdr top)])
+      (let* ([top (fst cont-stack)] [k (fst top)] [options (snd top)])
         (begin
-          (set! cont-stack (cdr cont-stack))
+          (set! cont-stack (snd cont-stack))
           (if (null? options)
               (fail)
               (begin
-                (set! cont-stack (cons (cons k (cdr options)) cont-stack))
-                (k (car options))
+                (set! cont-stack (pair (pair k (snd options)) cont-stack))
+                (k (fst options))
               )
           )
         )

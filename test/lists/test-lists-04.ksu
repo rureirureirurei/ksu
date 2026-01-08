@@ -3,4 +3,4 @@
 (define y 10)
 (define a 15)
 (define b 20)
-(print (car (cdr (cons (cons x y) (cons a b)) )))
+(print (fst (snd (pair (pair x y) (pair a b)) )))

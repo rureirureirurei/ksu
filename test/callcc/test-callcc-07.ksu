@@ -5,8 +5,8 @@
 (define (choose opts)
   (call/cc (lambda (k)
       (begin
-        (set! cont-stack (cons (cons k (cdr opts)) cont-stack))
-        (car opts)
+        (set! cont-stack (pair (pair k (snd opts)) cont-stack))
+        (fst opts)
       )
   ))
 )
@@ -18,15 +18,15 @@
   (if (null? cont-stack)
       (print count)
       (let (
-             [top (car cont-stack)]
-             [k (car (car cont-stack))]
-             [remaining (cdr (car cont-stack))])
-        (set! cont-stack (cdr cont-stack))
+             [top (fst cont-stack)]
+             [k (fst (fst cont-stack))]
+             [remaining (snd (fst cont-stack))])
+        (set! cont-stack (snd cont-stack))
         (if (null? remaining)
             (fail)
             (begin
-              (set! cont-stack (cons (cons k (cdr remaining)) cont-stack))
-              (k (car remaining))
+              (set! cont-stack (pair (pair k (snd remaining)) cont-stack))
+              (k (fst remaining))
         ))
       )
   )

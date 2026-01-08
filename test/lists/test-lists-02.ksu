@@ -1,2 +1,2 @@
 ;2
-(print (car (cdr (cons 1 (cons 2 3))))) 
+(print (fst (snd (pair 1 (pair 2 3))))) 

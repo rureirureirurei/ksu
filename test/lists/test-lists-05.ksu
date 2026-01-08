@@ -1,5 +1,5 @@
 ;9
 
-(print (car (cdr
-    (cons (cons (+ 1 2) (* 2 3)) (cons (+ 4 5) (* 3 4))) 
+(print (fst (snd
+    (pair (pair (+ 1 2) (* 2 3)) (pair (+ 4 5) (* 3 4))) 
 )))

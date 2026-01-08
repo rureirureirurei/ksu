@@ -1,2 +1,2 @@
 ;2
-(print (cdr (cons 1 2)))
+(print (snd (pair 1 2)))
