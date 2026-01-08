@@ -19,7 +19,10 @@ dune exec ksu "$INPUT" > "$CFILE"
 
 echo "==> Formatting $CFILE..."
 clang-format -i "$CFILE"
-echo "Generated C file: $CFILE"
+echo "Generated files:"
+echo "  AST:     /tmp/$(basename "$INPUT").ast"
+echo "  CC-AST:  /tmp/$(basename "$INPUT").cc.ast"
+echo "  C:       $CFILE"
 
 echo "==> Compiling C code with gcc..."
 gcc -o "$EXEC" "$CFILE" src/Runtime/ksu_runtime.c -I src/Runtime

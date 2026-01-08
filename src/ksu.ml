@@ -27,16 +27,28 @@ let () =
         try Builtins.builtin_definitions @ Parser.parse Lexer.lex lexbuf
         with Parser.Error ->
           let pos = lexbuf.lex_curr_p in
-          Printf.eprintf ("Parsing error at line %d, column %d\n, file %s") pos.pos_lnum
+          Printf.eprintf ("Parsing error at line %d, column %d, file %s\n") pos.pos_lnum
             (pos.pos_cnum - pos.pos_bol) file;
-          []
+          exit 1
       in
 
       (* Sanitize variable names for C code generation *)
       let sanitized_ast = Name_sanitizer.sanitize_top_exprs ast in
 
+      (* Write AST to debug file *)
+      let ast_file = "/tmp/" ^ Filename.basename file ^ ".ast" in
+      let oc = open_out ast_file in
+      List.iter (fun e -> output_string oc (Lang.Ast.string_of_top_expr e ^ "\n")) sanitized_ast;
+      close_out oc;
+
       (* Do closure conversion *)
       let converted_ast = Closures.convert sanitized_ast in
+
+      (* Write closure-converted AST to debug file *)
+      let cc_ast_file = "/tmp/" ^ Filename.basename file ^ ".cc.ast" in
+      let oc = open_out cc_ast_file in
+      List.iter (fun e -> output_string oc (Closures.string_of_cc_top_expr e ^ "\n")) converted_ast;
+      close_out oc;
 
       (* Generate C code *)
       let c_text = Ksu2c.ksu2c converted_ast in
