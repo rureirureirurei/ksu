@@ -27,6 +27,9 @@ def extract_expected_result(file_path):
     else:
         raise ValueError(f"No expected result found in first line: {first_line}")
 
+def red(s): 
+    return "\033[31m" + s + "\033[0m"
+
 def run_ksu_file(file_path):
     """Compile a KSU file to C, build it with gcc, run it, and return stdout."""
     try:
@@ -113,7 +116,7 @@ def run_tests():
                     print(f"  PASS {file_path.name}")
                     passed_tests += 1
                 else:
-                    print(f"  FAIL {file_path.name}")
+                    print(red(f"  FAIL {file_path.name}"))
                     failed_tests.append(file_path.name)                    
             except Exception as e:
                 print(f"  ERROR {file_path.name}: {e}")
@@ -122,7 +125,7 @@ def run_tests():
     color = '\033[32m' if passed_tests == total_tests else '\033[31m'
     print(f"\n{color}Test Results: {passed_tests}/{total_tests} passed\033[0m")
     if passed_tests != total_tests:
-        print("\033[31mYou bring great dishonor to your ancestors! Commit seppuku to restore your family's honor!\033[0m")
+        print(red("You bring great dishonor to your ancestors! Commit seppuku to restore your family's honor!"))
     
     if failed_tests:
         # print(f"\nFailed tests ({len(failed_tests)}):")
