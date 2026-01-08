@@ -165,3 +165,35 @@ let convert : top_expr list -> cc_top_expr list =
   fun exprs ->
     List.iter t_top exprs;
     !res
+
+(* Pretty printing for closure-converted AST *)
+let rec string_of_cc_expr = function
+  | CC_Bool b -> string_of_bool b
+  | CC_Number n -> string_of_int n
+  | CC_String s -> "\"" ^ String.escaped s ^ "\""
+  | CC_Nil -> "nil"
+  | CC_Var v -> v
+  | CC_If (c, y, n) -> "(if " ^ string_of_cc_expr c ^ " " ^ string_of_cc_expr y ^ " " ^ string_of_cc_expr n ^ ")"
+  | CC_Let (defs, body) ->
+      let defs_str = String.concat " " (List.map (fun (v, e) -> "(" ^ v ^ " " ^ string_of_cc_expr e ^ ")") defs) in
+      "(let (" ^ defs_str ^ ") " ^ string_of_cc_expr body ^ ")"
+  | CC_Pair (a, b) -> "(cons " ^ string_of_cc_expr a ^ " " ^ string_of_cc_expr b ^ ")"
+  | CC_App (fn, args) ->
+      let args_str = String.concat " " (List.map string_of_cc_expr args) in
+      "(" ^ string_of_cc_expr fn ^ " " ^ args_str ^ ")"
+  | CC_MakeClosure (fn, env) -> "(closure " ^ fn ^ " " ^ string_of_cc_expr env ^ ")"
+  | CC_MakeEnv vars ->
+      let vars_str = String.concat " " (List.map (fun (name, e) -> "(" ^ name ^ " " ^ string_of_cc_expr e ^ ")") vars) in
+      "(env " ^ vars_str ^ ")"
+  | CC_EnvRef (env, var) -> "(env-ref " ^ env ^ " \"" ^ var ^ "\")"
+  | CC_Prim p -> "<prim:" ^ string_of_prim p ^ ">"
+  | CC_Callcc e -> "(callcc " ^ string_of_cc_expr e ^ ")"
+  | CC_Begin exprs -> "(begin " ^ String.concat " " (List.map string_of_cc_expr exprs) ^ ")"
+
+let string_of_cc_top_expr = function
+  | CC_FuncDef (name, args, body) ->
+      "(func-def " ^ name ^ " (" ^ String.concat " " args ^ ") " ^ string_of_cc_expr body ^ ")"
+  | CC_VarDef (name, expr) ->
+      "(var-def " ^ name ^ " " ^ string_of_cc_expr expr ^ ")"
+  | CC_Expr e ->
+      "(expr " ^ string_of_cc_expr e ^ ")"
