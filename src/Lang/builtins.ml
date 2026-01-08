@@ -23,6 +23,9 @@ type prim =
   | P_Not
   | P_Print
   | P_Set
+  | P_Box
+  | P_Unwrap
+  | P_Peek
 
 (* Convert builtin to its Ksu name (for pretty-printing AST) *)
 let builtin_to_string = function
@@ -48,4 +51,7 @@ let builtin_to_string = function
   | P_Not -> "not"
   | P_Print -> "print"
   | P_Set -> "set!"
+  | P_Box -> "box"
+  | P_Unwrap -> "unwrap"
+  | P_Peek -> "peek"
 

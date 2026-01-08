@@ -143,6 +143,11 @@ let builtin_definitions : top_expr list =
 
     (* Mutation primitive *)
     mk_define "set!" (mk_lambda ["cell"; "value"] (mk_prim_app Builtins.P_Set ["cell"; "value"]));
+
+    (* Box operations *)
+    mk_define "box" (mk_lambda ["a0"] (mk_prim_app Builtins.P_Box ["a0"]));
+    mk_define "unwrap" (mk_lambda ["a0"] (mk_prim_app Builtins.P_Unwrap ["a0"]));
+    mk_define "peek" (mk_lambda ["a0"] (mk_prim_app Builtins.P_Peek ["a0"]));
   ]
 
 

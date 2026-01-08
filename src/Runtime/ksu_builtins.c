@@ -187,3 +187,23 @@ static Value __builtin_set(Value cell, Value value) {
     runtime_error("set! not yet implemented");
     return MakeInt(0);  // unreachable
 }
+
+// ============ BOX OPERATIONS ============
+// TODO: Implement proper box/cell semantics
+static Value __builtin_box(Value v) {
+    (void)v;
+    runtime_error("box not yet implemented");
+    return MakeInt(0);  // unreachable
+}
+
+static Value __builtin_unwrap(Value box) {
+    (void)box;
+    runtime_error("unwrap not yet implemented");
+    return MakeInt(0);  // unreachable
+}
+
+static Value __builtin_peek(Value box) {
+    (void)box;
+    runtime_error("peek not yet implemented");
+    return MakeInt(0);  // unreachable
+}
