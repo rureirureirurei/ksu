@@ -1,5 +1,5 @@
-;120
-(define f ()
+;5
+(define (f)
   5
 )
 
