@@ -1,0 +1,6 @@
+;1
+(print ((if 
+    #t 
+    (lambda (x y) x)
+    (lambda (x y) y)
+ ) 1 2))
