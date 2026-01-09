@@ -27,5 +27,5 @@
   )
 )
 
-(define biglist (upto 100000))
-(print (find 100000 biglist))
+(define biglist (upto 100))
+(print (find 100 biglist))

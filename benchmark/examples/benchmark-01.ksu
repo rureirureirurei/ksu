@@ -1,4 +1,4 @@
-;120
+;50005001
 ; Sophisticated nested functions program
 
 (define Y (lambda (f)
@@ -9,5 +9,5 @@
                         (lambda (n)
                           (if (= n 0)
                               1
-                              (* n (f (- n 1))))))))
-(print (factorial 5))
+                              (+ n (f (- n 1))))))))
+(print (factorial 10000))
