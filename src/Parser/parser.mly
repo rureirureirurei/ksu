@@ -84,7 +84,7 @@ exprs:
   | expr exprs { $1 :: $2 }
 
 callcc_expr:
-  | CALLCC expr { mk_node $loc (E_Callcc $2) }
+  | CALLCC SYMBOL expr { mk_node $loc (E_Callcc ($2, $3)) }
 
 let_args: 
   | { [] }

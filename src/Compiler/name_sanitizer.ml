@@ -61,7 +61,7 @@ and sanitize_expr (expr: expr) : expr =
       { expr with value = E_Lambda (sanitize_lambda_args args, sanitize_expr body) }
   | E_If (cond, then_expr, else_expr) ->
       { expr with value = E_If (sanitize_expr cond, sanitize_expr then_expr, sanitize_expr else_expr) }
-  | E_Callcc e -> { expr with value = E_Callcc (sanitize_expr e) }
+  | E_Callcc (v, e) -> { expr with value = E_Callcc ((sanitize_var_name v), (sanitize_expr e)) }
   | E_Begin exprs -> { expr with value = E_Begin (List.map sanitize_expr exprs) }
   | E_Let (bindings, body) ->
       { expr with value = E_Let (sanitize_let_bindings bindings, sanitize_expr body) }

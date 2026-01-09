@@ -38,7 +38,7 @@ and cc_expr =
   (* Non-literals *)
   | CC_Var of var
   | CC_If of cc_expr * cc_expr * cc_expr
-  | CC_Callcc of cc_expr
+  | CC_Callcc of var * cc_expr
   | CC_Let of (var * cc_expr) list * cc_expr
   | CC_Pair of cc_expr * cc_expr
   | CC_Prim of prim
@@ -57,7 +57,7 @@ let rec free : expr -> VarSet.t =
         (fun free_vars expr -> VarSet.union free_vars (free expr))
         VarSet.empty (f :: args)
   | E_Var v -> VarSet.singleton v
-  | E_Callcc expr -> free expr
+  | E_Callcc (v, expr) -> VarSet.diff (free expr) (VarSet.singleton v)
   | E_Pair (fst, snd) -> VarSet.union (free fst) (free snd)
   | E_If (c, y, n) -> VarSet.union (free n) @@ VarSet.union (free c) (free y)
   (* Lambda and Let *)
@@ -123,7 +123,7 @@ let convert : top_expr list -> cc_top_expr list =
         let body' = t (VarSet.diff sub bound) env_sym body in
         CC_Let (defs', body')
     | E_Pair (a, b) -> CC_Pair (t' a, t' b)
-    | E_Callcc e -> CC_Callcc (t' e)
+    | E_Callcc (v, e) -> CC_Callcc (v, t' e)
     (* Var *)
     | E_Var v -> cc_expr_of_var sub env_sym v
     (* App & Lambda *)
@@ -187,7 +187,7 @@ let rec string_of_cc_expr = function
       "(env " ^ vars_str ^ ")"
   | CC_EnvRef (env, var) -> "(env-ref " ^ env ^ " \"" ^ var ^ "\")"
   | CC_Prim p -> "<prim:" ^ Builtins.builtin_to_string p ^ ">"
-  | CC_Callcc e -> "(callcc " ^ string_of_cc_expr e ^ ")"
+  | CC_Callcc (v, e) -> "(callcc " ^ v ^ ". " ^ string_of_cc_expr e ^ ")"
   | CC_Begin exprs -> "(begin " ^ String.concat " " (List.map string_of_cc_expr exprs) ^ ")"
 
 let string_of_cc_top_expr = function
