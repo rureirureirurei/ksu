@@ -5,8 +5,26 @@ open Ast
   function 
 *)
 
-type cps_top_expr = CPS_Expr of cps_cxpr | CPS_Define of var * cps_cxpr
+let gensym =
+  let cnt = ref 0 in
+  fun s ->
+    cnt := !cnt + 1;
+    s ^ string_of_int !cnt
 
+(* removes begin and let constructions *)
+    let last lst = List.hd @@ List.rev lst
+let rec collapse_begin: expr_data -> expr_data = fun e -> match e with
+| E_Begin es ->
+  let unused_syms = List.map (fun _ -> gensym "unused_begin") es in
+  let defs = List.map (fun (e, sym) -> (sym, e)) (List.combine es unused_syms) in
+  collapse_begin (E_Let (defs, E_Var (last unused_syms)))
+| E_Let (defs, body) ->
+    let syms = List.map fst defs in
+    let exprs = List.map snd defs in
+    E_App (E_Lambda (syms, body), exprs)
+| _ -> e
+
+type cps_top_expr = CPS_Expr of cps_cxpr | CPS_Define of var * cps_cxpr
 (* Atomic values *)
 and cps_axpr =
   | CPS_Bool of bool
@@ -22,16 +40,11 @@ and cps_axpr =
 and cps_cxpr =
   | CPS_App of cps_axpr * cps_axpr list
   | CPS_If of cps_axpr * cps_cxpr * cps_cxpr
+  | CPS_SetThen of var * cps_axpr * cps_cxpr
 
 let is_axpr = function
   | E_Bool _ | E_Number _ | E_String _ | E_Var _ | E_Lambda _ | E_Pair _ -> true
   | _ -> false
-
-let gensym =
-  let cnt = ref 0 in
-  fun s ->
-    cnt := !cnt + 1;
-    s ^ string_of_int !cnt
 
 let rec m : expr_data -> cps_axpr = function
   | E_Bool b -> CPS_Bool b
@@ -42,7 +55,7 @@ let rec m : expr_data -> cps_axpr = function
   (* | E_Pair (l, r) ->  *)
   | E_Lambda (ids, body) ->
       let k = gensym "k" in
-      let body' = t body.value (CPS_Var k) in
+      let body' = t body (CPS_Var k) in
       CPS_Lambda (ids @ [ k ], body')
   | _ -> failwith "m expects expr that is atomic"
 (* Takes expression, it's continuation and translates it *)
@@ -63,18 +76,18 @@ and t : expr_data -> cps_axpr -> cps_cxpr =
                 argsyms := !argsyms @ [ CPS_Var argsym ];
                 t hd (CPS_Lambda ([ argsym ], aux rest))
           in
-          t f.value
-            (CPS_Lambda ([ fsym ], aux (List.map (fun a -> a.value) args)))
+          t f
+            (CPS_Lambda ([ fsym ], aux args))
       | E_If (c, y, n) ->
           let csym = gensym "c" in
-          t c.value
+          t c
             (CPS_Lambda
-               ([ csym ], CPS_If (CPS_Var csym, t y.value k, t n.value k)))
-      | E_Callcc (k', e) -> CPS_App ((CPS_Lambda ([k'], t e.value k)), [k])
+               ([ csym ], CPS_If (CPS_Var csym, t y k, t n k)))
+      | E_Callcc (k', e) -> CPS_App ((CPS_Lambda ([k'], t e k)), [k])
       | _ -> failwith "todo")
 
 let t_top : top_expr -> cps_top_expr =
  fun e ->
-  match e.value with
-  | E_Expr e -> CPS_Expr (t e.value CPS_Id)
-  | E_Define (v, e) -> CPS_Define (v, t e.value CPS_Id)
+  match e with
+  | E_Expr e -> CPS_Expr (t e CPS_Id)
+  | E_Define (v, e) -> CPS_Define (v, t e CPS_Id)
