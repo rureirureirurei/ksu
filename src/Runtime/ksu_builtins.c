@@ -156,6 +156,10 @@ static Value* __builtin_snd(Value* v, Value* k) {
 }
 
 static Value* __builtin_pair(Value* l, Value* r, Value* k) {
+    if (l == NULL || r == NULL) {
+        fprintf(stderr, "pair: NULL argument (l=%p, r=%p)\n", (void*)l, (void*)r);
+        runtime_error("pair expects non-NULL arguments");
+    }
     return ApplyClosure(k, 1, (Value*[]){ MakePair(l, r) });
 }
 
@@ -163,25 +167,49 @@ Value* nil;
 
 // ============ TYPE PREDICATES ============
 static Value* __builtin_is_pair(Value* v, Value* k) {
+    if (v == NULL) {
+        fprintf(stderr, "pair?: NULL argument\n");
+        runtime_error("pair? expects a value");
+    }
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == PAIR) });
 }
 
 static Value* __builtin_is_nil(Value* v, Value* k) {
+    if (v == NULL) {
+        fprintf(stderr, "nil?: NULL argument\n");
+        runtime_error("nil? expects a value");
+    }
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == NIL) });
 }
 
 static Value* __builtin_is_bool(Value* v, Value* k) {
+    if (v == NULL) {
+        fprintf(stderr, "bool?: NULL argument\n");
+        runtime_error("bool? expects a value");
+    }
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == BOOLEAN) });
 }
 
 static Value* __builtin_is_number(Value* v, Value* k) {
+    if (v == NULL) {
+        fprintf(stderr, "number?: NULL argument\n");
+        runtime_error("number? expects a value");
+    }
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == NUMBER) });
 }
 
 static Value* __builtin_is_list(Value* v, Value* k) {
+    if (v == NULL) {
+        fprintf(stderr, "list?: NULL argument\n");
+        runtime_error("list? expects a value");
+    }
     // A list is either nil or a pair whose second element is a list
     Value* cur = v;
     while (cur->t == PAIR) {
+        if (cur->pair.second == NULL) {
+            fprintf(stderr, "list?: encountered NULL in pair chain\n");
+            runtime_error("malformed list");
+        }
         cur = cur->pair.second;
     }
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(cur->t == NIL) });
@@ -189,6 +217,10 @@ static Value* __builtin_is_list(Value* v, Value* k) {
 
 // ============ COMPARISON ============
 static Value* __builtin_eq(Value* a, Value* b, Value* k) {
+    if (a == NULL || b == NULL) {
+        fprintf(stderr, "eq: NULL argument (a=%p, b=%p)\n", (void*)a, (void*)b);
+        runtime_error("eq expects non-NULL arguments");
+    }
     if (a->t != b->t) return ApplyClosure(k, 1, (Value*[]){ MakeBool(false) });
     switch (a->t) {
         case NUMBER:
@@ -196,12 +228,18 @@ static Value* __builtin_eq(Value* a, Value* b, Value* k) {
         case BOOLEAN:
             return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value == b->boolean.value) });
         default:
-            runtime_error("eq: can only compare ints and bools");
+            fprintf(stderr, "eq: can only compare ints and bools; got %s and %s\n",
+                    type_to_string(a->t), type_to_string(b->t));
+            runtime_error("eq: unsupported types");
             return NULL;
     }
 }
 
 static Value* __builtin_ne(Value* a, Value* b, Value* k) {
+    if (a == NULL || b == NULL) {
+        fprintf(stderr, "ne: NULL argument (a=%p, b=%p)\n", (void*)a, (void*)b);
+        runtime_error("ne expects non-NULL arguments");
+    }
     if (a->t != b->t) return ApplyClosure(k, 1, (Value*[]){ MakeBool(true) });
     switch (a->t) {
         case NUMBER:
@@ -209,13 +247,19 @@ static Value* __builtin_ne(Value* a, Value* b, Value* k) {
         case BOOLEAN:
             return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value != b->boolean.value) });
         default:
-            runtime_error("ne: can only compare ints and bools");
+            fprintf(stderr, "ne: can only compare ints and bools; got %s and %s\n",
+                    type_to_string(a->t), type_to_string(b->t));
+            runtime_error("ne: unsupported types");
             return NULL;
     }
 }
 
 // ============ ARITHMETIC ============
 static void ensure_int_pair(Value* a, Value* b, const char* op) {
+    if (a == NULL || b == NULL) {
+        fprintf(stderr, "%s: NULL argument (a=%p, b=%p)\n", op, (void*)a, (void*)b);
+        runtime_error(op);
+    }
     if (a->t != NUMBER || b->t != NUMBER) {
         fprintf(stderr, "%s; got %s and %s\n", op, type_to_string(a->t), type_to_string(b->t));
         runtime_error(op);
@@ -240,6 +284,7 @@ static Value* __builtin_mul(Value* a, Value* b, Value* k) {
 static Value* __builtin_div(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "/ expects two integers");
     if (b->integer.value == 0) {
+        fprintf(stderr, "division by zero: %d / 0\n", a->integer.value);
         runtime_error("division by zero");
     }
     return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value / b->integer.value) });
@@ -267,21 +312,38 @@ static Value* __builtin_ge(Value* a, Value* b, Value* k) {
 
 // ============ BOOLEAN OPERATIONS ============
 static Value* __builtin_and(Value* a, Value* b, Value* k) {
+    if (a == NULL || b == NULL) {
+        fprintf(stderr, "and: NULL argument (a=%p, b=%p)\n", (void*)a, (void*)b);
+        runtime_error("and expects non-NULL arguments");
+    }
     if (a->t != BOOLEAN || b->t != BOOLEAN) {
+        fprintf(stderr, "and: expects booleans; got %s and %s\n",
+                type_to_string(a->t), type_to_string(b->t));
         runtime_error("and expects two booleans");
     }
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value && b->boolean.value) });
 }
 
 static Value* __builtin_or(Value* a, Value* b, Value* k) {
+    if (a == NULL || b == NULL) {
+        fprintf(stderr, "or: NULL argument (a=%p, b=%p)\n", (void*)a, (void*)b);
+        runtime_error("or expects non-NULL arguments");
+    }
     if (a->t != BOOLEAN || b->t != BOOLEAN) {
+        fprintf(stderr, "or: expects booleans; got %s and %s\n",
+                type_to_string(a->t), type_to_string(b->t));
         runtime_error("or expects two booleans");
     }
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value || b->boolean.value) });
 }
 
 static Value* __builtin_not(Value* a, Value* k) {
+    if (a == NULL) {
+        fprintf(stderr, "not: NULL argument\n");
+        runtime_error("not expects a value");
+    }
     if (a->t != BOOLEAN) {
+        fprintf(stderr, "not: expects boolean; got %s\n", type_to_string(a->t));
         runtime_error("not expects a boolean");
     }
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(!a->boolean.value) });
@@ -332,21 +394,54 @@ static Value* __builtin_print(Value* a, Value* k) {
 
 // ============ BOX OPERATIONS ============
 static Value* __builtin_box(Value* v, Value* k) {
+    if (v == NULL) {
+        fprintf(stderr, "box: NULL argument\n");
+        runtime_error("box expects a value");
+    }
     return ApplyClosure(k, 1, (Value*[]){ MakeBox(v) });
 }
 
 static Value* __builtin_set(Value* box, Value* value, Value* k) {
-    if (box->t != BOX) runtime_error("set! expects a box");
+    if (box == NULL || value == NULL) {
+        fprintf(stderr, "set!: NULL argument (box=%p, value=%p)\n", (void*)box, (void*)value);
+        runtime_error("set! expects non-NULL arguments");
+    }
+    if (box->t != BOX) {
+        fprintf(stderr, "set!: expects box; got %s\n", type_to_string(box->t));
+        runtime_error("set! expects a box");
+    }
     box->box.ptr = deep_copy(value);
     return ApplyClosure(k, 1, (Value*[]){ box });
 }
 
 static Value* __builtin_unwrap(Value* box, Value* k) {
-    if (box->t != BOX) runtime_error("unwrap expects a box");
+    if (box == NULL) {
+        fprintf(stderr, "unwrap: NULL argument\n");
+        runtime_error("unwrap expects a box");
+    }
+    if (box->t != BOX) {
+        fprintf(stderr, "unwrap: expects box; got %s\n", type_to_string(box->t));
+        runtime_error("unwrap expects a box");
+    }
+    if (box->box.ptr == NULL) {
+        fprintf(stderr, "unwrap: box contains NULL pointer\n");
+        runtime_error("unwrap: box is empty");
+    }
     return ApplyClosure(k, 1, (Value*[]){ deep_copy(box->box.ptr) });
 }
 
 static Value* __builtin_peek(Value* box, Value* k) {
-    if (box->t != BOX) runtime_error("peek expects a box");
+    if (box == NULL) {
+        fprintf(stderr, "peek: NULL argument\n");
+        runtime_error("peek expects a box");
+    }
+    if (box->t != BOX) {
+        fprintf(stderr, "peek: expects box; got %s\n", type_to_string(box->t));
+        runtime_error("peek expects a box");
+    }
+    if (box->box.ptr == NULL) {
+        fprintf(stderr, "peek: box contains NULL pointer\n");
+        runtime_error("peek: box is empty");
+    }
     return ApplyClosure(k, 1, (Value*[]){ box->box.ptr });
 }
