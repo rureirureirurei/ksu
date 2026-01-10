@@ -1,4 +1,4 @@
-;49
+;2
 ;Backtracking
 (define cont-stack (box nil))
 
@@ -32,12 +32,12 @@
 )
 
 (define (range n) (if (= n 0) 
-  (pair 0 nil)
+  (pair 1 nil)
   (pair n (range (- n 1)))
 ))
 
 (define (triples)
-  (let* ([ns (range 10)]
+  (let* ([ns (range 5)]
         [a (choose ns)]
         [b (choose ns)]
         [c (choose ns)])
@@ -48,4 +48,4 @@
   )
 )
 
-(print (triples))
+(triples)

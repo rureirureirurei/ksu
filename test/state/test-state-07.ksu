@@ -1,4 +1,4 @@
-;Hello (unchanged)
+;"Hello (unchanged)"
 (define printval (box (lambda () (print "Hello (unchanged)"))))
 
 (define wrapper (unwrap printval))

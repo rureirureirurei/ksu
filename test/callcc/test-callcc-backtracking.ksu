@@ -1,4 +1,4 @@
-;100
+;2
 ; Sophisticated backtracking example
 (define cont-stack (box nil))
 
@@ -34,16 +34,22 @@
   )
 )
 
+(define (range n) (if (= n 1) 
+  (pair 1 nil)
+  (pair n (range (- n 1)))
+))
+
 (define (search)
-  (let (
-        [a (choose (range 1 100))]
-        [b (choose (range 1 100))]
-        [c (choose (range 1 100))]
+  (let* (
+        [a (choose (range 5))]
+        [b (choose (range 5))]
+        [c (choose (range 5))]
        )
         (begin
           (if (eq? (+ (* b b) (* c c)) (* a a))
               (begin
                 (set! count (+ 1 (unwrap count)))
+                ;(print (pair a (pair b (pair c nil))))
                 (fail)
               )
               (fail)
@@ -52,4 +58,4 @@
       )
     )
 
-(print (search))
+(search)
