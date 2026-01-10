@@ -1,15 +1,14 @@
 ;100
 ;Local set variables save their state during continuation switches
-(define saved-k #f)
+(define saved-k (box #f))
+(define sum (box 0))
 
-(define sum 0)
-
-(let ([x 10]) (begin
-  (call/cc (lambda (k) (set! saved-k k)))
-  (set! sum (+ sum x))
+(let ([x (box 10)]) (begin
+  (call/cc k (set! saved-k k))
+  (set! sum (+ (unwrap sum) (unwrap x)))
   (set! x 30)
-  (set! sum (+ sum x))
+  (set! sum (+ (unwrap sum) (unwrap x)))
 ))
 
-(saved-k -1)
-(print sum)
+((unwrap saved-k) (- 0 1))
+(print (peek sum))

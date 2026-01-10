@@ -3,4 +3,4 @@
   (lambda (k val)
     (k val)))
 
-(+ 40 (call/cc (lambda (k) (apply-cont k 2)))) 
+(print (+ 40 (call/cc k (apply-cont k 2))) )

@@ -1,2 +1,2 @@
-;30
-(+ 20 (call/cc (lambda (k) (k 10))))
+;10
+(print (call/cc k (k 10)) )
