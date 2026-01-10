@@ -15,6 +15,32 @@
 %{
   open Lang
   open Ast
+
+  (* Generate unique symbols for desugaring *)
+  let gensym =
+    let cnt = ref 0 in
+    fun prefix ->
+      cnt := !cnt + 1;
+      prefix ^ string_of_int !cnt
+
+  (* Get last element of a list *)
+  let last lst = List.hd @@ List.rev lst
+
+  (* Desugar begin into let *)
+  let desugar_begin exprs =
+    match exprs with
+    | [] -> E_App (E_Lambda ([], E_Bool true), []) (* empty begin *)
+    | [e] -> e (* single expression *)
+    | _ ->
+        let unused_syms = List.map (fun _ -> gensym "unused_begin_") exprs in
+        let body = E_Var (last unused_syms) in
+        E_App (E_Lambda (unused_syms, body), exprs)
+
+  (* Desugar let into lambda application *)
+  let desugar_let bindings body =
+    let syms = List.map fst bindings in
+    let exprs = List.map snd bindings in
+    E_App (E_Lambda (syms, body), exprs)
 %}
 
 %%
@@ -48,7 +74,7 @@ compound:
     }
   
 begin_expr:
-  | BEGIN exprs { E_Begin $2 }
+  | BEGIN exprs { desugar_begin $2 }
 
 lambda_args:
   | { [] }
@@ -72,7 +98,7 @@ let_args:
   | LBRACKET SYMBOL expr RBRACKET let_args { ($2, $3) :: $5 }
 
 let_expr:
-  | LET LPAREN let_args RPAREN expr { E_Let ($3, $5) }
+  | LET LPAREN let_args RPAREN expr { desugar_let $3 $5 }
 
 define_expr:
   | DEFINE SYMBOL expr { E_Define ($2, $3) }

@@ -39,12 +39,8 @@ let sanitize_var_name (name: string) : string =
 let sanitize_var_list (vars: var list) : var list =
   List.map sanitize_var_name vars
 
-(* Sanitize let bindings *)
-let rec sanitize_let_bindings (bindings: (var * expr) list) : (var * expr) list =
-  List.map (fun (var, expr) -> (sanitize_var_name var, sanitize_expr expr)) bindings
-
 (* Sanitize lambda arguments *)
-and sanitize_lambda_args (args: var list) : var list =
+let rec sanitize_lambda_args (args: var list) : var list =
   List.map sanitize_var_name args
 
 (* Sanitize define expressions *)
@@ -62,9 +58,6 @@ and sanitize_expr (expr: expr) : expr =
   | E_If (cond, then_expr, else_expr) ->
       E_If (sanitize_expr cond, sanitize_expr then_expr, sanitize_expr else_expr)
   | E_Callcc (v, e) -> E_Callcc (sanitize_var_name v, sanitize_expr e)
-  | E_Begin exprs -> E_Begin (List.map sanitize_expr exprs)
-  | E_Let (bindings, body) ->
-      E_Let (sanitize_let_bindings bindings, sanitize_expr body)
   | E_Bool _
   | E_Number _
   | E_String _

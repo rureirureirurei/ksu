@@ -60,14 +60,6 @@ let ksu2c: cc_top_expr list -> string =
   | CC_If (c, y, n) ->
       "(is_true(" ^ t_expr c ^ ") ? " ^ t_expr y ^ " : " ^ t_expr n ^ ")"
 
-  | CC_Begin exprs ->
-      let stmts = List.map (fun e -> t_expr e ^ ";") exprs in
-      "({ " ^ String.concat " " stmts ^ " })"
-
-  | CC_Let (defs, body) ->
-      let decls = List.map (fun (v, e) -> "Value* " ^ v ^ " = " ^ t_expr e ^ ";") defs in
-      "({ " ^ String.concat " " decls ^ " " ^ t_expr body ^ "; })"
-
   (* Closures *)
   | CC_MakeClosure (fn, env) ->
       "MakeClosure(" ^ fn ^ ", " ^ t_expr env ^ ")"

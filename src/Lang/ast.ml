@@ -14,8 +14,6 @@ and expr_data =
   | E_Lambda of var list * expr
   | E_If of expr * expr * expr
   | E_Callcc of var * expr
-  | E_Begin of expr list
-  | E_Let of (var * expr) list * expr
   | E_Prim of prim
 
 and expr = expr_data
@@ -49,31 +47,6 @@ let string_of_expr expr =
         ^ string_of_expr_aux (offset + 4) n
         ^ ")"
     | E_Callcc (v, e) -> "(callcc " ^ v ^ ". " ^  string_of_expr_aux (offset + 2) e ^ ")"
-    | E_Let (defs, body) ->
-        let indent = String.make offset ' ' in
-        let defs_str =
-          List.map
-            (fun (name, expr) ->
-              "[" ^ name ^ " " ^ string_of_expr_aux (offset + 4) expr ^ "]")
-            defs
-        in
-        "(let ("
-        ^ String.concat ("\n" ^ indent ^ "   ") defs_str
-        ^ ")\n" ^ indent ^ "  "
-        ^ string_of_expr_aux (offset + 2) body
-        ^ ")"
-    | E_Begin exprs ->
-        let indent = String.make offset ' ' in
-        let parts = List.map (string_of_expr_aux (offset + 2)) exprs in
-        if parts = [] then "(begin)"
-        else
-          "(begin "
-          ^ (match parts with
-            | [ one ] -> one
-            | _ ->
-                "\n" ^ indent ^ "  "
-                ^ String.concat ("\n" ^ indent ^ "  ") parts)
-          ^ ")"
     | E_Prim prim -> "<primitive: \"" ^ Builtins.builtin_to_string prim ^ "\">"
   in
   string_of_expr_aux 0 expr

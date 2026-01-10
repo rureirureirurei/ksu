@@ -11,19 +11,6 @@ let gensym =
     cnt := !cnt + 1;
     s ^ string_of_int !cnt
 
-(* removes begin and let constructions *)
-    let last lst = List.hd @@ List.rev lst
-let rec collapse_begin: expr_data -> expr_data = fun e -> match e with
-| E_Begin es ->
-  let unused_syms = List.map (fun _ -> gensym "unused_begin") es in
-  let defs = List.map (fun (e, sym) -> (sym, e)) (List.combine es unused_syms) in
-  collapse_begin (E_Let (defs, E_Var (last unused_syms)))
-| E_Let (defs, body) ->
-    let syms = List.map fst defs in
-    let exprs = List.map snd defs in
-    E_App (E_Lambda (syms, body), exprs)
-| _ -> e
-
 type cps_top_expr = CPS_Expr of cps_cxpr | CPS_Define of var * cps_cxpr
 (* Atomic values *)
 and cps_axpr =

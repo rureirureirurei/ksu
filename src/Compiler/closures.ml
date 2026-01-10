@@ -33,12 +33,10 @@ and cc_expr =
   | CC_Bool of bool
   | CC_Number of int
   | CC_String of string
-  | CC_Begin of cc_expr list
   (* Non-literals *)
   | CC_Var of var
   | CC_If of cc_expr * cc_expr * cc_expr
   | CC_Callcc of var * cc_expr
-  | CC_Let of (var * cc_expr) list * cc_expr
   | CC_Prim of prim
 
 module VarSet = Set.Make (String)
@@ -57,22 +55,7 @@ let rec free : expr -> VarSet.t =
   | E_Var v -> VarSet.singleton v
   | E_Callcc (v, expr) -> VarSet.diff (free expr) (VarSet.singleton v)
   | E_If (c, y, n) -> VarSet.union (free n) @@ VarSet.union (free c) (free y)
-  (* Lambda and Let *)
-  | E_Let (defs, body) ->
-      (* Sequential let: each binding can see variables bound before it *)
-      let (free_defs, _) =
-        List.fold_left
-          (fun (acc_free, acc_bound) (v, e) ->
-            let free_e = VarSet.diff (free e) acc_bound in
-            (VarSet.union acc_free free_e, VarSet.add v acc_bound))
-          (VarSet.empty, VarSet.empty) defs
-      in
-      let free_body =
-        VarSet.diff (free body) (List.map fst defs |> VarSet.of_list)
-      in
-      VarSet.union free_body free_defs
-  | E_Begin exprs ->
-      List.fold_left (fun acc e -> VarSet.union acc (free e)) VarSet.empty exprs
+  (* Lambda *)
   | E_Lambda (args, body) -> VarSet.diff (free body) (VarSet.of_list args)
 
 (* Converts expression to the closure-converted. As all functions become global at this step, we also return list of FuncDefs *)
@@ -106,18 +89,6 @@ let convert : top_expr list -> cc_top_expr list =
     | E_Bool b -> CC_Bool b
     (* A bit trickier *)
     | E_If (c, y, n) -> CC_If (t' c, t' y, t' n)
-    | E_Begin exprs -> CC_Begin (List.map t' exprs)
-    | E_Let (defs, body) ->
-        (* Sequential let: adjust substitution set for each binding *)
-        let (defs', bound) =
-          List.fold_left
-            (fun (acc_defs, prev_bound) (v, expr) ->
-              let expr' = t (VarSet.diff sub prev_bound) env_sym expr in
-              (acc_defs @ [(v, expr')], VarSet.add v prev_bound))
-            ([], VarSet.empty) defs
-        in
-        let body' = t (VarSet.diff sub bound) env_sym body in
-        CC_Let (defs', body')
     | E_Callcc (v, e) -> CC_Callcc (v, t' e)
     (* Var *)
     | E_Var v -> cc_expr_of_var sub env_sym v
@@ -168,9 +139,6 @@ let rec string_of_cc_expr = function
   | CC_String s -> "\"" ^ String.escaped s ^ "\""
   | CC_Var v -> v
   | CC_If (c, y, n) -> "(if " ^ string_of_cc_expr c ^ " " ^ string_of_cc_expr y ^ " " ^ string_of_cc_expr n ^ ")"
-  | CC_Let (defs, body) ->
-      let defs_str = String.concat " " (List.map (fun (v, e) -> "(" ^ v ^ " " ^ string_of_cc_expr e ^ ")") defs) in
-      "(let (" ^ defs_str ^ ") " ^ string_of_cc_expr body ^ ")"
   | CC_App (fn, args) ->
       let args_str = String.concat " " (List.map string_of_cc_expr args) in
       "(" ^ string_of_cc_expr fn ^ " " ^ args_str ^ ")"
@@ -181,7 +149,6 @@ let rec string_of_cc_expr = function
   | CC_EnvRef (env, var) -> "(env-ref " ^ env ^ " \"" ^ var ^ "\")"
   | CC_Prim p -> "<prim:" ^ Builtins.builtin_to_string p ^ ">"
   | CC_Callcc (v, e) -> "(callcc " ^ v ^ ". " ^ string_of_cc_expr e ^ ")"
-  | CC_Begin exprs -> "(begin " ^ String.concat " " (List.map string_of_cc_expr exprs) ^ ")"
 
 let string_of_cc_top_expr = function
   | CC_FuncDef (name, args, body) ->
