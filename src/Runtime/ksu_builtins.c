@@ -54,6 +54,18 @@ Value* MakeBox(Value* v) {
     return ptr;
 }
 
+static Value* __id_impl(ClosureEnv env, int argc, Value** argv) {
+    if (argc != 1) runtime_error("id expects 1 argument");
+    return argv[0];
+}
+
+Value* id;
+
+Value* ApplyClosure(Value* f, int argc, Value** argv) {
+    if (f->t != CLOSURE) runtime_error("ApplyClosure expects a closure");
+    return f->closure.lam(f->closure.env, argc, argv);
+}
+
 // ============ DEEP COPY ============
 Value* deep_copy(Value* v) {
     if (v == NULL) return NULL;
@@ -80,71 +92,71 @@ Value* deep_copy(Value* v) {
 }
 
 // ============ PAIR OPERATIONS ============
-static Value* __builtin_fst(Value* v) {
+static Value* __builtin_fst(Value* v, Value* k) {
     if (v->t != PAIR) runtime_error("fst expects a pair");
     if (v->pair.first == NULL) runtime_error("first element of pair is null");
-    return v->pair.first;
+    return ApplyClosure(k, 1, (Value*[]){ v->pair.first });
 }
 
-static Value* __builtin_snd(Value* v) {
+static Value* __builtin_snd(Value* v, Value* k) {
     if (v->t != PAIR) runtime_error("snd expects a pair");
     if (v->pair.second == NULL) runtime_error("second element of pair is null");
-    return v->pair.second;
+    return ApplyClosure(k, 1, (Value*[]){ v->pair.second });
 }
 
-static Value* __builtin_pair(Value* l, Value* r) {
-    return MakePair(l, r);
+static Value* __builtin_pair(Value* l, Value* r, Value* k) {
+    return ApplyClosure(k, 1, (Value*[]){ MakePair(l, r) });
 }
 
 Value* nil;
 
 // ============ TYPE PREDICATES ============
-static Value* __builtin_is_pair(Value* v) {
-    return MakeBool(v->t == PAIR);
+static Value* __builtin_is_pair(Value* v, Value* k) {
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == PAIR) });
 }
 
-static Value* __builtin_is_nil(Value* v) {
-    return MakeBool(v->t == NIL);
+static Value* __builtin_is_nil(Value* v, Value* k) {
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == NIL) });
 }
 
-static Value* __builtin_is_bool(Value* v) {
-    return MakeBool(v->t == BOOLEAN);
+static Value* __builtin_is_bool(Value* v, Value* k) {
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == BOOLEAN) });
 }
 
-static Value* __builtin_is_number(Value* v) {
-    return MakeBool(v->t == NUMBER);
+static Value* __builtin_is_number(Value* v, Value* k) {
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == NUMBER) });
 }
 
-static Value* __builtin_is_list(Value* v) {
+static Value* __builtin_is_list(Value* v, Value* k) {
     // A list is either nil or a pair whose second element is a list
     Value* cur = v;
     while (cur->t == PAIR) {
         cur = cur->pair.second;
     }
-    return MakeBool(cur->t == NIL);
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(cur->t == NIL) });
 }
 
 // ============ COMPARISON ============
-static Value* __builtin_eq(Value* a, Value* b) {
-    if (a->t != b->t) return MakeBool(false);
+static Value* __builtin_eq(Value* a, Value* b, Value* k) {
+    if (a->t != b->t) return ApplyClosure(k, 1, (Value*[]){ MakeBool(false) });
     switch (a->t) {
         case NUMBER:
-            return MakeBool(a->integer.value == b->integer.value);
+            return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value == b->integer.value) });
         case BOOLEAN:
-            return MakeBool(a->boolean.value == b->boolean.value);
+            return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value == b->boolean.value) });
         default:
             runtime_error("eq: can only compare ints and bools");
             return NULL;
     }
 }
 
-static Value* __builtin_ne(Value* a, Value* b) {
-    if (a->t != b->t) return MakeBool(true);
+static Value* __builtin_ne(Value* a, Value* b, Value* k) {
+    if (a->t != b->t) return ApplyClosure(k, 1, (Value*[]){ MakeBool(true) });
     switch (a->t) {
         case NUMBER:
-            return MakeBool(a->integer.value != b->integer.value);
+            return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value != b->integer.value) });
         case BOOLEAN:
-            return MakeBool(a->boolean.value != b->boolean.value);
+            return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value != b->boolean.value) });
         default:
             runtime_error("ne: can only compare ints and bools");
             return NULL;
@@ -152,79 +164,93 @@ static Value* __builtin_ne(Value* a, Value* b) {
 }
 
 // ============ ARITHMETIC ============
+static const char* type_to_string(ValueTag t) {
+    switch (t) {
+        case NUMBER: return "NUMBER";
+        case BOOLEAN: return "BOOLEAN";
+        case STRING: return "STRING";
+        case NIL: return "NIL";
+        case PAIR: return "PAIR";
+        case CLOSURE: return "CLOSURE";
+        case BOX: return "BOX";
+        default: return "UNKNOWN";
+    }
+}
+
 static void ensure_int_pair(Value* a, Value* b, const char* op) {
     if (a->t != NUMBER || b->t != NUMBER) {
+        fprintf(stderr, "%s; got %s and %s\n", op, type_to_string(a->t), type_to_string(b->t));
         runtime_error(op);
     }
 }
 
-static Value* __builtin_add(Value* a, Value* b) {
+static Value* __builtin_add(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "+ expects two integers");
-    return MakeInt(a->integer.value + b->integer.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value + b->integer.value) });
 }
 
-static Value* __builtin_sub(Value* a, Value* b) {
+static Value* __builtin_sub(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "- expects two integers");
-    return MakeInt(a->integer.value - b->integer.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value - b->integer.value) });
 }
 
-static Value* __builtin_mul(Value* a, Value* b) {
+static Value* __builtin_mul(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "* expects two integers");
-    return MakeInt(a->integer.value * b->integer.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value * b->integer.value) });
 }
 
-static Value* __builtin_div(Value* a, Value* b) {
+static Value* __builtin_div(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "/ expects two integers");
     if (b->integer.value == 0) {
         runtime_error("division by zero");
     }
-    return MakeInt(a->integer.value / b->integer.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value / b->integer.value) });
 }
 
-static Value* __builtin_lt(Value* a, Value* b) {
+static Value* __builtin_lt(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "< expects two integers");
-    return MakeBool(a->integer.value < b->integer.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value < b->integer.value) });
 }
 
-static Value* __builtin_gt(Value* a, Value* b) {
+static Value* __builtin_gt(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "> expects two integers");
-    return MakeBool(a->integer.value > b->integer.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value > b->integer.value) });
 }
 
-static Value* __builtin_le(Value* a, Value* b) {
+static Value* __builtin_le(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "<= expects two integers");
-    return MakeBool(a->integer.value <= b->integer.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value <= b->integer.value) });
 }
 
-static Value* __builtin_ge(Value* a, Value* b) {
+static Value* __builtin_ge(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, ">= expects two integers");
-    return MakeBool(a->integer.value >= b->integer.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value >= b->integer.value) });
 }
 
 // ============ BOOLEAN OPERATIONS ============
-static Value* __builtin_and(Value* a, Value* b) {
+static Value* __builtin_and(Value* a, Value* b, Value* k) {
     if (a->t != BOOLEAN || b->t != BOOLEAN) {
         runtime_error("and expects two booleans");
     }
-    return MakeBool(a->boolean.value && b->boolean.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value && b->boolean.value) });
 }
 
-static Value* __builtin_or(Value* a, Value* b) {
+static Value* __builtin_or(Value* a, Value* b, Value* k) {
     if (a->t != BOOLEAN || b->t != BOOLEAN) {
         runtime_error("or expects two booleans");
     }
-    return MakeBool(a->boolean.value || b->boolean.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value || b->boolean.value) });
 }
 
-static Value* __builtin_not(Value* a) {
+static Value* __builtin_not(Value* a, Value* k) {
     if (a->t != BOOLEAN) {
         runtime_error("not expects a boolean");
     }
-    return MakeBool(!a->boolean.value);
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(!a->boolean.value) });
 }
 
 // ============ I/O ============
-static Value* __builtin_print(Value* a) {
+static Value* __builtin_print(Value* a, Value* k) {
     switch (a->t) {
         case NUMBER:
             printf("%d\n", a->integer.value);
@@ -250,26 +276,26 @@ static Value* __builtin_print(Value* a) {
         default:
             runtime_error("print: unknown type");
     }
-    return a;
+    return ApplyClosure(k, 1, (Value*[]){ a });
 }
 
 // ============ BOX OPERATIONS ============
-static Value* __builtin_box(Value* v) {
-    return MakeBox(v);
+static Value* __builtin_box(Value* v, Value* k) {
+    return ApplyClosure(k, 1, (Value*[]){ MakeBox(v) });
 }
 
-static Value* __builtin_set(Value* box, Value* value) {
+static Value* __builtin_set(Value* box, Value* value, Value* k) {
     if (box->t != BOX) runtime_error("set! expects a box");
     box->box.ptr = deep_copy(value);
-    return box;
+    return ApplyClosure(k, 1, (Value*[]){ box });
 }
 
-static Value* __builtin_unwrap(Value* box) {
+static Value* __builtin_unwrap(Value* box, Value* k) {
     if (box->t != BOX) runtime_error("unwrap expects a box");
-    return deep_copy(box->box.ptr);
+    return ApplyClosure(k, 1, (Value*[]){ deep_copy(box->box.ptr) });
 }
 
-static Value* __builtin_peek(Value* box) {
+static Value* __builtin_peek(Value* box, Value* k) {
     if (box->t != BOX) runtime_error("peek expects a box");
-    return box->box.ptr;
+    return ApplyClosure(k, 1, (Value*[]){ box->box.ptr });
 }

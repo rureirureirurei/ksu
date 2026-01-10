@@ -94,8 +94,7 @@ let ksu2c: cc_top_expr list -> string =
           let fn_str = t_expr fn in
           let argc = string_of_int (List.length args) in
           let argv = if args_str = "" then "NULL" else "(Value*[]){" ^ args_str ^ "}" in
-          "({ Value* _f = " ^ fn_str ^ "; " ^
-          "_f->closure.lam(_f->closure.env, " ^ argc ^ ", " ^ argv ^ "); })")
+          "ApplyClosure(" ^ fn_str ^ ", " ^ argc ^ ", " ^ argv ^ ")")
 
   | CC_Prim _ -> failwith "bug: CC_Prim should be handled in CC_App"
   | CC_Callcc _ -> failwith "callcc not implemented"
@@ -127,7 +126,7 @@ let ksu2c: cc_top_expr list -> string =
       global_decls := !global_decls @ ["Value* " ^ name ^ ";"];
       (* For closures, add self-reference patching *)
       (match expr with
-      | CC_MakeClosure _ ->
+      | CC_App (CC_Var "id", [ CC_MakeClosure _ ]) -> 
           main_body := !main_body @ [name ^ " = " ^ t_expr expr ^ ";"];
           main_body := !main_body @ [name ^ "->closure.env[0].val = " ^ name ^ ";"];
           main_body := !main_body @ [name ^ "->closure.env[0].name = \"" ^ name ^ "\";"]
@@ -146,4 +145,4 @@ let ksu2c: cc_top_expr list -> string =
     let funcs = String.concat "\n\n" !global_funcs in
     let body = String.concat "\n  " !main_body in
 
-    header ^ decls ^ "\n\n" ^ funcs ^ "\n\nint main() {\n nil = MakeNil();\n  " ^ body ^ "\n}\n"
+    header ^ decls ^ "\n\n" ^ funcs ^ "\n\nint main() {\n  nil = MakeNil();\n  id = MakeClosure(__id_impl, NULL);\n  " ^ body ^ "\n}\n"
