@@ -2,22 +2,6 @@ open Lang
 open Ast
 
 type cc_top_expr =
-(* One may ask why do we need both VarDef and FuncDef?
-  Can't we replace FuncDef with Vardef f = lambda ... ?
-  Actually no. In the converted code, we won't have any lambdas.
-  Only globally defined named functions. That's the FuncDef.
-  If we are having some Variable defined to equal expr where
-  there is some lambda, i.e. 
-  (define id (lambda y y))
-  then it will be translated to 
-  
-  (define lambda_69 y y)
-  (define id lambda_69)
-  There is a minor tricky part - what about functions 
-  that are already globally defined, i.e. 
-  (define (id y) y)? That's syntax sugar for lambda, 
-  check parser.mly
-*)
   | CC_FuncDef of var * var list * cc_expr 
   | CC_VarDef of var * cc_expr
   | CC_Expr of cc_expr
