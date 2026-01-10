@@ -53,31 +53,31 @@ and sanitize_define (name: var) : var =
 
 (* Sanitize an entire expression recursively *)
 and sanitize_expr (expr: expr) : expr =
-  match expr.value with
-  | E_Var v -> { expr with value = E_Var (sanitize_var_name v) }
-  | E_App (func, args) -> 
-      { expr with value = E_App (sanitize_expr func, List.map sanitize_expr args) }
+  match expr with
+  | E_Var v -> E_Var (sanitize_var_name v)
+  | E_App (func, args) ->
+      E_App (sanitize_expr func, List.map sanitize_expr args)
   | E_Lambda (args, body) ->
-      { expr with value = E_Lambda (sanitize_lambda_args args, sanitize_expr body) }
+      E_Lambda (sanitize_lambda_args args, sanitize_expr body)
   | E_If (cond, then_expr, else_expr) ->
-      { expr with value = E_If (sanitize_expr cond, sanitize_expr then_expr, sanitize_expr else_expr) }
-  | E_Callcc (v, e) -> { expr with value = E_Callcc ((sanitize_var_name v), (sanitize_expr e)) }
-  | E_Begin exprs -> { expr with value = E_Begin (List.map sanitize_expr exprs) }
+      E_If (sanitize_expr cond, sanitize_expr then_expr, sanitize_expr else_expr)
+  | E_Callcc (v, e) -> E_Callcc (sanitize_var_name v, sanitize_expr e)
+  | E_Begin exprs -> E_Begin (List.map sanitize_expr exprs)
   | E_Let (bindings, body) ->
-      { expr with value = E_Let (sanitize_let_bindings bindings, sanitize_expr body) }
-  | E_Pair (e1, e2) -> { expr with value = E_Pair (sanitize_expr e1, sanitize_expr e2) }
+      E_Let (sanitize_let_bindings bindings, sanitize_expr body)
+  | E_Pair (e1, e2) -> E_Pair (sanitize_expr e1, sanitize_expr e2)
   | E_Bool _
-  | E_Number _ 
+  | E_Number _
   | E_String _
   | E_Prim _
   | E_Nil -> expr
 
 (* Sanitize a top-level expression *)
 let sanitize_top_expr (top_expr: top_expr) : top_expr =
-  match top_expr.value with
-  | E_Expr e -> { top_expr with value = E_Expr (sanitize_expr e) }
-  | E_Define (name, expr) -> 
-      { top_expr with value = E_Define (sanitize_define name, sanitize_expr expr) }
+  match top_expr with
+  | E_Expr e -> E_Expr (sanitize_expr e)
+  | E_Define (name, expr) ->
+      E_Define (sanitize_define name, sanitize_expr expr)
 
 (* Sanitize a list of top-level expressions *)
 let sanitize_top_exprs (top_exprs: top_expr list) : top_expr list =

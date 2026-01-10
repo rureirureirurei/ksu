@@ -48,7 +48,7 @@ module VarSet = Set.Make (String)
 (* Obtains set of free variables in an expression *)
 let rec free : expr -> VarSet.t =
  fun expr ->
-  match expr.value with
+  match expr with
   (* Trivial Stuff *)
   | E_String _ | E_Number _ | E_Prim _ | E_Nil | E_Bool _ -> VarSet.empty
   (* A bit less trivial *)
@@ -101,7 +101,7 @@ let convert : top_expr list -> cc_top_expr list =
    fun sub env_sym expr ->
     let t' = t sub env_sym in
 
-    match expr.value with
+    match expr with
     (* Trivial Stuff *)
     | E_String s -> CC_String s
     | E_Number n -> CC_Number n
@@ -156,7 +156,7 @@ let convert : top_expr list -> cc_top_expr list =
    fun top_expr ->
     let t = t VarSet.empty "If this env is called, it's a bug" in
     let transformed =
-      match top_expr.value with
+      match top_expr with
       | E_Expr e -> CC_Expr (t e)
       | E_Define (name, e) -> CC_VarDef (name, t e)
     in

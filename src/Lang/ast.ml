@@ -2,7 +2,7 @@ type location = { file : string; line : int; column : int }
 type prim = Builtins.prim
 
 type top_expr_data = E_Expr of expr | E_Define of var * expr
-and top_expr = top_expr_data node
+and top_expr = top_expr_data
 and var = string
 
 and expr_data =
@@ -20,13 +20,12 @@ and expr_data =
   | E_Nil
   | E_Prim of prim
 
-and expr = expr_data node
-and 'a node = { value : 'a; loc : location }
+and expr = expr_data
 
 (* Stringifies the AST *)
 let string_of_expr expr =
-  let rec string_of_expr_aux offset { value; _ } =
-    match value with
+  let rec string_of_expr_aux offset expr =
+    match expr with
     | E_Bool b -> string_of_bool b
     | E_Number n -> string_of_int n
     | E_String s -> "\"" ^ s ^ "\""
@@ -89,20 +88,19 @@ let string_of_expr expr =
   string_of_expr_aux 0 expr
 
 let string_of_top_expr top_expr =
-  match top_expr.value with
+  match top_expr with
   | E_Expr e -> string_of_expr e ^ "\n"
   | E_Define (name, expr) ->
       "(define " ^ name ^ "\n  " ^ string_of_expr expr ^ ")\n"
 
 (* Helper functions for creating builtin definitions *)
-let syn expr = { value = expr; loc = { file = ""; line = 0; column = 0 } }
-let mk_var name = syn (E_Var name)
-let mk_lambda params body = syn (E_Lambda (params, body))
+let mk_var name = E_Var name
+let mk_lambda params body = E_Lambda (params, body)
 
 let mk_prim_app prim vars =
-  syn (E_App (syn (E_Prim prim), List.map mk_var vars))
+  E_App (E_Prim prim, List.map mk_var vars)
 
-let mk_define name expr = syn (E_Define (name, expr))
+let mk_define name expr = E_Define (name, expr)
 
 (* Builtin primitive definitions as AST expressions *)
 let builtin_definitions : top_expr list =
@@ -137,7 +135,7 @@ let builtin_definitions : top_expr list =
     mk_define "fst" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_fst [ "a0" ]));
     mk_define "snd" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_snd [ "a0" ]));
     (* Constants *)
-    mk_define "nil" (syn E_Nil);
+    mk_define "nil" E_Nil;
     (* Predicates *)
     mk_define "nil?"
       (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_IsNil [ "a0" ]));
