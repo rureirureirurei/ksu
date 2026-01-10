@@ -25,7 +25,6 @@ and cps_axpr =
 and cps_cxpr =
   | CPS_App of cps_axpr * cps_axpr list
   | CPS_If of cps_axpr * cps_cxpr * cps_cxpr
-  | CPS_SetThen of var * cps_axpr * cps_cxpr
 
 let is_axpr = function E_Lit _ | E_Var _ | E_Lambda _ -> true | _ -> false
 
@@ -37,7 +36,7 @@ let rec m : expr_data -> cps_axpr = function
       let body' = t body (CPS_Var k) in
       CPS_Lambda (ids @ [ k ], body')
   | _ -> failwith "m expects expr that is atomic"
-  
+
 (* Takes expression, it's continuation and translates it *)
 and t : expr_data -> cps_axpr -> cps_cxpr =
  fun e k ->
@@ -68,3 +67,20 @@ let t_top : top_expr -> cps_top_expr =
   match e with
   | E_Expr e -> CPS_Expr (t e CPS_Id)
   | E_Define (v, e) -> CPS_Define (v, t e CPS_Id)
+
+(* Back-translation from CPS to AST *)
+let rec from_cps_axpr : cps_axpr -> expr = function
+  | CPS_Lit lit -> E_Lit lit
+  | CPS_Var v -> E_Var v
+  | CPS_Lambda (ids, body) -> E_Lambda (ids, from_cps_cxpr body)
+  | CPS_Prim p -> E_Prim p
+  | CPS_Id -> E_Var "id"
+
+and from_cps_cxpr : cps_cxpr -> expr = function
+  | CPS_App (f, args) -> E_App (from_cps_axpr f, List.map from_cps_axpr args)
+  | CPS_If (c, y, n) ->
+      E_If (from_cps_axpr c, from_cps_cxpr y, from_cps_cxpr n)
+
+let from_cps_top : cps_top_expr -> top_expr = function
+  | CPS_Expr e -> E_Expr (from_cps_cxpr e)
+  | CPS_Define (v, e) -> E_Define (v, from_cps_cxpr e)

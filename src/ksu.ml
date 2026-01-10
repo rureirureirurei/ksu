@@ -41,8 +41,20 @@ let () =
       List.iter (fun e -> output_string oc (Lang.Ast.string_of_top_expr e ^ "\n")) sanitized_ast;
       close_out oc;
 
+      (* Do CPS conversion *)
+      let cps_ast = List.map Cps.t_top sanitized_ast in
+
+      (* Back-translate from CPS to AST *)
+      let from_cps_ast = List.map Cps.from_cps_top cps_ast in
+
+      (* Write CPS-converted AST to debug file *)
+      let cps_ast_file = "/tmp/" ^ Filename.basename file ^ ".cps.ast" in
+      let oc = open_out cps_ast_file in
+      List.iter (fun e -> output_string oc (Lang.Ast.string_of_top_expr e ^ "\n")) from_cps_ast;
+      close_out oc;
+
       (* Do closure conversion *)
-      let converted_ast = Closures.convert sanitized_ast in
+      let converted_ast = Closures.convert from_cps_ast in
 
       (* Write closure-converted AST to debug file *)
       let cc_ast_file = "/tmp/" ^ Filename.basename file ^ ".cc.ast" in
