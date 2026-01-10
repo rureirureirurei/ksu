@@ -29,7 +29,7 @@
   (* Desugar begin into let *)
   let desugar_begin exprs =
     match exprs with
-    | [] -> E_App (E_Lambda ([], E_Bool true), []) (* empty begin *)
+    | [] -> E_App (E_Lambda ([], E_Lit (L_Bool true)), []) (* empty begin *)
     | [e] -> e (* single expression *)
     | _ ->
         let unused_syms = List.map (fun _ -> gensym "unused_begin_") exprs in
@@ -56,9 +56,9 @@ expr:
   | LPAREN compound RPAREN { $2 }
 
 atom:
-  | BOOL { E_Bool $1 }
-  | NUMBER { E_Number $1 }
-  | STRING { E_String $1 }
+  | BOOL { E_Lit (L_Bool $1) }
+  | NUMBER { E_Lit (L_Number $1) }
+  | STRING { E_Lit (L_String $1) }
   | SYMBOL { E_Var $1 }
 
 compound:

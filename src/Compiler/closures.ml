@@ -30,9 +30,7 @@ and cc_expr =
   | CC_EnvRef of var * var (* env id (i.e. $e_123) and id of the argument. *)
   | CC_App of cc_expr * cc_expr list (* May be application of closure or prim *)
   (* Literals *)
-  | CC_Bool of bool
-  | CC_Number of int
-  | CC_String of string
+  | CC_Lit of Ast.lit
   (* Non-literals *)
   | CC_Var of var
   | CC_If of cc_expr * cc_expr * cc_expr
@@ -46,7 +44,7 @@ let rec free : expr -> VarSet.t =
  fun expr ->
   match expr with
   (* Trivial Stuff *)
-  | E_String _ | E_Number _ | E_Prim _ | E_Bool _ -> VarSet.empty
+  | E_Lit _ | E_Prim _ -> VarSet.empty
   (* A bit less trivial *)
   | E_App (f, args) ->
       List.fold_left
@@ -83,10 +81,8 @@ let convert : top_expr list -> cc_top_expr list =
 
     match expr with
     (* Trivial Stuff *)
-    | E_String s -> CC_String s
-    | E_Number n -> CC_Number n
+    | E_Lit lit -> CC_Lit lit
     | E_Prim p -> CC_Prim p
-    | E_Bool b -> CC_Bool b
     (* A bit trickier *)
     | E_If (c, y, n) -> CC_If (t' c, t' y, t' n)
     | E_Callcc (v, e) -> CC_Callcc (v, t' e)
@@ -134,9 +130,9 @@ let convert : top_expr list -> cc_top_expr list =
 
 (* Pretty printing for closure-converted AST *)
 let rec string_of_cc_expr = function
-  | CC_Bool b -> string_of_bool b
-  | CC_Number n -> string_of_int n
-  | CC_String s -> "\"" ^ String.escaped s ^ "\""
+  | CC_Lit (Ast.L_Bool b) -> string_of_bool b
+  | CC_Lit (Ast.L_Number n) -> string_of_int n
+  | CC_Lit (Ast.L_String s) -> "\"" ^ String.escaped s ^ "\""
   | CC_Var v -> v
   | CC_If (c, y, n) -> "(if " ^ string_of_cc_expr c ^ " " ^ string_of_cc_expr y ^ " " ^ string_of_cc_expr n ^ ")"
   | CC_App (fn, args) ->

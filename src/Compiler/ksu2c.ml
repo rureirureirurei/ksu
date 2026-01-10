@@ -48,10 +48,10 @@ let ksu2c: cc_top_expr list -> string =
 
   (* Translate expression to C expression string *)
   let rec t_expr (e: cc_expr): string = match e with
-  (* Literals - use pairtructors, actual structs on stack *)
-  | CC_Bool b -> "MakeBool(" ^ string_of_bool b ^ ")"
-  | CC_Number n -> "MakeInt(" ^ string_of_int n ^ ")"
-  | CC_String s -> "MakeString(\"" ^ String.escaped s ^ "\")"
+  (* Literals - use constructors, actual structs on stack *)
+  | CC_Lit (Ast.L_Bool b) -> "MakeBool(" ^ string_of_bool b ^ ")"
+  | CC_Lit (Ast.L_Number n) -> "MakeInt(" ^ string_of_int n ^ ")"
+  | CC_Lit (Ast.L_String s) -> "MakeString(\"" ^ String.escaped s ^ "\")"
 
   (* Variables *)
   | CC_Var v -> v

@@ -14,10 +14,8 @@ let gensym =
 type cps_top_expr = CPS_Expr of cps_cxpr | CPS_Define of var * cps_cxpr
 (* Atomic values *)
 and cps_axpr =
-  | CPS_Bool of bool
+  | CPS_Lit of Ast.lit
   | CPS_Var of var
-  | CPS_String of string
-  | CPS_Number of int
   | CPS_Lambda of var list * cps_cxpr
   | CPS_Id (* Special function that should be called as base continuation *)
 
@@ -28,13 +26,11 @@ and cps_cxpr =
   | CPS_SetThen of var * cps_axpr * cps_cxpr
 
 let is_axpr = function
-  | E_Bool _ | E_Number _ | E_String _ | E_Var _ | E_Lambda _ -> true
+  | E_Lit _ | E_Var _ | E_Lambda _ -> true
   | _ -> false
 
 let rec m : expr_data -> cps_axpr = function
-  | E_Bool b -> CPS_Bool b
-  | E_Number n -> CPS_Number n
-  | E_String s -> CPS_String s
+  | E_Lit lit -> CPS_Lit lit
   | E_Var v -> CPS_Var v
   | E_Lambda (ids, body) ->
       let k = gensym "k" in

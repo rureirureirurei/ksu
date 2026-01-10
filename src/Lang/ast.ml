@@ -1,14 +1,18 @@
 type location = { file : string; line : int; column : int }
 type prim = Builtins.prim
 
+(* Literal values *)
+type lit =
+  | L_Bool of bool
+  | L_Number of int
+  | L_String of string
+
 type top_expr_data = E_Expr of expr | E_Define of var * expr
 and top_expr = top_expr_data
 and var = string
 
 and expr_data =
-  | E_Bool of bool
-  | E_Number of int
-  | E_String of string
+  | E_Lit of lit
   | E_Var of var
   | E_App of expr * expr list
   | E_Lambda of var list * expr
@@ -22,9 +26,9 @@ and expr = expr_data
 let string_of_expr expr =
   let rec string_of_expr_aux offset expr =
     match expr with
-    | E_Bool b -> string_of_bool b
-    | E_Number n -> string_of_int n
-    | E_String s -> "\"" ^ s ^ "\""
+    | E_Lit (L_Bool b) -> string_of_bool b
+    | E_Lit (L_Number n) -> string_of_int n
+    | E_Lit (L_String s) -> "\"" ^ s ^ "\""
     | E_Var s -> s
     | E_App (func, args) ->
         "("

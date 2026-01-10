@@ -58,9 +58,7 @@ and sanitize_expr (expr: expr) : expr =
   | E_If (cond, then_expr, else_expr) ->
       E_If (sanitize_expr cond, sanitize_expr then_expr, sanitize_expr else_expr)
   | E_Callcc (v, e) -> E_Callcc (sanitize_var_name v, sanitize_expr e)
-  | E_Bool _
-  | E_Number _
-  | E_String _
+  | E_Lit _
   | E_Prim _ -> expr
 
 (* Sanitize a top-level expression *)
