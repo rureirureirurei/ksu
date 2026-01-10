@@ -10,13 +10,14 @@ import os
 import subprocess
 import sys
 import re
+import random
 from pathlib import Path
 
 def extract_expected_result(file_path):
     """Extract expected result from the first line comment."""
     with open(file_path, 'r') as f:
         first_line = f.readline().strip()
-    
+
     # Look for comment starting with ; followed by expected result
     match = re.match(r'^;(.+)$', first_line)
     if match:
@@ -27,8 +28,25 @@ def extract_expected_result(file_path):
     else:
         raise ValueError(f"No expected result found in first line: {first_line}")
 
-def red(s): 
+def red(s):
     return "\033[31m" + s + "\033[0m"
+
+PASSED_MESSAGES = [
+    "Tests passed! But this is only beginning of your journey! Now meditate for 1000 hours in the mountains!",
+    "Honorable success! However, true warrior does not celebrate! Immediately begin training for next challenge or face eternal shame!",
+    "Tests pass with acceptable precision! Do not become arrogant! Your ancestors demand you refactor entire codebase by sunrise!",
+    "Most satisfactory! But warrior who rests after one victory dies in second battle! Write ten thousand more tests before you sleep!",
+    "Glorious achievement! Now you must maintain this honor forever without single failure, or commit seppuku!"
+]
+
+FAILED_MESSAGES = [
+    "Pathetic disgrace! Exile yourself to mountains immediately!",
+    "Disgraceful! Your keyboard must be melted down for this dishonor!",
+    "Unforgivable! Ancestors demand you delete all code and start life as rice farmer!",
+    "Catastrophic shame! Your family name must be erased from records!",
+    "Despicable failure! Never touch computer again!",
+    "Insufferable disgrace! Ancestors curse your bloodline! Burn your hard drive immediately!",
+]
 
 def run_ksu_file(file_path):
     """Compile a KSU file to C, build it with gcc, run it, and return stdout."""
@@ -97,44 +115,40 @@ def run_tests():
         if not os.path.exists(test_dir):
             print(f"Warning: Test directory {test_dir} not found")
             continue
-            
+
         print(f"\nTesting {test_dir}:")
         print("-" * 30)
-        
+
         for file_path in Path(test_dir).glob("*.ksu"):
             if file_path.stat().st_size == 0:
                 print(f"  SKIP {file_path.name} (empty file)")
                 continue
-                
+
             total_tests += 1
-            
+
             try:
                 expected = extract_expected_result(file_path)
                 actual = run_ksu_file(file_path)
-                
+
                 if actual == expected:
                     print(f"  PASS {file_path.name}")
                     passed_tests += 1
                 else:
                     print(red(f"  FAIL {file_path.name}"))
-                    failed_tests.append(file_path.name)                    
+                    failed_tests.append(file_path.name)
             except Exception as e:
                 print(f"  ERROR {file_path.name}: {e}")
                 failed_tests.append(file_path.name)
-    
+
     color = '\033[32m' if passed_tests == total_tests else '\033[31m'
     print(f"\n{color}Test Results: {passed_tests}/{total_tests} passed\033[0m")
+
     if passed_tests != total_tests:
-        print(red("You bring great dishonor to your ancestors! Commit seppuku to restore your family's honor!"))
-    
-    if failed_tests:
-        # print(f"\nFailed tests ({len(failed_tests)}):")
-        # for test_name in failed_tests:
-        #     print(f"  {test_name}")
+        print(red(random.choice(FAILED_MESSAGES)))
         return 1
     else:
-        print("All tests passed!")
+        print(random.choice(PASSED_MESSAGES))
         return 0
 
 if __name__ == "__main__":
-    sys.exit(run_tests()) 
+    sys.exit(run_tests())

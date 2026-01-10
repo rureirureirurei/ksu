@@ -1,158 +1,30 @@
-ksu is implementation of the subset of lisp language that compiles to C. 
+# Ksu - yet another implementation of LISP
 
-Compiler structure: 
+Ksu is a functional dynamically typed language that is compiled to C. Ksu is based on LISP.
+Here is an example code:
 
-AST -> 
-Closure Converted AST (all functions are closed and global) ->
-??? CPS ->
-C 
+```ksu
+;This one counts factorial
 
+(define factorial 
+  (lambda (n)
+    (if (= n 0)
+        1 
+        (* n (factorial (- n 1)))
+    )
+  )
+)
 
+(print (factorial 5))
+```
 
-+ Parser and Lexer are OK
-+ Closure Conversion (kinda ok)
+There is support for: 
+ - first class functions
+ - first class continuations
+ - mutable state 
+ - self-recursive functions
+ - first class builtin operators 
+ - pairs
 
-- Translation to C is complete bullshit
-- call/cc is not supported at all 
-
-
-What we want? 
-call/cc
-mutable state 
-recursive functions 
-
-
-1. Every variable is actually a box. What values may we have? 
-
-int
-global function
-boolean 
-string 
-list???
-
-each variable when translated to C is actually:
-pointer to location in memory where union is located: 
-union is tag + some data 
-int, boolean, string - straightforward. 
-funcion is address to function 
-
-for lists, only operations we could want is 
-x = (tail y)
-or 
-x = a :: y 
-
-so, we could represent lists as immutable data structures in memory (when list cells are added to memory, they are not changed) 
-
-so, assume that we have this structure in memory 
-
-x0 -> x1 -> x2 
-
-and we parse line 
-y = ? :: x 
-
-then it means allocating memory, creating new list entry ?, setting it's next to x and 
-y is pointer to struct in memory { TAG: LIST, headptr: ? }
-
-if we write y = tail x 
-then y is ptr to struct in memory {TAG : LIST, headptr: next(x) }
-
-now it's trivial to implement :: and rest 
-
-what about mutability / call.cc ??
-
-call/cc only captures context, but not the values. of the variables - so if they were changed, then it's ok. 
-
-so, let's think about the model once again and confirm the details and think about some edge cases. 
-where we may create new variables? 
-let, function call, global define 
-
-how do we translate this to C ? 
-
-first, we define our union type: 
-{ tag, other_details } - so that's our values. structs in memory. all identifiers are just 
-pointers to those structures. and the assumption is that those structures do not ever change, we only change 
-for our identifiers point to . 
-like if we say set! x (+ 1 x) then it translates to 
-
-// alloc_new_int: takes int, allocates memory creates int struct and returns pointer to it. 
-// x is of type Value
-x = alloc_new_int(1 + x.int_val)
-if we say x = (lambda x x) 
-then it's going to be like this: during the closure conv, the lambda will be transalted to global function: 
-
-Value lamda_69(Value x, Env e) {
-    return x
-}
-
-
-the struct for lambdas would look like 
-{ tag: LAMBDA, Value fptr*(Value): *(lambda_69)}
-and in C, translated to sth like 
-x = alloc_new_lam(*lambda69)
-
-Now lists, there would be 3 functions: empty, append, tail 
-
-x = ( empty ())
-would translate to 
-// alloc_new_list takes ptr to the first list item, if NULL - then it means list is empty
-x = alloc_new_list(null)
-
-
-## CLOSURES 
-how do we actually translate lambdas? 
-ok, also tricky questions - what should be passed to the env? cause for example: 
-
-(define inc (let ([cnt 0 ])
-    (lambda () (begin (set! cnt (+ 1 cnt)) cnt  ))
-))
-
-here this would translate to 
-
-Value lamda_<id> (Value arg, Env e) {
-    e
-}
-
-so, and here's the issue - if we use set only on the global variables / variables passed to the function, 
-then we can translate set <id> <val> to basically <id> = alloc_new_??? <val> 
-
-but when setting things from env, we don't have id. 
-so, env should be basically be map 
-<string id> 
-or list 
-of *Value (pointer to value). and Value is pointer to the structure in memory. 
-so and when we create enviroment, it should be sthe like 
-
-Value x ....
-MakeClosure(... Env(&x, ... )) 
-
-ok, now how should we handle closures and lambdas? 
-maybe we can have structure 
-tag: CLOSURE 
-lambda: ptr to function 
-env: Env 
-
-and Env type may be list of string -> &Value. This works because even though when compiled, closure can be thought of 
-as argument list, but we can only capture variables, so all the values in this list should be variable pointers. 
-(Compared to usual arguments - even if we pass variables i.e. f(x,y) - we don't actually pass &x, &y, but create new
-fresh vars that point to the same struct in memory. 
-about closures - we definitely have to define all the lambdas, no doubt here. 
-but I'm ZZ
-
-
-=============================
-how do we compile bulitin functions? i.e. print, or + ? 
-during the parsing stage we parse + - print and others are identifiers. 
-then, during the pipeline, we append sythetic ast list of definitions to the ast
-
-i.e. 
-
-(define + (lambda a b) (builtin "+" a b))
-so, now + is regular function. 
-
-we'll have to worry about parsing case when applying values to builtin, but that's pretty strainghtforward, because 
-builtin ast nodes are synthetic and cannot be generated by programmer
-
-=============================
-how to compile call/cc ? 
-
-
+# Running the project: 
+Clone the repo and run `./run.sh <.ksu file path>`. Script will also dump debug .ast files in the /tmp.  
