@@ -40,7 +40,14 @@ Value* MakePair(Value* l, Value* r) {
 }
 
 Value* MakeClosure(Lambda_t f, ClosureEnv e) {
+    if (f == NULL) {
+        fprintf(stderr, "MakeClosure: NULL lambda pointer\n");
+        runtime_error("Cannot create closure with NULL lambda");
+    }
     Value* ptr = malloc(sizeof(Value));
+    if (ptr == NULL) {
+        runtime_error("MakeClosure: malloc failed");
+    }
     ptr->closure.t = CLOSURE;
     ptr->closure.lam = f;
     ptr->closure.env = e;
@@ -62,7 +69,18 @@ static Value* __id_impl(ClosureEnv env, int argc, Value** argv) {
 Value* id;
 
 Value* ApplyClosure(Value* f, int argc, Value** argv) {
-    if (f->t != CLOSURE) runtime_error("ApplyClosure expects a closure");
+    if (f == NULL) {
+        fprintf(stderr, "ApplyClosure: NULL function pointer\n");
+        runtime_error("ApplyClosure called with NULL");
+    }
+    if (f->t != CLOSURE) {
+        fprintf(stderr, "ApplyClosure: expected CLOSURE, got type %d\n", f->t);
+        runtime_error("ApplyClosure expects a closure");
+    }
+    if (f->closure.lam == NULL) {
+        fprintf(stderr, "ApplyClosure: closure has NULL lambda pointer\n");
+        runtime_error("ApplyClosure: NULL lambda in closure");
+    }
     return f->closure.lam(f->closure.env, argc, argv);
 }
 
@@ -93,14 +111,34 @@ Value* deep_copy(Value* v) {
 
 // ============ PAIR OPERATIONS ============
 static Value* __builtin_fst(Value* v, Value* k) {
-    if (v->t != PAIR) runtime_error("fst expects a pair");
-    if (v->pair.first == NULL) runtime_error("first element of pair is null");
+    if (v == NULL) {
+        fprintf(stderr, "fst: NULL argument\n");
+        runtime_error("fst expects a pair");
+    }
+    if (v->t != PAIR) {
+        fprintf(stderr, "fst: expected PAIR, got type %d\n", v->t);
+        runtime_error("fst expects a pair");
+    }
+    if (v->pair.first == NULL) {
+        fprintf(stderr, "fst: first element is NULL\n");
+        runtime_error("first element of pair is null");
+    }
     return ApplyClosure(k, 1, (Value*[]){ v->pair.first });
 }
 
 static Value* __builtin_snd(Value* v, Value* k) {
-    if (v->t != PAIR) runtime_error("snd expects a pair");
-    if (v->pair.second == NULL) runtime_error("second element of pair is null");
+    if (v == NULL) {
+        fprintf(stderr, "snd: NULL argument\n");
+        runtime_error("snd expects a pair");
+    }
+    if (v->t != PAIR) {
+        fprintf(stderr, "snd: expected PAIR, got type %d\n", v->t);
+        runtime_error("snd expects a pair");
+    }
+    if (v->pair.second == NULL) {
+        fprintf(stderr, "snd: second element is NULL\n");
+        runtime_error("second element of pair is null");
+    }
     return ApplyClosure(k, 1, (Value*[]){ v->pair.second });
 }
 
@@ -250,32 +288,45 @@ static Value* __builtin_not(Value* a, Value* k) {
 }
 
 // ============ I/O ============
-static Value* __builtin_print(Value* a, Value* k) {
-    switch (a->t) {
+static void print_value(Value* v) {
+    if (v == NULL) {
+        printf("NULL");
+        return;
+    }
+    switch (v->t) {
         case NUMBER:
-            printf("%d\n", a->integer.value);
+            printf("%d", v->integer.value);
             break;
         case BOOLEAN:
-            printf("%s\n", a->boolean.value ? "#t" : "#f");
+            printf("%s", v->boolean.value ? "#t" : "#f");
             break;
         case STRING:
-            printf("%s\n", a->string.value);
+            printf("\"%s\"", v->string.value);
             break;
         case NIL:
-            printf("nil\n");
+            printf("nil");
             break;
         case PAIR:
-            printf("<pair>\n");
+            print_value(v->pair.first);
+            printf(" . ");
+            print_value(v->pair.second);
             break;
         case CLOSURE:
-            printf("<closure>\n");
+            printf("<closure>");
             break;
         case BOX:
-            printf("<box>\n");
+            printf("(box ");
+            print_value(v->box.ptr);
+            printf(")");
             break;
         default:
-            runtime_error("print: unknown type");
+            printf("<unknown-type-%d>", v->t);
     }
+}
+
+static Value* __builtin_print(Value* a, Value* k) {
+    print_value(a);
+    printf("\n");
     return ApplyClosure(k, 1, (Value*[]){ a });
 }
 
