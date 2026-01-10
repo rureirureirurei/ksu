@@ -18,6 +18,7 @@ rule lex = parse
   | ')' { RPAREN }
   | '[' { LBRACKET }
   | ']' { RBRACKET }
+  | "let*" { LET_STAR }
   | "let" { LET }
   | "begin" { BEGIN }
   | "if" { IF }

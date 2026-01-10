@@ -6,7 +6,7 @@
 %token LBRACKET RBRACKET
 %token DEFINE
 %token IF LAMBDA CALLCC
-%token LET
+%token LET LET_STAR
 %token BEGIN
 %token EOF
 
@@ -41,6 +41,12 @@
     let syms = List.map fst bindings in
     let exprs = List.map snd bindings in
     E_App (E_Lambda (syms, body), exprs)
+
+  (* Desugar let* into nested lambda applications *)
+  let desugar_seq_let bindings body =
+    List.fold_right (fun (sym, expr) acc ->
+      E_App (E_Lambda ([sym], acc), [expr])
+    ) bindings body
 %}
 
 %%
@@ -99,6 +105,7 @@ let_args:
 
 let_expr:
   | LET LPAREN let_args RPAREN expr { desugar_let $3 $5 }
+  | LET_STAR LPAREN let_args RPAREN expr { desugar_seq_let $3 $5 }
 
 define_expr:
   | DEFINE SYMBOL expr { E_Define ($2, $3) }
