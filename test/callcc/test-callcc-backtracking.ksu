@@ -1,0 +1,55 @@
+;100
+; Sophisticated backtracking example
+(define cont-stack (box nil))
+
+(define (choose opts)
+  (call/cc k
+    (begin
+      (set! cont-stack (pair (pair k (snd opts)) (unwrap cont-stack)))
+      (fst opts)
+    )
+  )
+)
+
+(define count (box 0))
+
+(define (fail)
+  (if (nil? (unwrap cont-stack))
+      (print (unwrap count))
+      (let* (
+             [top (fst (unwrap cont-stack))]
+             [k (fst top)]
+             [remaining (snd top)])
+        (begin
+          (set! cont-stack (snd (unwrap cont-stack)))
+          (if (nil? remaining)
+              (fail)
+              (begin
+                (set! cont-stack (pair (pair k (snd remaining)) (unwrap cont-stack)))
+                (k (fst remaining))
+              )
+          )
+        )
+      )
+  )
+)
+
+(define (search)
+  (let (
+        [a (choose (range 1 100))]
+        [b (choose (range 1 100))]
+        [c (choose (range 1 100))]
+       )
+        (begin
+          (if (eq? (+ (* b b) (* c c)) (* a a))
+              (begin
+                (set! count (+ 1 (unwrap count)))
+                (fail)
+              )
+              (fail)
+          )
+        )
+      )
+    )
+
+(print (search))
