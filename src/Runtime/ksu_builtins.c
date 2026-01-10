@@ -3,6 +3,19 @@
 // ============ FORWARD DECLARATIONS ============
 Value* deep_copy(Value* v);
 
+static const char* type_to_string(ValueTag t) {
+    switch (t) {
+        case NUMBER: return "NUMBER";
+        case BOOLEAN: return "BOOLEAN";
+        case STRING: return "STRING";
+        case NIL: return "NIL";
+        case PAIR: return "PAIR";
+        case CLOSURE: return "CLOSURE";
+        case BOX: return "BOX";
+        default: return "UNKNOWN";
+    }
+}
+
 // ============ CONSTRUCTORS ============
 Value* MakeInt(int x) {
     Value* ptr = malloc(sizeof(Value));
@@ -74,7 +87,7 @@ Value* ApplyClosure(Value* f, int argc, Value** argv) {
         runtime_error("ApplyClosure called with NULL");
     }
     if (f->t != CLOSURE) {
-        fprintf(stderr, "ApplyClosure: expected CLOSURE, got type %d\n", f->t);
+        fprintf(stderr, "ApplyClosure: expected CLOSURE, got %s\n", type_to_string(f->t));
         runtime_error("ApplyClosure expects a closure");
     }
     if (f->closure.lam == NULL) {
@@ -202,19 +215,6 @@ static Value* __builtin_ne(Value* a, Value* b, Value* k) {
 }
 
 // ============ ARITHMETIC ============
-static const char* type_to_string(ValueTag t) {
-    switch (t) {
-        case NUMBER: return "NUMBER";
-        case BOOLEAN: return "BOOLEAN";
-        case STRING: return "STRING";
-        case NIL: return "NIL";
-        case PAIR: return "PAIR";
-        case CLOSURE: return "CLOSURE";
-        case BOX: return "BOX";
-        default: return "UNKNOWN";
-    }
-}
-
 static void ensure_int_pair(Value* a, Value* b, const char* op) {
     if (a->t != NUMBER || b->t != NUMBER) {
         fprintf(stderr, "%s; got %s and %s\n", op, type_to_string(a->t), type_to_string(b->t));
