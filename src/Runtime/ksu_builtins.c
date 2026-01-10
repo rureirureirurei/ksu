@@ -96,6 +96,8 @@ static Value* __builtin_pair(Value* l, Value* r) {
     return MakePair(l, r);
 }
 
+Value* nil;
+
 // ============ TYPE PREDICATES ============
 static Value* __builtin_is_pair(Value* v) {
     return MakeBool(v->t == PAIR);

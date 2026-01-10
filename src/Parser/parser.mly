@@ -8,7 +8,6 @@
 %token IF LAMBDA CALLCC
 %token LET
 %token BEGIN
-%token QUOTE
 %token EOF
 
 %start <Lang.Ast.top_expr list> parse
@@ -35,7 +34,6 @@ atom:
   | NUMBER { E_Number $1 }
   | STRING { E_String $1 }
   | SYMBOL { E_Var $1 }
-  | list_expr { $1 }
 
 compound:
   | lambda_expr { $1}
@@ -51,13 +49,6 @@ compound:
   
 begin_expr:
   | BEGIN exprs { E_Begin $2 }
-
-list_expr:
-  | QUOTE LPAREN list_elements RPAREN { $3 }
-
-list_elements:
-  | { E_Nil }
-  | expr list_elements { E_Pair ($1, $2) }
 
 lambda_args:
   | { [] }

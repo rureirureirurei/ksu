@@ -32,8 +32,6 @@ and cps_axpr =
   | CPS_String of string
   | CPS_Number of int
   | CPS_Lambda of var list * cps_cxpr
-  | CPS_Nil
-  | CPS_Pair of cps_axpr * cps_axpr
   | CPS_Id (* Special function that should be called as base continuation *)
 
 (* Complex values *)
@@ -43,7 +41,7 @@ and cps_cxpr =
   | CPS_SetThen of var * cps_axpr * cps_cxpr
 
 let is_axpr = function
-  | E_Bool _ | E_Number _ | E_String _ | E_Var _ | E_Lambda _ | E_Pair _ -> true
+  | E_Bool _ | E_Number _ | E_String _ | E_Var _ | E_Lambda _ -> true
   | _ -> false
 
 let rec m : expr_data -> cps_axpr = function
@@ -51,8 +49,6 @@ let rec m : expr_data -> cps_axpr = function
   | E_Number n -> CPS_Number n
   | E_String s -> CPS_String s
   | E_Var v -> CPS_Var v
-  | E_Nil -> CPS_Nil
-  (* | E_Pair (l, r) ->  *)
   | E_Lambda (ids, body) ->
       let k = gensym "k" in
       let body' = t body (CPS_Var k) in

@@ -16,8 +16,6 @@ and expr_data =
   | E_Callcc of var * expr
   | E_Begin of expr list
   | E_Let of (var * expr) list * expr
-  | E_Pair of expr * expr
-  | E_Nil
   | E_Prim of prim
 
 and expr = expr_data
@@ -76,13 +74,6 @@ let string_of_expr expr =
                 "\n" ^ indent ^ "  "
                 ^ String.concat ("\n" ^ indent ^ "  ") parts)
           ^ ")"
-    | E_Pair (e1, e2) ->
-        "(pair "
-        ^ string_of_expr_aux offset e1
-        ^ " "
-        ^ string_of_expr_aux offset e2
-        ^ ")"
-    | E_Nil -> "nil"
     | E_Prim prim -> "<primitive: \"" ^ Builtins.builtin_to_string prim ^ "\">"
   in
   string_of_expr_aux 0 expr
@@ -134,8 +125,6 @@ let builtin_definitions : top_expr list =
       (mk_lambda [ "a0"; "a1" ] (mk_prim_app Builtins.P_pair [ "a0"; "a1" ]));
     mk_define "fst" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_fst [ "a0" ]));
     mk_define "snd" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_snd [ "a0" ]));
-    (* Constants *)
-    mk_define "nil" E_Nil;
     (* Predicates *)
     mk_define "nil?"
       (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_IsNil [ "a0" ]));

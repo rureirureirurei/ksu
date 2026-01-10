@@ -52,8 +52,6 @@ let ksu2c: cc_top_expr list -> string =
   | CC_Bool b -> "MakeBool(" ^ string_of_bool b ^ ")"
   | CC_Number n -> "MakeInt(" ^ string_of_int n ^ ")"
   | CC_String s -> "MakeString(\"" ^ String.escaped s ^ "\")"
-  | CC_Nil -> "MakeNil()"
-  | CC_Pair (a, b) -> "__builtin_pair(" ^ t_expr a ^ ", " ^ t_expr b ^ ")"
 
   (* Variables *)
   | CC_Var v -> v
@@ -156,4 +154,4 @@ let ksu2c: cc_top_expr list -> string =
     let funcs = String.concat "\n\n" !global_funcs in
     let body = String.concat "\n  " !main_body in
 
-    header ^ decls ^ "\n\n" ^ funcs ^ "\n\nint main() {\n  " ^ body ^ "\n}\n"
+    header ^ decls ^ "\n\n" ^ funcs ^ "\n\nint main() {\n nil = MakeNil();\n  " ^ body ^ "\n}\n"

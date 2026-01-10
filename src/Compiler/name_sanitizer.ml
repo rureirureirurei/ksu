@@ -65,12 +65,10 @@ and sanitize_expr (expr: expr) : expr =
   | E_Begin exprs -> E_Begin (List.map sanitize_expr exprs)
   | E_Let (bindings, body) ->
       E_Let (sanitize_let_bindings bindings, sanitize_expr body)
-  | E_Pair (e1, e2) -> E_Pair (sanitize_expr e1, sanitize_expr e2)
   | E_Bool _
   | E_Number _
   | E_String _
-  | E_Prim _
-  | E_Nil -> expr
+  | E_Prim _ -> expr
 
 (* Sanitize a top-level expression *)
 let sanitize_top_expr (top_expr: top_expr) : top_expr =

@@ -24,7 +24,6 @@ rule lex = parse
   | "define" { DEFINE }
   | "lambda" { LAMBDA }
   | "call/cc" { CALLCC }
-  | "'" { QUOTE }
   | ';' [^ '\n' '\r']* { lex lexbuf }
   | newline { 
       Lexing.new_line lexbuf; 

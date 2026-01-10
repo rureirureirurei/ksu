@@ -33,14 +33,12 @@ and cc_expr =
   | CC_Bool of bool
   | CC_Number of int
   | CC_String of string
-  | CC_Nil
   | CC_Begin of cc_expr list
   (* Non-literals *)
   | CC_Var of var
   | CC_If of cc_expr * cc_expr * cc_expr
   | CC_Callcc of var * cc_expr
   | CC_Let of (var * cc_expr) list * cc_expr
-  | CC_Pair of cc_expr * cc_expr
   | CC_Prim of prim
 
 module VarSet = Set.Make (String)
@@ -50,7 +48,7 @@ let rec free : expr -> VarSet.t =
  fun expr ->
   match expr with
   (* Trivial Stuff *)
-  | E_String _ | E_Number _ | E_Prim _ | E_Nil | E_Bool _ -> VarSet.empty
+  | E_String _ | E_Number _ | E_Prim _ | E_Bool _ -> VarSet.empty
   (* A bit less trivial *)
   | E_App (f, args) ->
       List.fold_left
@@ -58,7 +56,6 @@ let rec free : expr -> VarSet.t =
         VarSet.empty (f :: args)
   | E_Var v -> VarSet.singleton v
   | E_Callcc (v, expr) -> VarSet.diff (free expr) (VarSet.singleton v)
-  | E_Pair (fst, snd) -> VarSet.union (free fst) (free snd)
   | E_If (c, y, n) -> VarSet.union (free n) @@ VarSet.union (free c) (free y)
   (* Lambda and Let *)
   | E_Let (defs, body) ->
@@ -106,7 +103,6 @@ let convert : top_expr list -> cc_top_expr list =
     | E_String s -> CC_String s
     | E_Number n -> CC_Number n
     | E_Prim p -> CC_Prim p
-    | E_Nil -> CC_Nil
     | E_Bool b -> CC_Bool b
     (* A bit trickier *)
     | E_If (c, y, n) -> CC_If (t' c, t' y, t' n)
@@ -122,7 +118,6 @@ let convert : top_expr list -> cc_top_expr list =
         in
         let body' = t (VarSet.diff sub bound) env_sym body in
         CC_Let (defs', body')
-    | E_Pair (a, b) -> CC_Pair (t' a, t' b)
     | E_Callcc (v, e) -> CC_Callcc (v, t' e)
     (* Var *)
     | E_Var v -> cc_expr_of_var sub env_sym v
@@ -171,13 +166,11 @@ let rec string_of_cc_expr = function
   | CC_Bool b -> string_of_bool b
   | CC_Number n -> string_of_int n
   | CC_String s -> "\"" ^ String.escaped s ^ "\""
-  | CC_Nil -> "nil"
   | CC_Var v -> v
   | CC_If (c, y, n) -> "(if " ^ string_of_cc_expr c ^ " " ^ string_of_cc_expr y ^ " " ^ string_of_cc_expr n ^ ")"
   | CC_Let (defs, body) ->
       let defs_str = String.concat " " (List.map (fun (v, e) -> "(" ^ v ^ " " ^ string_of_cc_expr e ^ ")") defs) in
       "(let (" ^ defs_str ^ ") " ^ string_of_cc_expr body ^ ")"
-  | CC_Pair (a, b) -> "(pair " ^ string_of_cc_expr a ^ " " ^ string_of_cc_expr b ^ ")"
   | CC_App (fn, args) ->
       let args_str = String.concat " " (List.map string_of_cc_expr args) in
       "(" ^ string_of_cc_expr fn ^ " " ^ args_str ^ ")"
