@@ -1,0 +1,16 @@
+;11
+(define (evl0 expr) 
+  (begin
+;    (println (fst expr))
+;    (println (fst (snd expr)))
+;    (println (fst (snd (snd expr))))
+;    (println "===============")
+  
+  (if (number? expr) expr 
+  (if (eq? '+ (fst expr)) 
+      (+ (evl0 (fst (snd expr))) (evl0 (fst (snd (snd expr)))))      
+      (raise "expected + or number")
+))))
+
+(print (evl0 '(+ (+ 2 2) (+ 3 4))))
+

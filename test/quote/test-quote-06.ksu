@@ -1,0 +1,40 @@
+;42\n10\n1\n2\n3\n5\n<closure>\n2
+(define (evl1 expr env)
+  (if (number? expr) 
+      expr
+  (if (symbol? expr) 
+      (env expr)
+  (if (eq? (fst expr) 'lambda) 
+      (let ([id (fst (fst (snd expr)))]
+            [body (fst (snd (snd expr)))])
+        (lambda (val) (evl1 body 
+                            (lambda (var) (if (eq? var id) val (env var))))))
+  (let ([f (evl1 (fst expr) env)]
+        [arg (evl1 (fst (snd expr)) env)])
+    (f arg))))))
+
+
+(define init-env (lambda (var) (raise "unbound variable")))                                                          
+                                                                                                                       
+  ;; Tests                                                                                                             
+  (print (evl1 42 init-env))                                           ; → 42                                                  
+  (print (evl1 '((lambda (x) x) 10) init-env)   )                      ; → 10                                                  
+  (print (evl1 '(((lambda (x) (lambda (y) x)) 1) 2) init-env))         ; → 1 (returns x)                                       
+  (print (evl1 '(((lambda (x) (lambda (y) y)) 1) 2) init-env))         ; → 2 (returns y)                                       
+                                                                                                                       
+  ;; Closure captures outer variable                                                                                   
+    (print (evl1 '((lambda (x)                                                                                                  
+            ((lambda (y)                                                                                               
+               ((lambda (z) x) 7))                                                                                     
+             5))                                                                                                       
+          3)                                                                                                           
+        init-env)   )                                           ; → 3                                                   
+                                                                                                                       
+  ;; Shadowing                                                                                                         
+    (print (evl1 '((lambda (x) ((lambda (x) x) 5)) 10) init-env))       ; → 5                                                    
+                                                                                                                       
+  ;; Church numerals                                                                                                   
+  (define church-2 '(lambda (f) (lambda (x) (f (f x)))))                                                               
+  (define add1 (lambda (n) (+ n 1)))                                                                                   
+   (print  ((evl1 church-2 init-env) add1)             )                 ; → closure                                             
+    (print (((evl1 church-2 init-env) add1) 0)        )                  ; → 2
