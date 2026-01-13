@@ -238,9 +238,9 @@ static Value* __builtin_eq(Value* a, Value* b, Value* k) {
         case BOOLEAN:
             return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value == b->boolean.value) });
         case STRING:
-            return ApplyClosure(k, 1, (Value*[]){ MakeBool(strcmp(a->string.value, b->string.value)) });
+            return ApplyClosure(k, 1, (Value*[]){ MakeBool(strcmp(a->string.value, b->string.value) == 0) });
         case SYMBOL:
-            return ApplyClosure(k, 1, (Value*[]){ MakeBool(strcmp(a->symbol.name, b->symbol.name)) });
+            return ApplyClosure(k, 1, (Value*[]){ MakeBool(strcmp(a->symbol.name, b->symbol.name) == 0) });
         default:
             fprintf(stderr, "eq: can only compare ints and bools; got %s and %s\n",
                     type_to_string(a->t), type_to_string(b->t));

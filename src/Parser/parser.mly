@@ -74,6 +74,13 @@ quote_atom:
   | STRING { E_Lit (L_String $1) }
   | BOOL { E_Lit (L_Bool $1) }
   | IDENT { E_Lit (L_Symbol $1) }
+  | LAMBDA { E_Lit (L_Symbol "lambda") }
+  | IF { E_Lit (L_Symbol "if") }
+  | DEFINE { E_Lit (L_Symbol "define") }
+  | BEGIN { E_Lit (L_Symbol "begin") }
+  | LET { E_Lit (L_Symbol "let") }
+  | LET_STAR { E_Lit (L_Symbol "let*") }
+  | CALLCC { E_Lit (L_Symbol "call/cc") }
   | LPAREN quote_list RPAREN { exprs2list $2 }
   | LPAREN RPAREN { E_Var "nil" }
 
