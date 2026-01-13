@@ -1,4 +1,3 @@
-type location = { file : string; line : int; column : int }
 type prim = Builtins.prim
 
 (* Literal values *)
@@ -7,11 +6,10 @@ type lit =
   | L_Number of int
   | L_String of string
 
-type top_expr_data = E_Expr of expr | E_Define of var * expr
-and top_expr = top_expr_data
+type top_expr = E_Expr of expr | E_Define of var * expr
 and var = string
 
-and expr_data =
+and expr =
   | E_Lit of lit
   | E_Var of var
   | E_App of expr * expr list
@@ -19,8 +17,7 @@ and expr_data =
   | E_If of expr * expr * expr
   | E_Callcc of var * expr
   | E_Prim of prim
-
-and expr = expr_data
+  | E_Symbol of string
 
 (* Stringifies the AST *)
 let string_of_expr expr =
@@ -52,6 +49,7 @@ let string_of_expr expr =
         ^ ")"
     | E_Callcc (v, e) -> "(callcc " ^ v ^ ". " ^  string_of_expr_aux (offset + 2) e ^ ")"
     | E_Prim prim -> "<primitive: \"" ^ Builtins.builtin_to_string prim ^ "\">"
+    | E_Symbol s -> "sym " ^ s
   in
   string_of_expr_aux 0 expr
 
@@ -129,4 +127,5 @@ let builtin_definitions : top_expr list =
     mk_define "unwrap"
       (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_Unwrap [ "a0" ]));
     mk_define "peek" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_Peek [ "a0" ]));
+    mk_define "string->symbol" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_StringToSymbol [ "a0" ]));
   ]
