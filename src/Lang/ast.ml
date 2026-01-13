@@ -128,4 +128,6 @@ let builtin_definitions : top_expr list =
       (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_Unwrap [ "a0" ]));
     mk_define "peek" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_Peek [ "a0" ]));
     mk_define "string->symbol" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_StringToSymbol [ "a0" ]));
+    mk_define "symbol?" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_IsSymbol [ "a0" ]));
+    mk_define "raise" (mk_lambda [ "a0" ] (mk_prim_app Builtins.P_Raise [ "a0" ]));
   ]

@@ -470,3 +470,27 @@ static Value* __builtin_string_to_symbol(Value* v, Value* k) {
     }
     return ApplyClosure(k, 1, (Value*[]){ MakeSymbol(v->string.value) });
 }
+
+static Value* __builtin_is_symbol(Value* v, Value* k) {
+    if (v == NULL) {
+        fprintf(stderr, "symbol?: NULL argument\n");
+        runtime_error("symbol? expects a value");
+    }
+    return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == SYMBOL) });
+}
+
+static Value* __builtin_raise(Value* v, Value* k) {
+    (void)k;
+    fprintf(stderr, "Error: ");
+    if (v == NULL) {
+        fprintf(stderr, "(null)\n");
+    } else if (v->t == STRING) {
+        fprintf(stderr, "%s\n", v->string.value);
+    } else if (v->t == SYMBOL) {
+        fprintf(stderr, "%s\n", v->symbol.name);
+    } else {
+        fprintf(stderr, "<value of type %s>\n", type_to_string(v->t));
+    }
+    exit(1);
+    return NULL;
+}
