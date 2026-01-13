@@ -7,3 +7,5 @@ _opam/
 *.swp
 a.out
 test.c
+CLAUDE.md
+.claude/
