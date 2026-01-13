@@ -12,6 +12,7 @@ static const char* type_to_string(ValueTag t) {
         case PAIR: return "PAIR";
         case CLOSURE: return "CLOSURE";
         case BOX: return "BOX";
+        case SYMBOL: return "SYMBOL";
         default: return "UNKNOWN";
     }
 }
@@ -123,6 +124,8 @@ Value* deep_copy(Value* v) {
         case BOX:
             runtime_error("please don't create box over box");
             return NULL;
+        case SYMBOL:
+            return MakeSymbol(strdup(v->symbol.name));
         default:
             runtime_error("unknown type in deep_copy");
             return NULL;
@@ -388,6 +391,9 @@ static void print_value(Value* v) {
             print_value(v->box.ptr);
             printf(")");
             break;
+        case SYMBOL:
+            printf("'%s", v->symbol.name);
+            break;
         default:
             printf("<unknown-type-%d>", v->t);
     }
@@ -396,7 +402,7 @@ static void print_value(Value* v) {
 static Value* __builtin_print(Value* a, Value* k) {
     print_value(a);
     printf("\n");
-    return ApplyClosure(k, 1, (Value*[]){ a });
+    return ApplyClosure(k, 1, (Value*[]){ MakeNil() });
 }
 
 // ============ BOX OPERATIONS ============
@@ -418,7 +424,7 @@ static Value* __builtin_set(Value* box, Value* value, Value* k) {
         runtime_error("set! expects a box");
     }
     box->box.ptr = deep_copy(value);
-    return ApplyClosure(k, 1, (Value*[]){ box });
+    return ApplyClosure(k, 1, (Value*[]){ MakeNil() });
 }
 
 static Value* __builtin_unwrap(Value* box, Value* k) {
@@ -451,4 +457,16 @@ static Value* __builtin_peek(Value* box, Value* k) {
         runtime_error("peek: box is empty");
     }
     return ApplyClosure(k, 1, (Value*[]){ box->box.ptr });
+}
+
+static Value* __builtin_string_to_symbol(Value* v, Value* k) {
+    if (v == NULL) {
+        fprintf(stderr, "string->symbol: NULL argument\n");
+        runtime_error("string->symbol expects a string");
+    }
+    if (v->t != STRING) {
+        fprintf(stderr, "string->symbol: expects string; got %s\n", type_to_string(v->t));
+        runtime_error("string->symbol expects a string");
+    }
+    return ApplyClosure(k, 1, (Value*[]){ MakeSymbol(v->string.value) });
 }
