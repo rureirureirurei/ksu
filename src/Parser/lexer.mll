@@ -22,6 +22,8 @@ rule lex = parse
   | "let" { LET }
   | "begin" { BEGIN }
   | "'" { QUOTE }
+  | "`" { BACKQUOTE }
+  | "," { COMMA }
   | "if" { IF }
   | "define" { DEFINE }
   | "lambda" { LAMBDA }

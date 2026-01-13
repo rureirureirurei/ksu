@@ -7,7 +7,7 @@
 %token DEFINE
 %token IF LAMBDA CALLCC
 %token LET LET_STAR
-%token QUOTE
+%token QUOTE BACKQUOTE COMMA
 %token BEGIN
 %token EOF
 
@@ -68,6 +68,7 @@ expr:
   | atom { $1 }
   | LPAREN compound RPAREN { $2 }
   | quote_expr { $1 }
+  | quasiquote_expr { $1 }
 
 quote_atom:
   | NUMBER { E_Lit (L_Number $1) }
@@ -90,6 +91,29 @@ quote_list:
 
 quote_expr:
   | QUOTE quote_atom { $2 }
+
+quasiquote_atom:
+  | NUMBER { E_Lit (L_Number $1) }
+  | STRING { E_Lit (L_String $1) }
+  | BOOL { E_Lit (L_Bool $1) }
+  | IDENT { E_Lit (L_Symbol $1) }
+  | LAMBDA { E_Lit (L_Symbol "lambda") }
+  | IF { E_Lit (L_Symbol "if") }
+  | DEFINE { E_Lit (L_Symbol "define") }
+  | BEGIN { E_Lit (L_Symbol "begin") }
+  | LET { E_Lit (L_Symbol "let") }
+  | LET_STAR { E_Lit (L_Symbol "let*") }
+  | CALLCC { E_Lit (L_Symbol "call/cc") }
+  | COMMA expr { $2 }
+  | LPAREN quasiquote_list RPAREN { exprs2list $2 }
+  | LPAREN RPAREN { E_Var "nil" }
+
+quasiquote_list:
+  | { [] }
+  | quasiquote_atom quasiquote_list { $1 :: $2 }
+
+quasiquote_expr:
+  | BACKQUOTE quasiquote_atom { $2 }
 
 atom:
   | BOOL { E_Lit (L_Bool $1) }
