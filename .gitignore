@@ -9,3 +9,4 @@ a.out
 test.c
 CLAUDE.md
 .claude/
+.tmp_*
