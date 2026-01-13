@@ -28,7 +28,7 @@ and cps_cxpr =
 
 let is_axpr = function E_Lit _ | E_Var _ | E_Lambda _ -> true | _ -> false
 
-let rec m : expr_data -> cps_axpr = function
+let rec m : expr -> cps_axpr = function
   | E_Lit lit -> CPS_Lit lit
   | E_Var v -> CPS_Var v
   | E_Lambda (ids, body) ->
@@ -38,7 +38,7 @@ let rec m : expr_data -> cps_axpr = function
   | _ -> failwith "m expects expr that is atomic"
 
 (* Takes expression, it's continuation and translates it *)
-and t : expr_data -> cps_axpr -> cps_cxpr =
+and t : expr -> cps_axpr -> cps_cxpr =
  fun e k ->
   match e with
   | E_App (f, args) -> (
