@@ -1,0 +1,2 @@
+;'lambda . 'if . 'begin . nil
+(print `(lambda if begin))
