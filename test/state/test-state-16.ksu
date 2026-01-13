@@ -1,3 +1,4 @@
 ;60
-(define x (set! (if #t (box 20) (box 40)) 60))
+(define x (if #t (box 20) (box 40)))
+(set! x 60)
 (print (peek x))
