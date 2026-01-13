@@ -5,6 +5,7 @@ type lit =
   | L_Bool of bool
   | L_Number of int
   | L_String of string
+  | L_Symbol of string
 
 type top_expr = E_Expr of expr | E_Define of var * expr
 and var = string
@@ -17,7 +18,6 @@ and expr =
   | E_If of expr * expr * expr
   | E_Callcc of var * expr
   | E_Prim of prim
-  | E_Symbol of string
 
 (* Stringifies the AST *)
 let string_of_expr expr =
@@ -26,6 +26,7 @@ let string_of_expr expr =
     | E_Lit (L_Bool b) -> string_of_bool b
     | E_Lit (L_Number n) -> string_of_int n
     | E_Lit (L_String s) -> "\"" ^ s ^ "\""
+    | E_Lit (L_Symbol s) -> "'" ^ s
     | E_Var s -> s
     | E_App (func, args) ->
         "("
@@ -49,7 +50,6 @@ let string_of_expr expr =
         ^ ")"
     | E_Callcc (v, e) -> "(callcc " ^ v ^ ". " ^  string_of_expr_aux (offset + 2) e ^ ")"
     | E_Prim prim -> "<primitive: \"" ^ Builtins.builtin_to_string prim ^ "\">"
-    | E_Symbol s -> "sym " ^ s
   in
   string_of_expr_aux 0 expr
 

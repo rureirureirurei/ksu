@@ -17,6 +17,7 @@ let prim_to_c_name p =
   | ">" -> "gt"
   | ">=" -> "ge"
   | "set!" -> "set"
+  | "string->symbol" -> "string_to_symbol"
   (* Predicates: convert ? suffix to is_ prefix *)
   | _ when String.length name > 0 && name.[String.length name - 1] = '?' ->
       "is_" ^ String.sub name 0 (String.length name - 1)
@@ -52,6 +53,7 @@ let ksu2c: cc_top_expr list -> string =
   | CC_Lit (Ast.L_Bool b) -> "MakeBool(" ^ string_of_bool b ^ ")"
   | CC_Lit (Ast.L_Number n) -> "MakeInt(" ^ string_of_int n ^ ")"
   | CC_Lit (Ast.L_String s) -> "MakeString(\"" ^ String.escaped s ^ "\")"
+  | CC_Lit (Ast.L_Symbol s) -> "MakeSymbol(\"" ^ String.escaped s ^ "\")"
 
   (* Variables *)
   | CC_Var v -> v

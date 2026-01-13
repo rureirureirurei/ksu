@@ -1,12 +1,13 @@
 %token <bool> BOOL
 %token <int> NUMBER
-%token <string> SYMBOL
+%token <string> IDENT
 %token <string> STRING
 %token LPAREN RPAREN
 %token LBRACKET RBRACKET
 %token DEFINE
 %token IF LAMBDA CALLCC
 %token LET LET_STAR
+%token QUOTE
 %token BEGIN
 %token EOF
 
@@ -47,6 +48,12 @@
     List.fold_right (fun (sym, expr) acc ->
       E_App (E_Lambda ([sym], acc), [expr])
     ) bindings body
+
+  let rec exprs2list = function
+    | [] -> E_Var "nil"
+    | hd :: tail -> E_App (E_Var "pair", [hd; exprs2list tail])
+
+
 %}
 
 %%
@@ -60,12 +67,28 @@ top_exprs:
 expr:
   | atom { $1 }
   | LPAREN compound RPAREN { $2 }
+  | quote_expr { $1 }
+
+quote_atom:
+  | NUMBER { E_Lit (L_Number $1) }
+  | STRING { E_Lit (L_String $1) }
+  | BOOL { E_Lit (L_Bool $1) }
+  | IDENT { E_Lit (L_Symbol $1) }
+  | LPAREN quote_list RPAREN { exprs2list $2 }
+  | LPAREN RPAREN { E_Var "nil" }
+
+quote_list:
+  | { [] }
+  | quote_atom quote_list { $1 :: $2 }
+
+quote_expr:
+  | QUOTE quote_atom { $2 }
 
 atom:
   | BOOL { E_Lit (L_Bool $1) }
   | NUMBER { E_Lit (L_Number $1) }
   | STRING { E_Lit (L_String $1) }
-  | SYMBOL { E_Var $1 }
+  | IDENT { E_Var $1 }
 
 compound:
   | lambda_expr { $1}
@@ -84,7 +107,7 @@ begin_expr:
 
 lambda_args:
   | { [] }
-  | SYMBOL lambda_args { $1 :: $2 }
+  | IDENT lambda_args { $1 :: $2 }
 
 lambda_expr:
   | LAMBDA LPAREN lambda_args RPAREN expr { E_Lambda ($3, $5) }
@@ -97,16 +120,16 @@ exprs:
   | expr exprs { $1 :: $2 }
 
 callcc_expr:
-  | CALLCC SYMBOL expr { E_Callcc ($2, $3) }
+  | CALLCC IDENT expr { E_Callcc ($2, $3) }
 
 let_args: 
   | { [] }
-  | LBRACKET SYMBOL expr RBRACKET let_args { ($2, $3) :: $5 }
+  | LBRACKET IDENT expr RBRACKET let_args { ($2, $3) :: $5 }
 
 let_expr:
   | LET LPAREN let_args RPAREN expr { desugar_let $3 $5 }
   | LET_STAR LPAREN let_args RPAREN expr { desugar_seq_let $3 $5 }
 
 define_expr:
-  | DEFINE SYMBOL expr { E_Define ($2, $3) }
-  | DEFINE LPAREN SYMBOL lambda_args RPAREN expr { E_Define ($3, E_Lambda ($4, $6)) }
+  | DEFINE IDENT expr { E_Define ($2, $3) }
+  | DEFINE LPAREN IDENT lambda_args RPAREN expr { E_Define ($3, E_Lambda ($4, $6)) }

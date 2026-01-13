@@ -117,6 +117,7 @@ let rec string_of_cc_expr = function
   | CC_Lit (Ast.L_Bool b) -> string_of_bool b
   | CC_Lit (Ast.L_Number n) -> string_of_int n
   | CC_Lit (Ast.L_String s) -> "\"" ^ String.escaped s ^ "\""
+  | CC_Lit (Ast.L_Symbol s) -> "'" ^ s
   | CC_Var v -> v
   | CC_If (c, y, n) -> "(if " ^ string_of_cc_expr c ^ " " ^ string_of_cc_expr y ^ " " ^ string_of_cc_expr n ^ ")"
   | CC_App (fn, args) ->

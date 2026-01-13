@@ -74,6 +74,13 @@ Value* MakeBox(Value* v) {
     return ptr;
 }
 
+Value* MakeSymbol(const char* name) {
+    Value* ptr = malloc(sizeof(Value));
+    ptr->symbol.t = SYMBOL;
+    ptr->symbol.name = (char*)name;
+    return ptr;
+}
+
 static Value* __id_impl(ClosureEnv env, int argc, Value** argv) {
     if (argc != 1) runtime_error("id expects 1 argument");
     return argv[0];

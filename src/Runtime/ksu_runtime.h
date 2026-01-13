@@ -21,6 +21,7 @@ typedef enum ValueTag {
     PAIR,
     NIL,
     BOX,
+    SYMBOL,
 } ValueTag;
 
 // ============ PRIMITIVE VALUES ============
@@ -70,6 +71,12 @@ struct ValueBox {
     Value* ptr;
 };
 
+// ============ SYMBOLS ============
+struct ValueSymbol {
+    ValueTag t;
+    char* name;
+};
+
 // ============ VALUE UNION ============
 union Value {
     ValueTag t;
@@ -80,6 +87,7 @@ union Value {
     struct ValueNil nil;
     struct ValueClosure closure;
     struct ValueBox box;
+    struct ValueSymbol symbol;
 };
 
 // ============ NOW DEFINE COMPLETE STRUCTS ============

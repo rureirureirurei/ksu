@@ -21,6 +21,7 @@ rule lex = parse
   | "let*" { LET_STAR }
   | "let" { LET }
   | "begin" { BEGIN }
+  | "'" { QUOTE }
   | "if" { IF }
   | "define" { DEFINE }
   | "lambda" { LAMBDA }
@@ -30,6 +31,6 @@ rule lex = parse
       Lexing.new_line lexbuf; 
       lex lexbuf 
     }
-  | symbol_char (symbol_char | digit)* as s { SYMBOL s }
+  | symbol_char (symbol_char | digit)* as s { IDENT s }
   | whitespace+ { lex lexbuf }
   | eof { EOF }

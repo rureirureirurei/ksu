@@ -26,6 +26,7 @@ type prim =
   | P_Box
   | P_Unwrap
   | P_Peek
+  | P_StringToSymbol
   | P_Nil
 
 (* Convert builtin to its Ksu name (for pretty-printing AST) *)
@@ -56,4 +57,5 @@ let builtin_to_string = function
   | P_Unwrap -> "unwrap"
   | P_Peek -> "peek"
   | P_Nil -> "nil"
+  | P_StringToSymbol -> "string->symbol"
 
