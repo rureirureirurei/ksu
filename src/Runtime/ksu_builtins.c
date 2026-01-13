@@ -237,6 +237,10 @@ static Value* __builtin_eq(Value* a, Value* b, Value* k) {
             return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value == b->integer.value) });
         case BOOLEAN:
             return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value == b->boolean.value) });
+        case STRING:
+            return ApplyClosure(k, 1, (Value*[]){ MakeBool(strcmp(a->string.value, b->string.value)) });
+        case SYMBOL:
+            return ApplyClosure(k, 1, (Value*[]){ MakeBool(strcmp(a->symbol.name, b->symbol.name)) });
         default:
             fprintf(stderr, "eq: can only compare ints and bools; got %s and %s\n",
                     type_to_string(a->t), type_to_string(b->t));
