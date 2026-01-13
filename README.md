@@ -25,6 +25,7 @@ There is support for:
  - self-recursive functions
  - first class builtin operators 
  - pairs
+ - quoting
 
 # Running the project: 
 Clone the repo and run `./run.sh <.ksu file path>`. Script will also dump debug .ast files in the /tmp.  
