@@ -1,0 +1,2 @@
+;'a . 'b . 'c . nil
+(print '(a b c))

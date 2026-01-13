@@ -106,6 +106,7 @@ def run_tests():
             'test/lists',
             'test/closures',
             'test/state',
+            'test/quote',
             ]
     total_tests = 0
     passed_tests = 0
