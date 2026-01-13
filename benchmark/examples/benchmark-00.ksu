@@ -9,4 +9,4 @@
 )
 
 
-(print (sum 10000))
+(print (sum 10))
