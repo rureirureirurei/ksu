@@ -82,14 +82,14 @@ Value* MakeSymbol(const char* name) {
     return ptr;
 }
 
-static Value* __id_impl(ClosureEnv env, int argc, Value** argv) {
+static Thunk __id_impl(ClosureEnv env, int argc, Value** argv) {
     if (argc != 1) runtime_error("id expects 1 argument");
-    return argv[0];
+    return MakeComputedThunk(argv[0]);
 }
 
 Value* id;
 
-Value* ApplyClosure(Value* f, int argc, Value** argv) {
+Thunk ApplyClosure(Value* f, int argc, Value** argv) {
     if (f == NULL) {
         fprintf(stderr, "ApplyClosure: NULL function pointer\n");
         runtime_error("ApplyClosure called with NULL");
@@ -102,7 +102,7 @@ Value* ApplyClosure(Value* f, int argc, Value** argv) {
         fprintf(stderr, "ApplyClosure: closure has NULL lambda pointer\n");
         runtime_error("ApplyClosure: NULL lambda in closure");
     }
-    return f->closure.lam(f->closure.env, argc, argv);
+    return MakeThunk(f->closure.lam, f->closure.env, argc, argv);
 }
 
 // ============ DEEP COPY ============
@@ -133,7 +133,7 @@ Value* deep_copy(Value* v) {
 }
 
 // ============ PAIR OPERATIONS ============
-static Value* __builtin_fst(Value* v, Value* k) {
+static Thunk __builtin_fst(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "fst: NULL argument\n");
         runtime_error("fst expects a pair");
@@ -149,7 +149,7 @@ static Value* __builtin_fst(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ v->pair.first });
 }
 
-static Value* __builtin_snd(Value* v, Value* k) {
+static Thunk __builtin_snd(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "snd: NULL argument\n");
         runtime_error("snd expects a pair");
@@ -165,7 +165,7 @@ static Value* __builtin_snd(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ v->pair.second });
 }
 
-static Value* __builtin_pair(Value* l, Value* r, Value* k) {
+static Thunk __builtin_pair(Value* l, Value* r, Value* k) {
     if (l == NULL || r == NULL) {
         fprintf(stderr, "pair: NULL argument (l=%p, r=%p)\n", (void*)l, (void*)r);
         runtime_error("pair expects non-NULL arguments");
@@ -176,7 +176,7 @@ static Value* __builtin_pair(Value* l, Value* r, Value* k) {
 Value* nil;
 
 // ============ TYPE PREDICATES ============
-static Value* __builtin_is_pair(Value* v, Value* k) {
+static Thunk __builtin_is_pair(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "pair?: NULL argument\n");
         runtime_error("pair? expects a value");
@@ -184,7 +184,7 @@ static Value* __builtin_is_pair(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == PAIR) });
 }
 
-static Value* __builtin_is_nil(Value* v, Value* k) {
+static Thunk __builtin_is_nil(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "nil?: NULL argument\n");
         runtime_error("nil? expects a value");
@@ -192,7 +192,7 @@ static Value* __builtin_is_nil(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == NIL) });
 }
 
-static Value* __builtin_is_bool(Value* v, Value* k) {
+static Thunk __builtin_is_bool(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "bool?: NULL argument\n");
         runtime_error("bool? expects a value");
@@ -200,7 +200,7 @@ static Value* __builtin_is_bool(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == BOOLEAN) });
 }
 
-static Value* __builtin_is_number(Value* v, Value* k) {
+static Thunk __builtin_is_number(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "number?: NULL argument\n");
         runtime_error("number? expects a value");
@@ -208,7 +208,7 @@ static Value* __builtin_is_number(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == NUMBER) });
 }
 
-static Value* __builtin_is_list(Value* v, Value* k) {
+static Thunk __builtin_is_list(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "list?: NULL argument\n");
         runtime_error("list? expects a value");
@@ -226,7 +226,7 @@ static Value* __builtin_is_list(Value* v, Value* k) {
 }
 
 // ============ COMPARISON ============
-static Value* __builtin_eq(Value* a, Value* b, Value* k) {
+static Thunk __builtin_eq(Value* a, Value* b, Value* k) {
     if (a == NULL || b == NULL) {
         fprintf(stderr, "eq: NULL argument (a=%p, b=%p)\n", (void*)a, (void*)b);
         runtime_error("eq expects non-NULL arguments");
@@ -245,11 +245,11 @@ static Value* __builtin_eq(Value* a, Value* b, Value* k) {
             fprintf(stderr, "eq: can only compare ints and bools; got %s and %s\n",
                     type_to_string(a->t), type_to_string(b->t));
             runtime_error("eq: unsupported types");
-            return NULL;
+            return MakeComputedThunk(NULL);
     }
 }
 
-static Value* __builtin_ne(Value* a, Value* b, Value* k) {
+static Thunk __builtin_ne(Value* a, Value* b, Value* k) {
     if (a == NULL || b == NULL) {
         fprintf(stderr, "ne: NULL argument (a=%p, b=%p)\n", (void*)a, (void*)b);
         runtime_error("ne expects non-NULL arguments");
@@ -264,7 +264,7 @@ static Value* __builtin_ne(Value* a, Value* b, Value* k) {
             fprintf(stderr, "ne: can only compare ints and bools; got %s and %s\n",
                     type_to_string(a->t), type_to_string(b->t));
             runtime_error("ne: unsupported types");
-            return NULL;
+            return MakeComputedThunk(NULL);
     }
 }
 
@@ -280,22 +280,22 @@ static void ensure_int_pair(Value* a, Value* b, const char* op) {
     }
 }
 
-static Value* __builtin_add(Value* a, Value* b, Value* k) {
+static Thunk __builtin_add(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "+ expects two integers");
     return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value + b->integer.value) });
 }
 
-static Value* __builtin_sub(Value* a, Value* b, Value* k) {
+static Thunk __builtin_sub(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "- expects two integers");
     return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value - b->integer.value) });
 }
 
-static Value* __builtin_mul(Value* a, Value* b, Value* k) {
+static Thunk __builtin_mul(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "* expects two integers");
     return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value * b->integer.value) });
 }
 
-static Value* __builtin_div(Value* a, Value* b, Value* k) {
+static Thunk __builtin_div(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "/ expects two integers");
     if (b->integer.value == 0) {
         fprintf(stderr, "division by zero: %d / 0\n", a->integer.value);
@@ -304,28 +304,28 @@ static Value* __builtin_div(Value* a, Value* b, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeInt(a->integer.value / b->integer.value) });
 }
 
-static Value* __builtin_lt(Value* a, Value* b, Value* k) {
+static Thunk __builtin_lt(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "< expects two integers");
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value < b->integer.value) });
 }
 
-static Value* __builtin_gt(Value* a, Value* b, Value* k) {
+static Thunk __builtin_gt(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "> expects two integers");
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value > b->integer.value) });
 }
 
-static Value* __builtin_le(Value* a, Value* b, Value* k) {
+static Thunk __builtin_le(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, "<= expects two integers");
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value <= b->integer.value) });
 }
 
-static Value* __builtin_ge(Value* a, Value* b, Value* k) {
+static Thunk __builtin_ge(Value* a, Value* b, Value* k) {
     ensure_int_pair(a, b, ">= expects two integers");
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->integer.value >= b->integer.value) });
 }
 
 // ============ BOOLEAN OPERATIONS ============
-static Value* __builtin_and(Value* a, Value* b, Value* k) {
+static Thunk __builtin_and(Value* a, Value* b, Value* k) {
     if (a == NULL || b == NULL) {
         fprintf(stderr, "and: NULL argument (a=%p, b=%p)\n", (void*)a, (void*)b);
         runtime_error("and expects non-NULL arguments");
@@ -338,7 +338,7 @@ static Value* __builtin_and(Value* a, Value* b, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value && b->boolean.value) });
 }
 
-static Value* __builtin_or(Value* a, Value* b, Value* k) {
+static Thunk __builtin_or(Value* a, Value* b, Value* k) {
     if (a == NULL || b == NULL) {
         fprintf(stderr, "or: NULL argument (a=%p, b=%p)\n", (void*)a, (void*)b);
         runtime_error("or expects non-NULL arguments");
@@ -351,7 +351,7 @@ static Value* __builtin_or(Value* a, Value* b, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(a->boolean.value || b->boolean.value) });
 }
 
-static Value* __builtin_not(Value* a, Value* k) {
+static Thunk __builtin_not(Value* a, Value* k) {
     if (a == NULL) {
         fprintf(stderr, "not: NULL argument\n");
         runtime_error("not expects a value");
@@ -403,14 +403,14 @@ static void print_value(Value* v) {
     }
 }
 
-static Value* __builtin_print(Value* a, Value* k) {
+static Thunk __builtin_print(Value* a, Value* k) {
     print_value(a);
     printf("\n");
     return ApplyClosure(k, 1, (Value*[]){ MakeNil() });
 }
 
 // ============ BOX OPERATIONS ============
-static Value* __builtin_box(Value* v, Value* k) {
+static Thunk __builtin_box(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "box: NULL argument\n");
         runtime_error("box expects a value");
@@ -418,7 +418,7 @@ static Value* __builtin_box(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeBox(v) });
 }
 
-static Value* __builtin_set(Value* box, Value* value, Value* k) {
+static Thunk __builtin_set(Value* box, Value* value, Value* k) {
     if (box == NULL || value == NULL) {
         fprintf(stderr, "set!: NULL argument (box=%p, value=%p)\n", (void*)box, (void*)value);
         runtime_error("set! expects non-NULL arguments");
@@ -431,7 +431,7 @@ static Value* __builtin_set(Value* box, Value* value, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeNil() });
 }
 
-static Value* __builtin_unwrap(Value* box, Value* k) {
+static Thunk __builtin_unwrap(Value* box, Value* k) {
     if (box == NULL) {
         fprintf(stderr, "unwrap: NULL argument\n");
         runtime_error("unwrap expects a box");
@@ -447,7 +447,7 @@ static Value* __builtin_unwrap(Value* box, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ deep_copy(box->box.ptr) });
 }
 
-static Value* __builtin_peek(Value* box, Value* k) {
+static Thunk __builtin_peek(Value* box, Value* k) {
     if (box == NULL) {
         fprintf(stderr, "peek: NULL argument\n");
         runtime_error("peek expects a box");
@@ -463,7 +463,7 @@ static Value* __builtin_peek(Value* box, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ box->box.ptr });
 }
 
-static Value* __builtin_string_to_symbol(Value* v, Value* k) {
+static Thunk __builtin_string_to_symbol(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "string->symbol: NULL argument\n");
         runtime_error("string->symbol expects a string");
@@ -475,7 +475,7 @@ static Value* __builtin_string_to_symbol(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeSymbol(v->string.value) });
 }
 
-static Value* __builtin_is_symbol(Value* v, Value* k) {
+static Thunk __builtin_is_symbol(Value* v, Value* k) {
     if (v == NULL) {
         fprintf(stderr, "symbol?: NULL argument\n");
         runtime_error("symbol? expects a value");
@@ -483,7 +483,7 @@ static Value* __builtin_is_symbol(Value* v, Value* k) {
     return ApplyClosure(k, 1, (Value*[]){ MakeBool(v->t == SYMBOL) });
 }
 
-static Value* __builtin_raise(Value* v, Value* k) {
+static Thunk __builtin_raise(Value* v, Value* k) {
     (void)k;
     fprintf(stderr, "Error: ");
     if (v == NULL) {
@@ -496,5 +496,5 @@ static Value* __builtin_raise(Value* v, Value* k) {
         fprintf(stderr, "<value of type %s>\n", type_to_string(v->t));
     }
     exit(1);
-    return NULL;
+    return MakeComputedThunk(NULL);
 }

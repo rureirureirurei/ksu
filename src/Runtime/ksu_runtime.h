@@ -10,6 +10,8 @@
 union Value;
 typedef union Value Value;
 struct ListItem;
+struct Thunk;
+typedef struct Thunk Thunk;
 struct EnvEntry;
 
 // ============ VALUE TAGS ============
@@ -42,7 +44,7 @@ struct ValueBool {
 
 // ============ CLOSURES ============
 typedef struct EnvEntry* ClosureEnv;
-typedef Value* (*Lambda_t)(ClosureEnv, int, Value**);
+typedef Thunk (*Lambda_t)(ClosureEnv, int, Value**);
 
 struct ValueClosure {
     ValueTag t;
@@ -102,5 +104,24 @@ void runtime_error(const char* msg);
 ClosureEnv MakeEnv(int count, ...);
 Value* EnvRef(ClosureEnv env, const char* id);
 bool is_true(Value* v);
+
+// ============ TRAMPOLINE ============
+
+struct Thunk {
+    Lambda_t func;      // NULL means computed
+    ClosureEnv env;     // closure environment
+    int argc;           // argument count
+    Value** argv;       // arguments for the call
+    Value* result;      // final result (only valid when func == NULL)
+};
+
+Value* Trampoline(Thunk t);
+Thunk MakeComputedThunk(Value* v);
+Thunk MakeThunk(
+        Lambda_t f, 
+        ClosureEnv env,
+        int argc,
+        Value** argv
+    );
 
 #endif // KSU_RUNTIME_H

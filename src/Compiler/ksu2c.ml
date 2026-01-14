@@ -117,7 +117,7 @@ let ksu2c: cc_top_expr list -> string =
         | _ -> []
       in
       let func =
-        "Value* " ^ name ^ "(" ^ c_args ^ ") {\n" ^
+        "Thunk " ^ name ^ "(" ^ c_args ^ ") {\n" ^
         String.concat "\n" arg_bindings ^
         (if arg_bindings <> [] then "\n" else "") ^
         "  return " ^ t_expr body ^ ";\n}"
@@ -129,14 +129,18 @@ let ksu2c: cc_top_expr list -> string =
       (* For closures, add self-reference patching *)
       (match expr with
       | CC_App (CC_Var "id", [ CC_MakeClosure _ ]) -> 
-          main_body := !main_body @ [name ^ " = " ^ t_expr expr ^ ";"];
+          main_body := !main_body @ [name ^ " = Trampoline(" ^ t_expr expr ^ ");"];
           main_body := !main_body @ [name ^ "->closure.env[0].val = " ^ name ^ ";"];
           main_body := !main_body @ [name ^ "->closure.env[0].name = \"" ^ name ^ "\";"]
+      | CC_App _ ->
+          main_body := !main_body @ [name ^ " = Trampoline(" ^ t_expr expr ^ ");"]
       | _ ->
           main_body := !main_body @ [name ^ " = " ^ t_expr expr ^ ";"])
 
   | CC_Expr e ->
-      main_body := !main_body @ [t_expr e ^ ";"]
+      match e with 
+      | CC_App _ -> main_body := !main_body @ ["Trampoline(" ^ t_expr e ^ ");"]
+      | _ -> main_body := !main_body @ [t_expr e ^ ";"]
   in
 
   fun exprs ->
