@@ -1,31 +1,31 @@
-;#t
-
-(define find
-  (lambda (needle lst)
-    (if (= lst #f)
-        #f
-        (if (= (fst lst) needle)
-            #t
-            (find needle (snd lst))
-        )
-    )
-  )
-)
-
-(define buildlist
-  (lambda (n acc)
-    (if (= n 0)
-        acc
-        (buildlist (- n 1) (pair n acc))
-    )
-  )
-)
-
-(define upto
-  (lambda (n)
-    (buildlist n #f)
-  )
-)
-
-(define biglist (upto 10))
-(print (find 10 biglist))
+;#t                                                                                                  
+(define find                                                                                                         
+  (lambda (needle lst)                                                                                               
+    (if (nil? lst)                                                                                                   
+        #f                                                                                                        
+        (if (= (fst lst) needle)                                                                                     
+            #t                                                                                                     
+            (find needle (snd lst))                                                                                  
+        )                                                                                                            
+    )                                                                                                                
+  )                                                                                                                  
+)                                                                                                                    
+                                                                                                                      
+(define buildlist                                                                                                    
+  (lambda (n acc)                                                                                                    
+    (if (= n 0)                                                                                                      
+        acc                                                                                                          
+        (buildlist (- n 1) (pair n acc))                                                                             
+    )                                                                                                                
+  )                                                                                                                  
+)                                                                                                                    
+                                                                                                                      
+(define upto                                                                                                         
+  (lambda (n)                                                                                                        
+    (buildlist n nil)                                                                                                
+  )                                                                                                                  
+)                                                                                                                    
+                                                                                                                      
+(define n 100000)                                                                                                       
+(define biglist (upto n))                                                                                            
+(print (find n biglist))

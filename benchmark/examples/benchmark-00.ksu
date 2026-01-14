@@ -1,4 +1,4 @@
-;50005000
+;500000500000
 (define sum 
   (lambda (n)
     (if (= n 0)
@@ -9,4 +9,4 @@
 )
 
 
-(print (sum 10))
+(print (sum 1000000))
