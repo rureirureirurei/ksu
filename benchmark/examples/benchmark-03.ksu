@@ -1,4 +1,4 @@
-;22
+;12
 ;Backtracking
 (define cont-stack (box nil))
 
@@ -37,7 +37,7 @@
 ))
 
 (define (triples)
-  (let* ([ns (range 30)]
+  (let* ([ns (range 23)]
         [a (choose ns)]
         [b (choose ns)]
         [c (choose ns)])

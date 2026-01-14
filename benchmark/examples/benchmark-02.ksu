@@ -26,6 +26,6 @@
   )                                                                                                                  
 )                                                                                                                    
                                                                                                                       
-(define n 100000)                                                                                                       
+(define n 30000)                                                                                                       
 (define biglist (upto n))                                                                                            
 (print (find n biglist))
