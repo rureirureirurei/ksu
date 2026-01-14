@@ -27,5 +27,10 @@ There is support for:
  - pairs
  - quoting
 
+Compiler implements
+ - lexing / parsing
+ - cps translation (trivial syntactic based approach currently)
+ - trampolining (so that cps does not cause stack overflow)
+
 # Running the project: 
 Clone the repo and run `./run.sh <.ksu file path>`. Script will also dump debug .ast files in the /tmp.  
