@@ -32,5 +32,14 @@ Compiler implements
  - cps translation (trivial syntactic based approach currently)
  - trampolining (so that cps does not cause stack overflow)
 
-# Running the project: 
+# Installation: 
+(todo provide details on dune / utop / ocaml installation) 
 Clone the repo and run `./run.sh <.ksu file path>`. Script will also dump debug .ast files in the /tmp.  
+
+# Testing 
+`./test/run_test.py`
+
+# Benchmarking 
+Procudicing optimal target code was never goal of this project. Nevertheless there is simple benchmarking facility:
+`./benchmark/run_benchmarks.py`
+
