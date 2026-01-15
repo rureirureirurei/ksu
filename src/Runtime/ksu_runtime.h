@@ -116,7 +116,7 @@ struct Thunk {
 };
 
 Value* Trampoline(Thunk t);
-Thunk MakeComputedThunk(Value* v);
+Thunk DoneThunk(Value* v);
 Thunk MakeThunk(
         Lambda_t f, 
         ClosureEnv env,

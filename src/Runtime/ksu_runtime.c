@@ -76,7 +76,7 @@ Value* Trampoline(Thunk t) {
     return t.result;
 }
 
-Thunk MakeComputedThunk(Value* v) {
+Thunk DoneThunk(Value* v) {
     Thunk t;
     t.func = NULL;
     t.env = NULL;

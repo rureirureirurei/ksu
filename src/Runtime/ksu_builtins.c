@@ -84,7 +84,7 @@ Value* MakeSymbol(const char* name) {
 
 static Thunk __id_impl(ClosureEnv env, int argc, Value** argv) {
     if (argc != 1) runtime_error("id expects 1 argument");
-    return MakeComputedThunk(argv[0]);
+    return DoneThunk(argv[0]);
 }
 
 Value* id;
@@ -245,7 +245,7 @@ static Thunk __builtin_eq(Value* a, Value* b, Value* k) {
             fprintf(stderr, "eq: can only compare ints and bools; got %s and %s\n",
                     type_to_string(a->t), type_to_string(b->t));
             runtime_error("eq: unsupported types");
-            return MakeComputedThunk(NULL);
+            return DoneThunk(NULL);
     }
 }
 
@@ -264,7 +264,7 @@ static Thunk __builtin_ne(Value* a, Value* b, Value* k) {
             fprintf(stderr, "ne: can only compare ints and bools; got %s and %s\n",
                     type_to_string(a->t), type_to_string(b->t));
             runtime_error("ne: unsupported types");
-            return MakeComputedThunk(NULL);
+            return DoneThunk(NULL);
     }
 }
 
@@ -496,5 +496,5 @@ static Thunk __builtin_raise(Value* v, Value* k) {
         fprintf(stderr, "<value of type %s>\n", type_to_string(v->t));
     }
     exit(1);
-    return MakeComputedThunk(NULL);
+    return DoneThunk(NULL);
 }
