@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """
-KSU Test Runner
-
-This script runs all .ksu test files in test/callcc, test/generic, and test/lists directories
-and compares the output with the expected result from the first line comment.
+KSU Test Runner - Parallel execution via ThreadPoolExecutor
 """
 
 import os
@@ -12,85 +9,67 @@ import sys
 import re
 import random
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def extract_expected_result(file_path):
-    """Extract expected result from the first line comment."""
     with open(file_path, 'r') as f:
         first_line = f.readline().strip()
-
-    # Look for comment starting with ; followed by expected result
     match = re.match(r'^;(.+)$', first_line)
     if match:
         expected = match.group(1).strip()
-        # Convert \n escape sequences to actual newlines
-        expected = expected.replace('\\n', '\n')
-        return expected
-    else:
-        raise ValueError(f"No expected result found in first line: {first_line}")
+        return expected.replace('\\n', '\n')
+    raise ValueError(f"No expected result found in first line: {first_line}")
 
 def red(s):
     return "\033[31m" + s + "\033[0m"
 
+def green(s):
+    return "\033[32m" + s + "\033[0m"
+
 PASSED_MESSAGES = [
-    "Tests passed! But this is only beginning of your journey! Now meditate for 1000 hours in the mountains!",
-    "Honorable success! However, true warrior does not celebrate! Immediately begin training for next challenge or face eternal shame!",
-    "Tests pass with acceptable precision! Do not become arrogant! Your ancestors demand you refactor entire codebase by sunrise!",
-    "Most satisfactory! But warrior who rests after one victory dies in second battle! Write ten thousand more tests before you sleep!",
-    "Glorious achievement! Now you must maintain this honor forever without single failure, or commit seppuku!"
+    "Tests passed! But this is only beginning of your journey!",
+    "Honorable success! However, true warrior does not celebrate!",
+    "Most satisfactory! But warrior who rests after one victory dies in second battle!",
 ]
 
 FAILED_MESSAGES = [
     "Pathetic disgrace! Exile yourself to mountains immediately!",
     "Disgraceful! Your keyboard must be melted down for this dishonor!",
     "Unforgivable! Ancestors demand you delete all code and start life as rice farmer!",
-    "Catastrophic shame! Your family name must be erased from records!",
-    "Despicable failure! Never touch computer again!",
-    "Insufferable disgrace! Ancestors curse your bloodline! Burn your hard drive immediately!",
 ]
 
+PROJECT_ROOT = Path(__file__).parent.parent
+KSU_BIN = PROJECT_ROOT / '_build' / 'default' / 'src' / 'ksu.exe'
+
 def run_ksu_file(file_path):
-    """Compile a KSU file to C, build it with gcc, run it, and return stdout."""
+    """Compile and run a single .ksu file, return stdout or error string."""
     try:
-        # 1) Generate C from ksu
         gen = subprocess.run(
-            ['dune', 'exec', 'ksu', '--', str(file_path)],
-            capture_output=True,
-            text=True,
-            cwd=Path(__file__).parent.parent
+            [str(KSU_BIN), str(file_path)],
+            capture_output=True, text=True, cwd=PROJECT_ROOT
         )
         if gen.returncode != 0:
             return f"ERROR: {gen.stderr.strip()}"
 
-        c_code = gen.stdout
-
-        # 2) Compile and run in an isolated temp dir
         import tempfile
         with tempfile.TemporaryDirectory() as td:
             c_path = Path(td) / 'test.c'
             exe_path = Path(td) / 'a.out'
-            c_path.write_text(c_code)
+            c_path.write_text(gen.stdout)
 
-            # Get project root directory
-            project_root = Path(__file__).parent.parent
-            runtime_c = project_root / 'src' / 'Runtime' / 'ksu_runtime.c'
-            runtime_include = project_root / 'src' / 'Runtime'
+            runtime_c = PROJECT_ROOT / 'src' / 'Runtime' / 'ksu_runtime.c'
+            runtime_include = PROJECT_ROOT / 'src' / 'Runtime'
 
             comp = subprocess.run(
                 ['gcc', str(c_path), str(runtime_c), '-I', str(runtime_include), '-o', str(exe_path)],
-                capture_output=True,
-                text=True,
+                capture_output=True, text=True,
             )
             if comp.returncode != 0:
                 return f"ERROR: C compile failed: {comp.stderr.strip()}"
 
-            run = subprocess.run(
-                [str(exe_path)],
-                capture_output=True,
-                text=True,
-            )
+            run = subprocess.run([str(exe_path)], capture_output=True, text=True)
             if run.returncode != 0:
                 return f"ERROR: Program exited with {run.returncode}: {run.stderr.strip()}"
-
             return run.stdout.strip()
 
     except subprocess.CalledProcessError as e:
@@ -98,58 +77,78 @@ def run_ksu_file(file_path):
     except FileNotFoundError as e:
         return f"ERROR: command not found: {e}"
 
-def run_tests():
-    """Run all tests and report results."""
-    test_dirs = [
-            'test/callcc',
-            'test/generic',
-            'test/lists',
-            'test/closures',
-            'test/state',
-            'test/quote',
-            ]
-    total_tests = 0
-    passed_tests = 0
-    failed_tests = []
+def run_single_test(file_path):
+    """Run one test, return (file_path, passed, error_msg)."""
+    try:
+        expected = extract_expected_result(file_path)
+        actual = run_ksu_file(file_path)
+        if actual == expected:
+            return (file_path, True, None)
+        return (file_path, False, f"expected: {expected!r}, got: {actual!r}")
+    except Exception as e:
+        return (file_path, False, str(e))
 
+def run_tests():
+    # Build ksu first
+    print("Building ksu...")
+    build = subprocess.run(['dune', 'build'], cwd=PROJECT_ROOT, capture_output=True, text=True)
+    if build.returncode != 0:
+        print(red(f"Build failed: {build.stderr}"))
+        return 1
+
+    test_dirs = [
+        'test/callcc', 'test/generic', 'test/lists',
+        'test/closures', 'test/state', 'test/quote', 'test/errors',
+    ]
+
+    # Collect all test files
+    all_tests = []
     for test_dir in test_dirs:
         if not os.path.exists(test_dir):
-            print(f"Warning: Test directory {test_dir} not found")
+            print(f"Warning: {test_dir} not found")
             continue
+        for fp in Path(test_dir).glob("*.ksu"):
+            if fp.stat().st_size > 0:
+                all_tests.append(fp)
 
+    # Run in parallel
+    results = {}
+    workers = min(8, os.cpu_count() or 4)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(run_single_test, fp): fp for fp in all_tests}
+        for future in as_completed(futures):
+            fp, passed, err = future.result()
+            results[fp] = (passed, err)
+
+    # Print grouped by directory
+    passed_tests = 0
+    failed_tests = []
+    for test_dir in test_dirs:
+        dir_tests = [fp for fp in all_tests if str(fp).startswith(test_dir)]
+        if not dir_tests:
+            continue
         print(f"\nTesting {test_dir}:")
         print("-" * 30)
+        for fp in sorted(dir_tests):
+            passed, err = results[fp]
+            if passed:
+                print(f"  PASS {fp.name}")
+                passed_tests += 1
+            else:
+                print(red(f"  FAIL {fp.name}"))
+                failed_tests.append((fp.name, err))
 
-        for file_path in Path(test_dir).glob("*.ksu"):
-            if file_path.stat().st_size == 0:
-                print(f"  SKIP {file_path.name} (empty file)")
-                continue
+    total = len(all_tests)
+    color = green if passed_tests == total else red
+    print(f"\n{color(f'Test Results: {passed_tests}/{total} passed')}")
 
-            total_tests += 1
-
-            try:
-                expected = extract_expected_result(file_path)
-                actual = run_ksu_file(file_path)
-
-                if actual == expected:
-                    print(f"  PASS {file_path.name}")
-                    passed_tests += 1
-                else:
-                    print(red(f"  FAIL {file_path.name}"))
-                    failed_tests.append(file_path.name)
-            except Exception as e:
-                print(f"  ERROR {file_path.name}: {e}")
-                failed_tests.append(file_path.name)
-
-    color = '\033[32m' if passed_tests == total_tests else '\033[31m'
-    print(f"\n{color}Test Results: {passed_tests}/{total_tests} passed\033[0m")
-
-    if passed_tests != total_tests:
+    if failed_tests:
         print(red(random.choice(FAILED_MESSAGES)))
+        for name, err in failed_tests:
+            print(f"  {name}: {err}")
         return 1
-    else:
-        print(random.choice(PASSED_MESSAGES))
-        return 0
+    print(random.choice(PASSED_MESSAGES))
+    return 0
 
 if __name__ == "__main__":
     sys.exit(run_tests())
