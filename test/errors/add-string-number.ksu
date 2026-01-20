@@ -1,0 +1,2 @@
+; ERROR: Program exited with 1: + expects two integers; got STRING and NUMBER\nRuntime error: + expects two integers
+(print (+ "hello" 42))

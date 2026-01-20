@@ -1,0 +1,3 @@
+; ERROR: Parsing error at line 3, column 8, file test/errors/parse-malformed-define.ksu
+
+(define)

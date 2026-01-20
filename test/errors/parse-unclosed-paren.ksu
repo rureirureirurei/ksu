@@ -1,0 +1,2 @@
+; ERROR: Parsing error at line 3, column 0, file test/errors/parse-unclosed-paren.ksu
+(lambda (x) x

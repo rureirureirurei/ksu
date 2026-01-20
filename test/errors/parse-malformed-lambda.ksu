@@ -1,0 +1,2 @@
+; ERROR: Parsing error at line 2, column 8, file test/errors/parse-malformed-lambda.ksu
+(lambda)

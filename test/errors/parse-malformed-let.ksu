@@ -1,0 +1,2 @@
+; ERROR: Parsing error at line 2, column 5, file test/errors/parse-malformed-let.ksu
+(let)

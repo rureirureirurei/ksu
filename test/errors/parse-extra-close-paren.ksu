@@ -1,0 +1,2 @@
+; ERROR: Parsing error at line 2, column 1, file test/errors/parse-extra-close-paren.ksu
+)
