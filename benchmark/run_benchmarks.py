@@ -55,7 +55,7 @@ def benchmark_file(file_path: Path):
             'run_time_s': None,
             'c_size_bytes': None,
             'exe_size_bytes': None,
-            'stdout': '',
+            'resindent_set_kb': None,
             'stderr': gen_proc.stderr.strip(),
         }
     c_code = gen_proc.stdout
@@ -79,14 +79,18 @@ def benchmark_file(file_path: Path):
                 'run_time_s': None,
                 'c_size_bytes': c_size,
                 'exe_size_bytes': None,
-                'stdout': '',
+                'resindent_set_kb': None,
                 'stderr': comp_proc.stderr.strip(),
             }
 
         exe_size = exe_path.stat().st_size
 
-        run_proc, run_time = run_command([str(exe_path)])
+        run_proc, run_time = run_command(['/usr/bin/time', '-f', '%M', str(exe_path)])
         status = 'OK' if run_proc.returncode == 0 else f'RUN_ERROR({run_proc.returncode})'
+
+        # /usr/bin/time outputs to stderr
+        rss_kb = int(run_proc.stderr.strip()) if run_proc.stderr.strip().isdigit() else 0
+
         return {
             'name': file_path.name,
             'status': status,
@@ -95,7 +99,7 @@ def benchmark_file(file_path: Path):
             'run_time_s': run_time,
             'c_size_bytes': c_size,
             'exe_size_bytes': exe_size,
-            'stdout': run_proc.stdout.strip(),
+            'resindent_set_kb': rss_kb,
             'stderr': run_proc.stderr.strip(),
         }
 
@@ -111,7 +115,7 @@ def main():
     print(f"Benchmarking {len(files)} file(s) in {EXAMPLES_DIR}")
     print(f"Date: {timestamp} | Commit: {commit_id}")
     print("-" * 102)
-    print(f"{'file':20} {'gen(s)':>10} {'compile(s)':>10} {'run(s)':>10} {'.c size':>12} {'binary':>12} {'status':>12}")
+    print(f"{'file':20} {'gen(s)':>10} {'compile(s)':>10} {'run(s)':>10} {'rss kb':>10} {'.c size':>12} {'binary':>12} {'status':>12}")
     print("-" * 102)
 
     exit_code = 0
@@ -122,11 +126,12 @@ def main():
         gt = f"{res['gen_time_s']:.4f}" if res['gen_time_s'] is not None else '-'
         ct = f"{res['compile_time_s']:.4f}" if res['compile_time_s'] is not None else '-'
         rt = f"{res['run_time_s']:.4f}" if res['run_time_s'] is not None else '-'
+        rs = f"{res['resindent_set_kb']}" if res['resindent_set_kb'] is not None else '-'
         cs = f"{res['c_size_bytes']}" if res['c_size_bytes'] is not None else '-'
         es = f"{res['exe_size_bytes']}" if res['exe_size_bytes'] is not None else '-'
-        print(f"{res['name']:20} {gt:>10} {ct:>10} {rt:>10} {cs:>12} {es:>12} {res['status']:>12}")
+        print(f"{res['name']:20} {gt:>10} {ct:>10} {rt:>10} {rs:>10} {cs:>12} {es:>12} {res['status']:>12}")
 
-    print("-" * 102)
+    print("-" * 112)
     return exit_code
 
 
