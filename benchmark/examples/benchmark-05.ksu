@@ -1,0 +1,46 @@
+;#t
+; Merge sort benchmark
+
+(define (merge xs ys)
+  (if (nil? xs) ys
+      (if (nil? ys) xs
+          (if (< (fst xs) (fst ys))
+              (pair (fst xs) (merge (snd xs) ys))
+              (pair (fst ys) (merge xs (snd ys)))))))
+
+(define (split-at lst n acc)
+  (if (= n 0)
+      (pair acc lst)
+      (split-at (snd lst) (- n 1) (pair (fst lst) acc))))
+
+(define (length lst)
+  (if (nil? lst) 0 (+ 1 (length (snd lst)))))
+
+(define (mergesort lst)
+  (let ([len (length lst)])
+    (if (< len 2)
+        lst
+        (let* ([half (/ len 2)]
+               [parts (split-at lst half nil)]
+               [left (fst parts)]
+               [right (snd parts)])
+          (merge (mergesort left) (mergesort right))))))
+
+; Generate descending list from n to 1
+(define (descending n acc)
+  (if (= n 0)
+      acc
+      (descending (- n 1) (pair n acc))))
+
+; Check if list is sorted
+(define (sorted? lst)
+  (if (nil? lst) #t
+      (if (nil? (snd lst)) #t
+          (if (<= (fst lst) (fst (snd lst)))
+              (sorted? (snd lst))
+              #f))))
+
+(define N 10000)
+(define lst (descending N nil))
+(define sorted-lst (mergesort lst))
+(print (sorted? sorted-lst))

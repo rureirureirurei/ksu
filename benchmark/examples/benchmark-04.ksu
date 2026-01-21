@@ -1,0 +1,62 @@
+;200000
+; Coroutine ping-pong using scheduler queue
+
+(define queue (box nil))
+(define scheduler-k (box nil))
+(define counter (box 0))
+(define N 100000)
+
+; Queue operations
+(define (push-queue k)
+  (set! queue (pair k (unwrap queue))))
+
+(define (pop-queue)
+  (if (nil? (unwrap queue))
+      nil
+      (let ([result (fst (unwrap queue))])
+        (begin
+          (set! queue (snd (unwrap queue)))
+          result))))
+
+(define (yield)
+  (call/cc k
+    (begin
+      (push-queue k)
+      ((unwrap scheduler-k) nil))))
+
+(define (quit)
+  ((unwrap scheduler-k) nil))
+
+(define (scheduler)
+  (begin
+    (call/cc k
+      (set! scheduler-k k))
+    (let ([next (pop-queue)])
+      (if (nil? next)
+          nil
+          (next nil)))))
+
+(define (ping n)
+  (if (= n 0)
+      (quit)
+      (begin
+        (set! counter (+ 1 (unwrap counter)))
+        (yield)
+        (ping (- n 1)))))
+
+(define (pong n)
+  (if (= n 0)
+      (quit)
+      (begin
+        (set! counter (+ 1 (unwrap counter)))
+        (yield)
+        (pong (- n 1)))))
+
+; Spawn both coroutines
+(push-queue (lambda (x) (ping N)))
+(push-queue (lambda (x) (pong N)))
+
+; Run scheduler
+(scheduler)
+
+(print (unwrap counter))

@@ -1,0 +1,56 @@
+;92
+; N-Queens: count all solutions for N=8
+
+(define cont-stack (box nil))
+(define solution-count (box 0))
+
+(define (choose options)
+  (call/cc k
+    (begin
+      (set! cont-stack (pair (pair k (snd options)) (unwrap cont-stack)))
+      (fst options))))
+
+(define (fail)
+  (if (nil? (unwrap cont-stack))
+      (print (unwrap solution-count))
+      (let* ([top (fst (unwrap cont-stack))]
+             [k (fst top)]
+             [options (snd top)])
+        (begin
+          (set! cont-stack (snd (unwrap cont-stack)))
+          (if (nil? options)
+              (fail)
+              (begin
+                (set! cont-stack (pair (pair k (snd options)) (unwrap cont-stack)))
+                (k (fst options))))))))
+
+(define (range-helper n acc)
+  (if (= n 0) acc (range-helper (- n 1) (pair n acc))))
+
+(define (range n) (range-helper n nil))
+
+(define (myabs x) (if (< x 0) (- 0 x) x))
+
+; Check if queen at (row, col) attacks any queen in placed list
+(define (attacks? row col placed)
+  (if (nil? placed)
+      #f
+      (let* ([p (fst placed)]
+             [r (fst p)]
+             [c (snd p)])
+        (if (= c col) #t
+            (if (= (myabs (- r row)) (myabs (- c col))) #t
+                (attacks? row col (snd placed)))))))
+
+(define (solve n row placed)
+  (if (> row n)
+      (begin
+        (set! solution-count (+ 1 (unwrap solution-count)))
+        (fail))
+      (let ([col (choose (range n))])
+        (if (attacks? row col placed)
+            (fail)
+            (solve n (+ row 1) (pair (pair row col) placed))))))
+
+(define N 8)
+(solve N 1 nil)
