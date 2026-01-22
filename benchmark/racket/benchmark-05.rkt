@@ -44,7 +44,7 @@
      (sorted? (cdr lst))]
     [else #f]))
 
-(define N 10000)
+(define N 100000)
 (define lst (descending N '()))
 (define sorted-lst (mergesort lst))
 (displayln (sorted? sorted-lst))

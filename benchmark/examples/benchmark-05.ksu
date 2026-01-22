@@ -40,7 +40,7 @@
               (sorted? (snd lst))
               #f))))
 
-(define N 10000)
+(define N 100000)
 (define lst (descending N nil))
 (define sorted-lst (mergesort lst))
 (print (sorted? sorted-lst))
