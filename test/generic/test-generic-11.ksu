@@ -1,0 +1,6 @@
+;0\n4\n
+(define tmp +)
+(define + -)
+(define - tmp)
+(print (+ 2 2))
+(print (- 2 2))
