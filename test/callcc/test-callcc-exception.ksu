@@ -1,0 +1,13 @@
+;"1"\n"2"\n"Caught exception"\n"error :("                                                                                             
+(define (exception body catch)                                                                                       
+    (catch (call/cc k (body k))))                                                                                    
+                                                                                                                    
+(define (body throw) (begin                                                                                          
+    (print "1")                                                                                                      
+    (print "2")                                                                                                      
+    (throw "error :(")                                                                                               
+    (print "4")                                                                                                      
+    10                                                                                                               
+))                                                                                                                   
+                                                                                                                    
+(exception body (lambda (msg) (begin (print "Caught exception") (print msg))))  

@@ -1,0 +1,14 @@
+;120
+(define (fact n) (begin
+    (let* (
+        [k (box #f)]
+        [n (box n)]
+        [res (call/cc cont (begin (set! k cont) 1))])
+    (if (= (! n) 0) res
+        (begin
+            (set! n (- (! n) 1))
+            ((unwrap k) (* res (+ (! n) 1)))
+        )))
+))
+
+(print (fact 5))

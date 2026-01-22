@@ -1,0 +1,16 @@
+;0\n1\n2\n3\n4\n5\n6\n7\n8\n9
+(define (while cond body)                                                                                            
+    (let* ([k (call/cc k' k')]                                                                                        
+        [res (if (cond)                                                                                            
+                (begin                                                                                             
+                    (body)                                                                                         
+                    (k k))                                                                                   
+                nil)])                                                                                             
+        nil))  
+
+(define n (box 0))                                                                                                   
+(while                                                                                                               
+    (lambda () (< (! n) 10))                                                                                         
+    (lambda () (begin                                                                                                
+        (print (! n))                                                                                                
+        (set! n (+ 1 (! n))))))   
