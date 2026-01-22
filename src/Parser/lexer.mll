@@ -5,7 +5,7 @@
 
 let digit = ['0' - '9']
 let letter = ['a' - 'z' 'A' - 'Z']
-let symbol_char = letter | ['+' '-' '*' '/' '<' '>' '=' '!' '?']
+let symbol_char = letter | ['+' '-' '*' '/' '<' '>' '=' '!' '?' '#' '$']
 let whitespace = [' ' '\t']
 let newline = ['\n' '\r']
 
@@ -33,6 +33,6 @@ rule lex = parse
       Lexing.new_line lexbuf; 
       lex lexbuf 
     }
-  | symbol_char (symbol_char | digit)* as s { IDENT s }
+  | symbol_char (symbol_char | digit | '\'')* as s { IDENT s }
   | whitespace+ { lex lexbuf }
   | eof { EOF }

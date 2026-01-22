@@ -26,6 +26,9 @@ let sanitize_var_name (name: string) : string =
     | '&' -> "_amp_"
     | '|' -> "_pipe_"
     | '^' -> "_caret_"
+    | '\'' -> "_quote_"
+    | '$' -> "_dollar_"
+    | '#' -> "_hash_"
     | '~' -> "_tilde_"
     | c -> String.make 1 c
   in
