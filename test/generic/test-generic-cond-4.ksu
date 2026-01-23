@@ -1,0 +1,9 @@
+;'deep
+(define a 2)
+(define b 3)
+(define c 4)
+(print (cond
+  [(eq? (+ a b) c) 'no]
+  [(eq? (+ a b) (+ c 1)) 'deep]
+  [(symbol? (+ a b)) 'impossible]
+  [else 'default]))

@@ -1,0 +1,7 @@
+;'nested
+(define f (lambda (x) (+ x 1)))
+(define val 9)
+(print (cond
+  [(number? (f val)) 'nested]
+  [(symbol? val) 'wrong]
+  [else 'fallback]))

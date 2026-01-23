@@ -1,0 +1,7 @@
+;42
+(define x 10)
+(define y 5)
+(print (cond
+  [(eq? (+ x y) 10) 100]
+  [(eq? (+ x y) 15) 42]
+  [else 0]))

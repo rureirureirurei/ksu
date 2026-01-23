@@ -1,0 +1,6 @@
+;2
+(define x 'sym)
+(print (cond 
+  [(number? x) (lambda () (print "lol"))]
+  [(symbol? x) 2]
+  [else 33]))
