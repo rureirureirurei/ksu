@@ -6,6 +6,7 @@
 %token LBRACKET RBRACKET
 %token DEFINE
 %token IF LAMBDA CALLCC
+%token COND ELSE
 %token LET LET_STAR
 %token QUOTE BACKQUOTE COMMA
 %token BEGIN
@@ -132,6 +133,14 @@ compound:
       | f :: args -> E_App (f, args)
       | [] -> failwith "Empty application"
     }
+  | cond_expr { $1 }
+
+cond_expr:
+  | COND cond_clauses { $2 }
+
+cond_clauses: 
+  | LBRACKET ELSE expr RBRACKET { $3 }
+  | LBRACKET expr expr RBRACKET cond_clauses { E_If ($2, $3, $5)}
   
 begin_expr:
   | BEGIN exprs { desugar_begin $2 }

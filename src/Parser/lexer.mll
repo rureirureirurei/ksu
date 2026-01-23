@@ -27,6 +27,8 @@ rule lex = parse
   | "if" { IF }
   | "define" { DEFINE }
   | "lambda" { LAMBDA }
+  | "cond" { COND }
+  | "else" { ELSE }
   | "call/cc" { CALLCC }
   | ';' [^ '\n' '\r']* { lex lexbuf }
   | newline { 
