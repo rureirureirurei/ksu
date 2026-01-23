@@ -1,7 +1,7 @@
 ;0\n1\n2\n3\n4\n5\n6\n7\n8\n9
-(define (while cond body)                                                                                            
+(define (while c body)                                                                                            
     (let* ([k (call/cc k' k')]                                                                                        
-        [res (if (cond)                                                                                            
+        [res (if (c)                                                                                            
                 (begin                                                                                             
                     (body)                                                                                         
                     (k k))                                                                                   

@@ -138,9 +138,9 @@ compound:
 cond_expr:
   | COND cond_clauses { $2 }
 
-cond_clauses: 
-  | LBRACKET ELSE expr RBRACKET { $3 }
-  | LBRACKET expr expr RBRACKET cond_clauses { E_If ($2, $3, $5)}
+cond_clauses:
+  | LBRACKET ELSE exprs RBRACKET { desugar_begin $3 }
+  | LBRACKET expr exprs RBRACKET cond_clauses { E_If ($2, desugar_begin $3, $5)}
   
 begin_expr:
   | BEGIN exprs { desugar_begin $2 }
@@ -167,8 +167,8 @@ let_args:
   | LBRACKET IDENT expr RBRACKET let_args { ($2, $3) :: $5 }
 
 let_expr:
-  | LET LPAREN let_args RPAREN expr { desugar_let $3 $5 }
-  | LET_STAR LPAREN let_args RPAREN expr { desugar_seq_let $3 $5 }
+  | LET LPAREN let_args RPAREN exprs { desugar_let $3 (desugar_begin $5) }
+  | LET_STAR LPAREN let_args RPAREN exprs { desugar_seq_let $3 (desugar_begin $5) }
 
 define_expr:
   | DEFINE IDENT expr { E_Define ($2, $3) }

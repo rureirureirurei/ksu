@@ -1,4 +1,4 @@
-;0\n4\n
+;0\n4
 (define tmp +)
 (define + -)
 (define - tmp)
