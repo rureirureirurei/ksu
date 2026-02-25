@@ -18,6 +18,21 @@ Here is an example code:
 (print (factorial 5))
 ```
 
+Here is an example using `call/cc` for early exit:
+
+```ksu
+; Multiply list elements, exit early if zero found
+(define (product lst k)
+  (if (nil? lst)
+      1
+      (if (= 0 (fst lst))
+          (k 0)
+          (* (fst lst) (product (snd lst) k)))))
+
+(print (call/cc k (product '(1 2 3 4 5) k)))   ; 120
+(print (call/cc k (product '(1 2 0 4 5) k)))   ; 0 (skips multiplication)
+```
+
 There is support for: 
  - first class functions
  - first class continuations
@@ -32,9 +47,29 @@ Compiler implements
  - cps translation (trivial syntactic based approach currently)
  - trampolining (so that cps does not cause stack overflow)
 
-# Installation: 
-(todo provide details on dune / utop / ocaml installation) 
-Clone the repo and run `./run.sh <.ksu file path>`. Script will also dump debug .ast files in the /tmp.  
+# Installation
+
+```bash
+# Install OCaml and opam (package manager)
+# Fedora/RHEL:
+sudo dnf install opam
+
+# Ubuntu/Debian:
+# sudo apt install opam
+
+# macOS:
+# brew install opam
+
+# Initialize opam and install OCaml
+opam init
+opam switch create 5.1.0
+eval $(opam env)
+
+# Install dependencies
+opam install dune menhir
+```
+
+Clone the repo and run `./run.sh <.ksu file path>`. Script will also dump debug .ast files in /tmp.  
 
 # Testing 
 `./test/run_test.py`
