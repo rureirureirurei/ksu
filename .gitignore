@@ -10,3 +10,4 @@ test.c
 CLAUDE.md
 .claude/
 .tmp_*
+.vscode/
